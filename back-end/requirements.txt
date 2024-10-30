@@ -1,0 +1,12 @@
+Flask==3.0.3
+Flask-Mailman==1.1.1
+Flask-Migrate==4.0.7
+Flask-Principal==0.4.0
+Flask-Security-Too==5.5.2
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.2
+Werkzeug==3.0.6
+WTForms==3.2.1
+bcrypt==4.2.0
+bleach==6.2.0
+zxcvbn==4.4.28
