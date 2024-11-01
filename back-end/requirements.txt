@@ -9,4 +9,3 @@ Werkzeug==3.0.6
 WTForms==3.2.1
 bcrypt==4.2.0
 bleach==6.2.0
-zxcvbn==4.4.28

@@ -2,13 +2,19 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
+import { configure } from 'vee-validate'
 import App from './App.vue'
 import router from './router'
 
-const app = createApp(App)
+window.backurl = 'http://localhost:5000/'
 
-app.use(createPinia())
-app.use(router)
+configure( {
+    validateOnInput: true,
+} )
 
-app.mount('#app')
+const app = createApp( App )
+
+app.use( createPinia() )
+app.use( router )
+
+app.mount( '#app' )
