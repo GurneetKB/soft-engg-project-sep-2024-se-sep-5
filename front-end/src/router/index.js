@@ -82,6 +82,15 @@ const router = createRouter( {
 
 
     {
+      path: '/teacher/add_milestone',
+      name: 'add_milestone',
+      meta: {
+        title: 'Add Milestone',
+      },
+      component: () => import( '../views/teacherViews/AddMilestone.vue' )
+    },
+
+    {
       path: '/:pathMatch(.*)*',
       name: 'Notfound',
       component: Notfound
