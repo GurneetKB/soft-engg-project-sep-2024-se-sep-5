@@ -32,7 +32,7 @@ def handle_exception(error):
 @app.route("/user/role")
 def userroleassign():
     if current_user.is_authenticated:
-        return [r.name for r in current_user.roles]
+        return [r.name for r in current_user.roles], 200
     else:
         abort(401)
 
@@ -46,6 +46,6 @@ def logout():
         )
         db.session.commit()
         logout_user()
-        return '"You have successfully logged out."'
+        return {"message": "You have successfully logged out."}, 200
     else:
         abort(401)

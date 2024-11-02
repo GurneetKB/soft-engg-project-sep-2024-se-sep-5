@@ -1,20 +1,45 @@
 <script setup>
-    import { ref, computed, onMounted } from 'vue'
+    import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
     import { fetchfunct, checkerror, checksuccess } from '@/components/fetch.js'
+    import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
     const notifications = ref( [] )
     const loading = ref( true )
 
     const unreadCount = computed( () =>
     {
-        return notifications.value.filter( n => !n.read ).length
+        return notifications.value.filter( n => !n.read_at ).length
     } )
+
+
+    // Handler for notification read event
+    const handleNotificationRead = ( event ) =>
+    {
+        const { id } = event.detail
+        // Update the local notifications array
+        notifications.value = notifications.value.map( notification =>
+        {
+            if ( notification.id == id )
+            {
+                console.log( notification.id )
+                return {
+                    ...notification,
+                    read_at: new Date().toGMTString()
+                }
+            }
+            return notification
+        } )
+    }
 
     const markAllAsRead = async () =>
     {
-        const response = await fetchfunct( 'student/notifications/mark-all-as-read' )
+        const response = await fetchfunct( 'student/notifications/mark_all_as_read' )
         if ( response.ok )
-        {
+        {// Update all notifications locally
+            notifications.value = notifications.value.map( notification => ( {
+                ...notification,
+                read_at: new Date().toISOString()
+            } ) )
             checksuccess( response )
         }
         else
@@ -25,7 +50,7 @@
 
     const formatDate = ( timestamp ) =>
     {
-        return new Date( timestamp ).toLocaleDateString( {
+        return new Date( timestamp ).toLocaleDateString( 'en-US', {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
@@ -45,50 +70,64 @@
         {
             checkerror( response )
         }
-
+        window.addEventListener( 'notification-read', handleNotificationRead )
         loading.value = false
+    } )
+
+    onBeforeUnmount( () =>
+    {
+        // Clean up event listener
+        window.removeEventListener( 'notification-read', handleNotificationRead )
     } )
 </script>
 
 <template>
     <div class="container-fluid p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="m-0">Notifications</h4>
-            <div class="d-flex gap-3 align-items-center">
-                <span class="text-muted small">
-                    {{ unreadCount }} unread
-                </span>
-                <button v-if="unreadCount > 0" @click="markAllAsRead" class="btn btn-sm btn-outline-primary">
-                    Mark all as read
-                </button>
-            </div>
-        </div>
+        <!-- This div will be replaced by Detail.vue when a notification is clicked -->
+        <router-view v-if="$route.params.id"></router-view>
 
-        <LoadingPlaceholder v-if="loading" variant="list-item" :count="5" :withLeadingIcon="true" :lines="[7, 4]"
-            leadingSize="8" />
-
-        <div v-else-if="notifications.length === 0" class="text-center py-5 text-muted">
-            <p>No notifications yet</p>
-        </div>
-
+        <!-- Show the list only when not viewing a detail -->
         <div v-else>
-            <router-link v-for="notification in notifications" :key="notification.id"
-                :to="{ name: 'notification-detail', params: { id: notification.id }}" class="notification-item"
-                :class="{ 'unread': !notification.read }">
-                <div class="d-flex align-items-start gap-3 p-3">
-                    <div v-if="!notification.read" class="notification-dot" aria-label="Unread notification"></div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">{{ notification.title }}</h6>
-                        <p class="text-muted small mb-0">
-                            {{ formatDate(notification.timestamp) }}
-                        </p>
-                    </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="m-0">Notifications</h4>
+                <div class="d-flex gap-3 align-items-center">
+                    <span class="text-muted small">
+                        {{ unreadCount }} unread
+                    </span>
+                    <button v-if="unreadCount > 0" @click="markAllAsRead" class="btn btn-sm btn-outline-primary">
+                        Mark all as read
+                    </button>
                 </div>
-            </router-link>
+            </div>
+
+            <LoadingPlaceholder v-if="loading" variant="list-item" :count="5" :withLeadingIcon="true" :lines="[7, 4]"
+                :leadingSize="8" />
+
+            <div v-else-if="notifications.length === 0" class="text-center py-5 text-muted">
+                <p>No notifications yet</p>
+            </div>
+
+            <div v-else>
+                <router-link :to="{ 
+            name: 'NotificationDetail', 
+            params: { id: notification.id }
+          }" v-for="notification in notifications" :key="notification.id" class="notification-item"
+                    :class="{ 'unread': !notification.read_at }">
+                    <div class="d-flex align-items-start gap-3 p-3">
+                        <div v-if="!notification.read_at" class="notification-dot" aria-label="Unread notification">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ notification.title }}</h6>
+                            <p class="text-muted small mb-0">
+                                {{ formatDate(notification.created_at) }}
+                            </p>
+                        </div>
+                    </div>
+                </router-link>
+            </div>
         </div>
     </div>
 </template>
-
 <style scoped>
     .notification-list {
         max-width: 800px;

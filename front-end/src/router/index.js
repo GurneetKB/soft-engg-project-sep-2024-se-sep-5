@@ -33,7 +33,6 @@ const router = createRouter( {
     },
     {
       path: '/student/notification_management',
-      name: 'Notification',
       meta: {
         title: 'Notification management',
         auth_role: 'Student'
@@ -43,15 +42,22 @@ const router = createRouter( {
         {
           path: '',
           name: 'NotificationView',
-          component: () => import( '../views/studentViews/notification/List.vue' )
+          component: () => import( '../views/studentViews/notification/List.vue' ),
+          children: [
+            {
+              path: ':id',
+              name: 'NotificationDetail',
+              props: true,
+              component: () => import( '../views/studentViews/notification/Detail.vue' )
+            }
+          ]
         },
         {
           path: 'preference',
           name: 'NotificationPreference',
           component: () => import( '../views/studentViews/notification/Preference.vue' )
         }
-
-      ],
+      ]
     },
     {
       path: '/teacher/dashboard',

@@ -7,8 +7,8 @@
                     <div class="d-flex flex-column align-items-center w-100 py-4 gap-2 mobile-nav-container">
                         <router-link v-for="tab in tabs" :key="tab.name" :to="tab.to"
                             class="btn w-75 text-start position-relative nav-link text-truncate" :class="{
-                                'active text-white': $route.path === tab.to,
-                                'text-secondary': $route.path !== tab.to
+                                'active text-white': $route.matched.filter(n=>n.name==tab.name).length,
+                                'text-secondary': !$route.matched.filter(n=>n.name==tab.name).length
                             }" :title="tab.label">
                             <div class="d-flex align-items-center text-truncate">
                                 <span class="text-truncate">{{ tab.label }}</span>

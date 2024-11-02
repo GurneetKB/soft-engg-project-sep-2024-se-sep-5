@@ -17,7 +17,7 @@ convention = {
 db = SQLAlchemy(metadata=MetaData(naming_convention=convention))
 
 
-class NotificationType(Enum):
+class NotificationType(str, Enum):
     DEADLINE = "DEADLINE"
     FEEDBACK = "FEEDBACK"
     MILESTONE_UPDATE = "MILESTONE_UPDATE"

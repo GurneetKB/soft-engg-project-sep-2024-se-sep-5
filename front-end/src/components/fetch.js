@@ -42,6 +42,6 @@ export async function checkerror ( response )
 export async function checksuccess ( response )
 {
     let data = await response.json()
-    useAlertStore().alertpush( [ { msg: data, type: 'alert-success' } ] )
+    useAlertStore().alertpush( [ { msg: data.message, type: 'alert-success' } ] )
 
 }
