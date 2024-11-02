@@ -22,13 +22,13 @@
   {
     const root = document.documentElement
     if ( identity.value.includes( 'Student' ) )
-      root.style.setProperty( '--navbar-bg', '#248afd' )
+      root.style.setProperty( '--navbar-bg', '#2c3e50' )
     else if ( identity.value.includes( 'Instructor' ) )
-      root.style.setProperty( '--navbar-bg', '#1a55e3' )
+      root.style.setProperty( '--navbar-bg', '#34495e' )
     else if ( identity.value.includes( 'TA' ) )
-      root.style.setProperty( '--navbar-bg', '#651FFF' )
+      root.style.setProperty( '--navbar-bg', '#1a2e5b' )
     else
-      root.style.setProperty( '--navbar-bg', '#5e6eed' )
+      root.style.setProperty( '--navbar-bg', '#1e2a78' )
   } )
 
   function access_type_change ( value )
@@ -41,11 +41,11 @@
 
 <template>
 
-  <nav class="navbar sticky-top navbar-expand-lg">
+  <nav class="navbar sticky-top navbar-expand-lg border-bottom border-body" data-bs-theme="dark">
     <div class="container-fluid">
 
       <RouterLink class="navbar-brand" to="/">
-        Tracky
+        <i class="bi bi-file-earmark-bar-graph"></i> Tracky
       </RouterLink>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#Navbar">
@@ -57,7 +57,7 @@
         <div class="offcanvas-header">
           <h5 class="offcanvas-title" data-bs-dismiss="offcanvas">
             <RouterLink to="/" class="navbar-brand">
-              Tracky
+              <i class="bi bi-file-earmark-bar-graph"></i> Tracky
             </RouterLink>
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -114,11 +114,21 @@
     background-color: var(--navbar-bg);
   }
 
-  .router-link-exact-active.nav-link {
+  .navbar-brand i {
+    position: relative;
+    top: 0;
+    transition: top ease 0.5s;
+  }
+
+  .navbar-brand:hover i {
+    top: -5px;
+  }
+
+  .router-link-active.nav-link {
     color: var(--bs-navbar-active-color);
   }
 
-  .router-link-exact-active.nav-link:hover {
+  .router-link-active.nav-link:hover {
     color: var(--bs-navbar-active-color);
   }
 

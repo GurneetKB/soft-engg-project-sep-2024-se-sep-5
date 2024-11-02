@@ -1,5 +1,7 @@
 import { useAlertStore } from '@/stores/alert.js'
 
+const backend = 'http://localhost:5000/'
+
 export async function fetchfunct ( url, options = { headers: {} } )
 {
     if ( options.headers )
@@ -20,7 +22,7 @@ export async function fetchfunct ( url, options = { headers: {} } )
     {
         options.headers[ "Accept" ] = "application/json"
     }
-    return fetch( url, options ).catch( () => "Failed to fetch. Network error occured." )
+    return fetch( backend + url, options ).catch( () => "Failed to fetch. Network error occured." )
 }
 
 export async function checkerror ( response )

@@ -6,7 +6,6 @@ import { configure } from 'vee-validate'
 import App from './App.vue'
 import router from './router'
 
-window.backurl = 'http://localhost:5000/'
 
 configure( {
     validateOnInput: true,

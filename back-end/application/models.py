@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin
 from sqlalchemy import MetaData
+from enum import Enum
+
 
 # Define naming convention for constraints
 convention = {
@@ -13,6 +15,13 @@ convention = {
 
 # Initialize SQLAlchemy with naming convention
 db = SQLAlchemy(metadata=MetaData(naming_convention=convention))
+
+
+class NotificationType(Enum):
+    DEADLINE = "DEADLINE"
+    FEEDBACK = "FEEDBACK"
+    MILESTONE_UPDATE = "MILESTONE_UPDATE"
+
 
 team_students = db.Table(
     "team_students",
@@ -141,9 +150,15 @@ class Milestones(db.Model):
 
 class TeamMilestones(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    team_id = db.Column(db.Integer, db.ForeignKey("teams.id", ondelete="CASCADE"))
+    team_id = db.Column(
+        db.Integer,
+        db.ForeignKey("teams.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     milestone_id = db.Column(
-        db.Integer, db.ForeignKey("milestones.id", ondelete="CASCADE")
+        db.Integer,
+        db.ForeignKey("milestones.id", ondelete="CASCADE"),
+        nullable=False,
     )
     completion_percentage = db.Column(db.Float, default=0.0, nullable=False)
     team = db.relationship("Teams", back_populates="milestone_status", lazy="subquery")
@@ -184,12 +199,17 @@ class Documents(db.Model):
 
 class Notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title = db.Column(db.String, nullable=False)
     message = db.Column(db.Text, nullable=False)
-    type = db.Column(db.String(50))
+    type = db.Column(db.Enum(NotificationType), nullable=False)
     created_at = db.Column(db.DateTime)
     read_at = db.Column(db.DateTime)
-    user = db.relationship("Users", back_populates="notifications", lazy="subquery")
+    user = db.relationship(
+        "Users", back_populates="notifications", lazy="subquery", uselist=False
+    )
 
 
 class NotificationPreferences(db.Model):

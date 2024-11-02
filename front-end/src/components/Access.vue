@@ -31,7 +31,7 @@
         } )
 
 
-        let response = await fetchfunct( backurl + "login?include_auth_token", { method: "POST", body: bodyContent, headers: headersList } )
+        let response = await fetchfunct( "login?include_auth_token", { method: "POST", body: bodyContent, headers: headersList } )
 
         if ( response.ok )
         {
@@ -39,7 +39,7 @@
             let data = await response.json()
             localStorage.setItem( "Authentication-Token", data.response.user.authentication_token )
 
-            let r = await fetchfunct( backurl + "user/role" )
+            let r = await fetchfunct( "user/role" )
             if ( r.ok )
             {
                 useIdentityStore().identity = await r.json()
@@ -62,7 +62,7 @@
         // hiding the bootstrap modal element
         bootstrap.Modal.getInstance( "#accessModal" ).hide()
 
-        let r = await fetchfunct( backurl + "logout" )
+        let r = await fetchfunct( "logout" )
         if ( r.ok || r.status == 401 )
         {   // logout is successfully or the authentication token has expired
             localStorage.removeItem( 'Authentication-Token' )

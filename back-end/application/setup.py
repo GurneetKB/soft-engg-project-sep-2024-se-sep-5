@@ -44,7 +44,7 @@ with app.app_context():
     db.init_app(app)  # initializing flask-sqlalchemy
 
     db.create_all()  # create the tables if not created
-    print(Users.query.first())
+
     if not Users.query.first():  # if instructor role is not created
         seed_database(db)
 
