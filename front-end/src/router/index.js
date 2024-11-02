@@ -54,6 +54,34 @@ const router = createRouter( {
       ],
     },
     {
+      path: '/teacher/dashboard',
+      name: 'instructor_dashboard',
+      meta: {
+        title: 'Instructor Dashboard',
+      },
+      component: () => import( '../views/teacherViews/InstructorDashboard.vue' )
+    },
+
+    {
+      path: '/teacher/milestone_management',
+      name: 'milestone_management',
+      meta: {
+        title: 'Milestone Management',
+      },
+      component: () => import( '../views/teacherViews/MilestoneManagement.vue' )
+    },
+
+    {
+      path: '/teacher/team_management',
+      name: 'team_management',
+      meta: {
+        title: 'Team Management',
+      },
+      component: () => import( '../views/teacherViews/TeamManagement.vue' )
+    },
+
+
+    {
       path: '/:pathMatch(.*)*',
       name: 'Notfound',
       component: Notfound

@@ -26,8 +26,10 @@
           <div class="col-md-4" v-for="user in userTypes" :key="user.title">
             <div class="card h-100 shadow-sm">
               <div class="card-body">
+
                 <div class="d-flex align-items-center mb-3">
                   <i :class="user.icon" class="fs-4 me-2 text-secondary"></i>
+                  
                   <h3 class="card-title h5 mb-0">{{ user.title }}</h3>
                 </div>
                 <p class="card-text">{{ user.description }}</p>
