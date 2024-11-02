@@ -24,8 +24,16 @@
 
   <section class="py-5">
     <div class="container hero-section text-white py-5 rounded-lg px-4">
-      <div class="mb-5">
-        <h2 class="text-center main-title">Milestones</h2>
+      <div class="text-center mb-4 position-relative">
+        <h2 class="main-title mb-0">Milestones</h2>
+        <button
+          class="btn btn-success rounded-circle add-button position-absolute"
+          style="right: 20px; top: 0"
+        >
+          <RouterLink class="nav-link" to="/teacher/add_milestone">
+            <i class="bi bi-plus fs-0" style="font-size: 4rem"></i>
+          </RouterLink>
+        </button>
       </div>
       <div class="milestone-wrapper">
         <div class="milestone-item mb-4">
@@ -88,6 +96,16 @@
 </template>
 
 <style scoped>
+.add-button {
+  width: 70px;
+  height: 70px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 .hero-section {
   background: linear-gradient(135deg, #6a5880, #00695c);
   border-radius: 20px;
