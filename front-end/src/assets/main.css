@@ -3,8 +3,6 @@
   --transition-speed: 0.3s;
   --navbar-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   --accent-color: #42b983;
-  --text-color: #2c3e50;
-  --gradient-start: rgba(44, 62, 80, 0.95);
   --gradient-end: rgba(52, 73, 94, 0.95);
 }
 
@@ -33,6 +31,10 @@ select {
 
 .form-text {
   color: var(--bs-form-invalid-color)
+}
+
+.nav-tabs .nav-link {
+  color: var(--navbar-bg)
 }
 
 .pointer-link {

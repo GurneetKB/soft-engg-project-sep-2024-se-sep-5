@@ -1,6 +1,9 @@
 <template>
-  <nav class="navbar sticky-top navbar-expand-lg border-bottom border-body" data-bs-theme="dark">
+
+
+  <nav class="navbar sticky-top navbar-expand-lg" data-bs-theme="dark">
     <div class="container-fluid">
+
       <RouterLink class="navbar-brand" to="/">
         <i class="bi bi-file-earmark-bar-graph"></i> Tracky
       </RouterLink>
@@ -22,6 +25,7 @@
 
         <div class="offcanvas-body">
           <ul class="navbar-nav me-auto">
+
             <li v-if="identity.includes('Instructor') || identity.includes('TA')" class="nav-item"
               data-bs-dismiss="offcanvas">
               <RouterLink class="nav-link" to="/teacher/milestone_management">Milestone Management</RouterLink>
@@ -30,12 +34,14 @@
               data-bs-dismiss="offcanvas">
               <RouterLink class="nav-link" to="/teacher/team_management">Team Management</RouterLink>
             </li>
+
             <li v-if="identity.includes('Student')" class="nav-item" data-bs-dismiss="offcanvas">
               <RouterLink class="nav-link" to="/student/milestone_management">Milestone Management</RouterLink>
             </li>
             <li v-if="identity.includes('Student')" class="nav-item" data-bs-dismiss="offcanvas">
               <RouterLink class="nav-link" to="/student/notification_management">Notification Management</RouterLink>
             </li>
+
             <li class="nav-item" data-bs-dismiss="offcanvas">
               <RouterLink class="nav-link" to="/about">About</RouterLink>
             </li>
@@ -43,25 +49,26 @@
 
           <ul class="navbar-nav ms-auto">
             <li v-if="!identity.includes('Unauthenticated')" class="nav-item" data-bs-dismiss="offcanvas">
-              <a class="nav-link pointer-link" @click="access_type_change('Logout')">
+              <a class="nav-link pointer-link" @click="access_type_change ( 'Logout' )">
                 <i class="bi bi-box-arrow-right"></i>Logout
               </a>
             </li>
             <li v-if="identity.includes('Unauthenticated')" class="nav-item" data-bs-dismiss="offcanvas">
-              <a class="nav-link pointer-link" @click="access_type_change('Login')">Login</a>
+              <a class="nav-link pointer-link" @click="access_type_change ( 'Login' )">Login</a>
             </li>
           </ul>
+
         </div>
       </div>
     </div>
   </nav>
   <Access :access="access_type"></Access>
-  <div v-for="(value, key) in useAlertStore().alerts" :key="key">
+  <div v-for="(value,key) in useAlertStore().alerts" :key="key">
     <Alert :alert="value" :id="key"></Alert>
   </div>
   <RouterView />
-</template>
 
+</template>
 
 <script setup>
 
@@ -107,11 +114,6 @@
 </script>
 
 <style scoped>
-  :root {
-    --transition-speed: 0.3s;
-    --navbar-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    --gradient-end: rgba(52, 73, 94, 0.95);
-  }
 
   /* Navbar styling */
   .navbar {
@@ -196,6 +198,7 @@
   }
 
 
+
   @keyframes slideIn {
     from {
       transform: translateY(-20px);
@@ -227,6 +230,37 @@
     .nav-link {
       padding: 0.75rem 1rem;
       margin: 0.25rem 0;
+      width: 100%;
+      /* Make links full width */
+    }
+
+    .offcanvas {
+      height: 100vh !important;
+      background: linear-gradient(135deg, var(--navbar-bg), var(--gradient-end));
+    }
+
+    .offcanvas-body {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      /* Add some padding */
+    }
+
+    /* Make the nav items container full width */
+    .offcanvas-body .navbar-nav {
+      width: 100%;
+    }
+
+    /* Adjust spacing for nav items */
+    .navbar-nav .nav-item {
+      width: 100%;
+      margin: 0.25rem 0;
+    }
+
+    /* Adjust the navbar brand in offcanvas header */
+    .offcanvas-header .navbar-brand {
+      margin-right: 0;
     }
   }
 </style>
