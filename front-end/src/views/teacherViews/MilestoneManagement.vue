@@ -3,18 +3,22 @@
     <div class="container px-4">
       <div class="row g-4 justify-content-center mx-0">
         <div class="col-sm-5 px-2">
-          <div class="stats-card text-white rounded-lg">
+          <div class="stats-card rounded-lg shadow-sm">
             <div class="card-body d-flex flex-column align-items-center">
-              <h2 class="card-title fw-bold mb-4">Total Registered Students</h2>
-              <div class="stats-number">234</div>
+              <h2 class="card-title fw-bold mb-4 text-dark">
+                Total Registered Students
+              </h2>
+              <div class="stats-number text-primary">234</div>
             </div>
           </div>
         </div>
         <div class="col-sm-5 px-2">
-          <div class="stats-card text-white rounded-lg">
+          <div class="stats-card rounded-lg shadow-sm">
             <div class="card-body d-flex flex-column align-items-center">
-              <h2 class="card-title fw-bold mb-4">Total Number of Teams</h2>
-              <div class="stats-number">50</div>
+              <h2 class="card-title fw-bold mb-4 text-dark">
+                Total Number of Teams
+              </h2>
+              <div class="stats-number text-primary">50</div>
             </div>
           </div>
         </div>
@@ -22,10 +26,10 @@
     </div>
   </section>
 
-  <section class="py-5">
-    <div class="container hero-section text-white py-5 rounded-lg px-4">
+  <section class="py-5 bg-light">
+    <div class="container hero-section py-5 rounded-lg px-4 shadow-sm">
       <div class="text-center mb-4 position-relative">
-        <h2 class="main-title mb-0">Milestones</h2>
+        <h2 class="main-title text-dark">Milestones</h2>
         <button
           class="btn btn-success rounded-circle add-button position-absolute"
           style="right: 20px; top: 0"
@@ -36,57 +40,22 @@
         </button>
       </div>
       <div class="milestone-wrapper">
-        <div class="milestone-item mb-4">
-          <h5 class="milestone-title">Milestone 1</h5>
-          <div class="progress">
-            <div
-              class="progress-bar bg-success"
-              role="progressbar"
-              style="width: 100%"
-            ></div>
+        <div
+          v-for="milestone in milestonesWithStatus"
+          :key="milestone.name"
+          class="milestone-item mb-4"
+        >
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="milestone-title">{{ milestone.name }}</h5>
+            <button class="btn btn-edit" @click="editMilestone(milestone)">
+              <i class="bi bi-pencil-square"></i>
+            </button>
           </div>
-        </div>
-
-        <div class="milestone-item mb-4">
-          <h5 class="milestone-title">Milestone 2</h5>
           <div class="progress">
             <div
-              class="progress-bar bg-warning"
+              :class="'progress-bar progress-bar-' + milestone.status"
               role="progressbar"
-              style="width: 50%"
-            ></div>
-          </div>
-        </div>
-
-        <div class="milestone-item mb-4">
-          <h5 class="milestone-title">Milestone 3</h5>
-          <div class="progress">
-            <div
-              class="progress-bar bg-danger"
-              role="progressbar"
-              style="width: 10%"
-            ></div>
-          </div>
-        </div>
-
-        <div class="milestone-item mb-4">
-          <h5 class="milestone-title">Milestone 4</h5>
-          <div class="progress">
-            <div
-              class="progress-bar bg-light"
-              role="progressbar"
-              style="width: 0%"
-            ></div>
-          </div>
-        </div>
-
-        <div class="milestone-item mb-4">
-          <h5 class="milestone-title">Milestone 5</h5>
-          <div class="progress">
-            <div
-              class="progress-bar bg-light"
-              role="progressbar"
-              style="width: 0%"
+              :style="{ width: milestone.progress + '%' }"
             ></div>
           </div>
         </div>
@@ -107,52 +76,33 @@
 }
 
 .hero-section {
-  background: linear-gradient(135deg, #6a5880, #00695c);
+  background: #ffffff;
   border-radius: 20px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-}
-
-.main-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  position: relative;
-  padding-bottom: 15px;
-}
-
-.main-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 2px;
 }
 
 .stats-card {
-  background: linear-gradient(135deg, #6a5880, #00695c);
+  background: #ffffff;
   padding: 2rem;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  border: 1px solid #ddd;
   border-radius: 15px;
+  transition: all 0.3s ease;
 }
 
-.stats-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+.main-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #333;
 }
 
 .stats-number {
-  font-size: 3.5rem;
+  font-size: 2.5rem;
   font-weight: bold;
-  padding: 1.5rem 2.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 1rem 2rem;
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  border-radius: 10px;
 }
 
 .milestone-wrapper {
@@ -162,37 +112,69 @@
 }
 
 .milestone-item {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.03);
   padding: 20px;
-  border-radius: 15px;
-  transition: all 0.3s ease;
-}
-
-.milestone-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(5px);
+  border-radius: 10px;
 }
 
 .milestone-title {
   font-weight: 600;
-  margin-bottom: 15px;
-  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: #333;
 }
 
 .progress {
-  height: 1.2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  overflow: hidden;
+  height: 1rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
 }
 
-.progress-bar {
-  transition: width 1s ease-in-out;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+.progress-bar-success {
+  background-color: #a8d5ba; /* Pastel green */
+}
+
+.progress-bar-warning {
+  background-color: #ffd966; /* Pastel yellow */
+}
+
+.progress-bar-danger {
+  background-color: #ffb3b3; /* Pastel red */
 }
 
 .card-title {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   text-align: center;
+  color: #333;
 }
 </style>
+
+<script>
+export default {
+  data() {
+    return {
+      milestones: [
+        { name: 'Milestone 1', progress: 100 },
+        { name: 'Milestone 2', progress: 52 },
+        { name: 'Milestone 3', progress: 10 },
+        { name: 'Milestone 4', progress: 0 },
+        { name: 'Milestone 5', progress: 0 },
+      ],
+    }
+  },
+  computed: {
+    milestonesWithStatus() {
+      return this.milestones.map(milestone => {
+        let status = 'light'
+        if (milestone.progress === 100) {
+          status = 'success'
+        } else if (milestone.progress > 50) {
+          status = 'warning'
+        } else if (milestone.progress > 0 && milestone.progress <= 50) {
+          status = 'danger'
+        }
+        return { ...milestone, status }
+      })
+    },
+  },
+}
+</script>

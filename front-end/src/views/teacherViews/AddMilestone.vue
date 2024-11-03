@@ -46,6 +46,16 @@ function addTask() {
           ></textarea>
         </div>
 
+        <div class="mb-4">
+          <label for="deadlineInput" class="form-label fw-bold">Deadline</label>
+          <input
+            type="datetime-local"
+            class="form-control form-control-lg custom-input"
+            id="deadlineInput"
+            :min="new Date().toISOString().slice(0, 16)"
+          />
+        </div>
+
         <div class="task-list mb-4">
           <label for="tasksInput" class="form-label fw-bold">Tasks</label>
           <div
