@@ -4,8 +4,11 @@ from application.models import (
     NotificationPreferences,
     Teams,
     Milestones,
+    Tasks,
+    Submissions,
+    Documents,
     Notifications,
-    TeamMilestones,
+    UserNotifications,
 )
 from flask_security import hash_password
 from datetime import datetime, timedelta, timezone
@@ -62,7 +65,6 @@ def seed_database(db):
             for i in range(1, 13)
         },
     }
-
     for user in users.values():
         db.session.add(user)
 
@@ -102,84 +104,108 @@ def seed_database(db):
             members=[users["student10"], users["student11"], users["student12"]],
         ),
     ]
-
     for team in teams:
         db.session.add(team)
 
-    # Create milestones
+    # Create milestones and tasks within milestones
     milestones = [
         Milestones(
             title="Project Proposal Due",
             description="Submit your project proposal for approval.",
-            deadline=datetime.now(timezone.utc) + timedelta(days=7),  # 1 week from now
+            deadline=datetime.now(timezone.utc) + timedelta(days=7),
             created_at=datetime.now(timezone.utc),
             created_by=users["instructor"].id,
-            requirements={"format": "PDF", "length": "2-3 pages"},
         ),
         Milestones(
             title="First Prototype Submission",
             description="Submit the first working prototype of your project.",
-            deadline=datetime.now(timezone.utc)
-            + timedelta(days=14),  # 2 weeks from now
+            deadline=datetime.now(timezone.utc) + timedelta(days=14),
             created_at=datetime.now(timezone.utc),
             created_by=users["instructor"].id,
-            requirements={"format": "GitHub repo link"},
         ),
         Milestones(
             title="Final Project Presentation",
             description="Prepare for the final presentation of your project.",
-            deadline=datetime.now(timezone.utc)
-            + timedelta(days=21),  # 3 weeks from now
+            deadline=datetime.now(timezone.utc) + timedelta(days=21),
             created_at=datetime.now(timezone.utc),
             created_by=users["instructor"].id,
-            requirements={"format": "Slide deck"},
         ),
     ]
-
     for milestone in milestones:
         db.session.add(milestone)
-        # Associate milestones with teams
-        for team in teams:
-            team_milestone = TeamMilestones(team=team, milestone=milestone)
-            db.session.add(team_milestone)
 
-    # Create notifications only for students
-    notification_types = ["DEADLINE", "FEEDBACK", "MILESTONE_UPDATE"]
+        # Add tasks for each milestone
+        tasks = [
+            Tasks(
+                milestone=milestone,
+                description=f"Complete task for {milestone.title}",
+            )
+        ]
+        for task in tasks:
+            db.session.add(task)
+
+    # Create sample submissions with documents
+    for team in teams:
+        for task in tasks:
+            submission = Submissions(
+                team=team,
+                tasks=task,
+                submission_time=datetime.now(timezone.utc),
+                feedback="Good job on initial submission",
+                feedback_by=users["instructor"].id,
+                feedback_time=datetime.now(timezone.utc) + timedelta(days=1),
+            )
+            db.session.add(submission)
+
+            # Add a document to each submission
+            document = Documents(
+                title=f"{task.description} document",
+                file_url="https://example.com/doc.pdf",
+                submission=submission,
+            )
+            db.session.add(document)
+
+    # Create notifications for each student
     for team in teams:
         for student in team.members:
             for milestone in milestones:
-                # Deadline notifications
-                notification = Notifications(
-                    user=student,  # Send notification to each student
-                    title=f"{notification_types[0].capitalize()} Notification",
+                # Deadline notification
+                deadline_notification = Notifications(
+                    title="Deadline Notification",
                     message=f"The milestone '{milestone.title}' is due on {milestone.deadline.strftime('%Y-%m-%d')}.",
-                    type=notification_types[0],
+                    type="DEADLINE",
                     created_at=datetime.now(timezone.utc),
-                    read_at=None,
                 )
-                db.session.add(notification)
+                db.session.add(deadline_notification)
+                db.session.add(
+                    UserNotifications(user=student, notifications=deadline_notification)
+                )
 
-                # Feedback notifications
+                # Feedback notification
                 feedback_notification = Notifications(
-                    user=student,  # Send to the same student
-                    title=f"{notification_types[1].capitalize()} Notification",
-                    message=f"You have received feedback on your submission for '{milestone.title}'.",
-                    type=notification_types[1],
+                    title="Feedback Notification",
+                    message=f"You have received feedback on '{milestone.title}'.",
+                    type="FEEDBACK",
                     created_at=datetime.now(timezone.utc),
-                    read_at=None,
                 )
                 db.session.add(feedback_notification)
+                db.session.add(
+                    UserNotifications(user=student, notifications=feedback_notification)
+                )
 
-                # Milestone update notifications
+                # Milestone update notification
                 milestone_update_notification = Notifications(
-                    user=student,  # Send to the same student
-                    title=f"{notification_types[2].capitalize()} Notification",
+                    title="Milestone Update Notification",
                     message=f"The milestone '{milestone.title}' has been updated.",
-                    type=notification_types[2],
+                    type="MILESTONE_UPDATE",
                     created_at=datetime.now(timezone.utc),
-                    read_at=None,
                 )
                 db.session.add(milestone_update_notification)
+                db.session.add(
+                    UserNotifications(
+                        user=student, notifications=milestone_update_notification
+                    )
+                )
 
     # Commit all changes
     db.session.commit()
