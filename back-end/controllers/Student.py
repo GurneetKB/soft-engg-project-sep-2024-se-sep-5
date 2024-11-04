@@ -1,6 +1,6 @@
 from application.setup import app
 from flask_security import current_user, roles_required
-from application.models import Notifications, NotificationPreferences, db
+from application.models import Notifications, NotificationPreferences, TeamMilestones, Teams, team_students, db
 from flask import abort, request
 from datetime import datetime, timezone
 
@@ -133,3 +133,32 @@ def set_notification_preferences():
     db.session.commit()
 
     return {"message": "Notification preferences updated successfully."}, 200
+
+
+@app.route("/student/milestone_mnagement/overall", methods=["GET"])
+@roles_required("Student")
+
+def get_team_milestones():
+
+    team_milestones_for_user = (
+    db.session.query(TeamMilestones)
+    .join(Teams)
+    .join(team_students)
+    .filter(team_students.c.student_id == current_user.id)
+    .all()
+    )
+
+    teammilestone_for_user = [
+        {
+            "id": team_milestone.id,
+            "title": team_milestone.milestone.title,
+            "completion_percentage": team_milestone.completion_percentage,
+        }
+        for team_milestone in team_milestones_for_user
+    ]
+
+    return {"milestones": teammilestone_for_user,
+            "team_name" : teammilestone_for_user[0]["name"]}, 200
+
+
+
