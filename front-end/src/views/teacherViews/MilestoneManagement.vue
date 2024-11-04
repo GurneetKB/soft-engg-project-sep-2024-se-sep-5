@@ -48,7 +48,9 @@
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="milestone-title">{{ milestone.name }}</h5>
             <button class="btn btn-edit" @click="editMilestone(milestone)">
-              <i class="bi bi-pencil-square"></i>
+              <RouterLink class="nav-link" to="/teacher/edit_milestone">
+                <i class="bi bi-pencil-square"></i>
+              </RouterLink>
             </button>
           </div>
           <div class="progress">

@@ -1,17 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const count = ref(0)
-
-function increment() {
-  count.value++
-}
-
-onMounted(() => {
-  console.log(`The initial count is ${count.value}.`)
-})
-
-const tasks = ref([''])
+// Hardcoded values for editing
+const title = ref('Complete Project Phase 1')
+const description = ref(
+  'Finish the initial phase of the project including requirements gathering and system design.',
+)
+const deadline = ref('2024-01-30T14:00')
+const tasks = ref([
+  'Create system architecture diagram',
+  'Write requirements documentation',
+  'Set up development environment',
+  'Create project timeline',
+])
 
 function addTask() {
   tasks.value.push('')
@@ -22,7 +23,7 @@ function addTask() {
   <div class="page-wrapper">
     <div class="container my-5">
       <div class="card shadow-lg p-4 mx-auto">
-        <h2 class="mb-4 text-center gradient-text">Create New Milestone</h2>
+        <h2 class="mb-4 text-center gradient-text">Edit Milestone</h2>
 
         <div class="mb-4">
           <label for="titleInput" class="form-label fw-bold">Title</label>
@@ -30,7 +31,7 @@ function addTask() {
             type="text"
             class="form-control form-control-lg custom-input"
             id="titleInput"
-            placeholder="Enter milestone title"
+            v-model="title"
           />
         </div>
 
@@ -42,7 +43,7 @@ function addTask() {
             class="form-control custom-input"
             id="descriptionArea"
             rows="4"
-            placeholder="Enter milestone description"
+            v-model="description"
           ></textarea>
         </div>
 
@@ -52,6 +53,7 @@ function addTask() {
             type="datetime-local"
             class="form-control form-control-lg custom-input"
             id="deadlineInput"
+            v-model="deadline"
             :min="new Date().toISOString().slice(0, 16)"
           />
         </div>
@@ -91,9 +93,12 @@ function addTask() {
         </div>
 
         <div class="text-center">
-          <button class="btn btn-gradient btn-lg px-5">
-            <i class="bi bi-check2-circle me-2"></i>
-            Publish Milestone
+          <button
+            class="btn btn-gradient btn-lg px-5"
+            style="font-family: 'Segoe UI', Arial, sans-serif"
+          >
+            <i class="bi bi-arrow-clockwise me-2"></i>
+            Update Milestone
           </button>
         </div>
       </div>
@@ -149,7 +154,7 @@ function addTask() {
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   padding: 12px;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; */
 }
 
 .custom-input:focus {
@@ -162,7 +167,7 @@ function addTask() {
   background: #159957;
   border: none;
   color: white;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; */
   font-weight: 500;
   letter-spacing: 0.5px;
   border-radius: 10px;
