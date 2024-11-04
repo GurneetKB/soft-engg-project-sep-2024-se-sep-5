@@ -1,6 +1,14 @@
 from application.setup import app
 from flask_security import current_user, roles_required
-from application.models import Notifications, NotificationPreferences, TeamMilestones, Teams, team_students, db
+from application.models import (
+    Notifications,
+    NotificationPreferences,
+    TeamMilestones,
+    Teams,
+    team_students,
+    db,
+    Milestones,
+)
 from flask import abort, request
 from datetime import datetime, timezone
 
@@ -135,30 +143,36 @@ def set_notification_preferences():
     return {"message": "Notification preferences updated successfully."}, 200
 
 
-@app.route("/student/milestone_mnagement/overall", methods=["GET"])
+@app.route("/student/milestone_management/overall", methods=["GET"])
 @roles_required("Student")
-
 def get_team_milestones():
 
-    team_milestones_for_user = (
-    db.session.query(TeamMilestones)
-    .join(Teams)
-    .join(team_students)
-    .filter(team_students.c.student_id == current_user.id)
-    .all()
-    )
+    team_id = (
+        db.session.query(team_students.c.team_id)
+        .filter(team_students.c.student_id == current_user.id)
+        .first()
+    )[0]
+    if team_id:
+        milestone_details = (
+            db.session.query(TeamMilestones)
+            .filter(TeamMilestones.team_id == team_id)
+            .all()
+        )
+        team_milestone_for_user = []
+        team_name = ""
+        for team_milestone in milestone_details:
+            team_milestone_for_user.append(
+                {
+                    "milestone_id": team_milestone.milestone_id,
+                    "title": team_milestone.milestone.title,
+                    "completion_percentage": team_milestone.completion_percentage,
+                }
+            )
+            team_name = team_milestone.team.name
 
-    teammilestone_for_user = [
-        {
-            "id": team_milestone.id,
-            "title": team_milestone.milestone.title,
-            "completion_percentage": team_milestone.completion_percentage,
-        }
-        for team_milestone in team_milestones_for_user
-    ]
-
-    return {"milestones": teammilestone_for_user,
-            "team_name" : teammilestone_for_user[0]["name"]}, 200
-
-
-
+        return {
+            "milestones": team_milestone_for_user,
+            "team_name": team_name,
+        }, 200
+    else:
+        abort("No team is assigned to you yet.")

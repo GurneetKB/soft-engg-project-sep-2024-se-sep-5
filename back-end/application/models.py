@@ -161,11 +161,11 @@ class TeamMilestones(db.Model):
         nullable=False,
     )
     completion_percentage = db.Column(db.Float, default=0.0, nullable=False)
-    team = db.relationship("Teams", back_populates="milestone_status", lazy="subquery")
+    team = db.relationship(
+        "Teams", back_populates="milestone_status", lazy="subquery", uselist=False
+    )
     milestone = db.relationship(
-        "Milestones",
-        back_populates="team_milestones",
-        lazy="subquery",
+        "Milestones", back_populates="team_milestones", lazy="subquery", uselist=False
     )
 
 
