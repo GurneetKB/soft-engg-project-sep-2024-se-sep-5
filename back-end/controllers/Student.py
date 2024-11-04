@@ -152,21 +152,14 @@ def get_team_milestones():
     team_id = (
         db.session.query(team_students.c.team_id)
         .filter(team_students.c.student_id == current_user.id)
-        .first()
-    )[0]
+        .scalar()
+    )
 
     if not team_id:
         abort(400, "No team is assigned to you yet.")
 
     # Retrieve the team along with its milestones, tasks, and submissions
-    team = (
-        db.session.query(Teams)
-        .options(
-            joinedload(Teams.submissions).joinedload(Submissions.tasks),
-        )
-        .filter(Teams.id == team_id)
-        .first()
-    )
+    team = db.session.query(Teams).filter(Teams.id == team_id).first()
 
     # Prepare milestone data
     team_milestone_for_user = []
