@@ -29,7 +29,19 @@ const router = createRouter( {
         title: 'Milestone management',
         auth_role: 'Student'
       },
-      component: () => import( '../views/studentViews/milestone/MilestoneTab.vue' )
+      component: () => import( '../views/studentViews/milestone/MilestoneTab.vue' ),
+      children: [
+        {
+          path: '',
+          name: 'OverallView',
+          component: () => import( '../views/studentViews/milestone/Overall.vue' )
+        },
+        {
+          path: 'individual',
+          name: 'IndividualView',
+          component: () => import( '../views/studentViews/milestone/Individual.vue' )
+        }
+      ]
     },
     {
       path: '/student/notification_management',
