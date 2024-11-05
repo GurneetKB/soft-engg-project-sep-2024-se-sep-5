@@ -13,6 +13,7 @@ from application.models import (
 )
 from flask import abort, request
 from datetime import datetime, timezone
+import os
 
 
 def get_team_id(user):
@@ -222,7 +223,9 @@ def get_milestones():
     return {"milestones": milestone_list}, 200
 
 
-@app.route("/student/milestone_management/individual/<int:milestone_id>", methods=["GET"])
+@app.route(
+    "/student/milestone_management/individual/<int:milestone_id>", methods=["GET"]
+)
 @roles_required("Student")
 def get_milestone_details(milestone_id):
     team_id = get_team_id(current_user)
@@ -230,7 +233,7 @@ def get_milestone_details(milestone_id):
     team_submissions = db.session.query(Submissions.id).filter(
         Submissions.team_id == team_id
     )
-    if milestone:
+    if milestone and team_id:
         # Prepare a dictionary with the milestone details
         milestone_data = {
             "id": milestone.id,
@@ -251,52 +254,98 @@ def get_milestone_details(milestone_id):
         }
         return milestone_data, 200
     else:
-        return abort(404, "Milestone not found")
+        return abort(404, "Milestone/team not found.")
 
 
-@app.route('/student/milestone_management/individual/<int:milestone_id>', methods=['POST'])
-@roles_required("Student")  
+@app.route(
+    "/student/milestone_management/individual/<int:milestone_id>", methods=["POST"]
+)
+@roles_required("Student")
 def submit_milestone(milestone_id):
-    data = request.get_json()
-    team_id = data.get('team_id')
-    document_title = data.get('title')
-    file_url = data.get('file_url')
-
-    # Check if milestone and team exist
+    team_id = get_team_id(current_user)
+    saved_files = []
+    tasks = []
+    # Fetch the milestone and team details
     milestone = Milestones.query.get(milestone_id)
     team = Teams.query.get(team_id)
+
+    # Check if milestone and team exist
     if not milestone or not team:
         return abort(404, "Milestone or team not found")
 
-    # Create a new submission
-    submission = Submissions(
-        task_id=milestone_id,
-        team_id=team_id,
-        submission_time=datetime.utcnow(),
+    # Check if the milestone deadline has passed
+    if milestone.deadline.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        return abort(400, "Cannot submit after the milestone deadline")
+
+    # Verify tasks under the milestone
+    milestone_tasks = {str(task.id): task for task in milestone.task_milestones}
+
+    # Prepare the directory for storing uploaded files
+    file_dir = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        f"team_{team_id}",
+        f"milestone_{milestone_id}",
     )
-    db.session.add(submission)
+    os.makedirs(file_dir, exist_ok=True)
+
+    # Check and process each file in the form data
+    for key in request.files:
+        task_id = key
+        file = request.files.get(key)
+        # Ensure task exists under the current milestone
+        if task_id in milestone_tasks and file:
+
+            # Generate document title and save file
+            document_title = f"{milestone.title}_Task{task_id}_Team{team.name}"
+            file_url = os.path.join(file_dir, document_title + ".pdf")
+            file.save(file_url)
+            saved_files.append(file_url)
+
+            # Check if a previous submission exists for this team and task and delete it
+            existing_submission = Submissions.query.filter_by(
+                team_id=team_id, task_id=task_id
+            ).first()
+            if existing_submission:
+                db.session.delete(existing_submission)
+
+            # Create a new submission
+            new_submission = Submissions(
+                task_id=task_id,
+                team_id=team_id,
+                submission_time=datetime.now(timezone.utc),
+            )
+            db.session.add(new_submission)
+
+            # Associate document with specific task
+            document = Documents(
+                title=document_title,
+                file_url=file_url,
+                submission=new_submission,
+            )
+            db.session.add(document)
+            tasks.append(task_id)
+
+        else:
+            for saved_file in saved_files:
+                os.remove(saved_file)
+            abort(f"Task {task_id} is not valid for this milestone", 400)
+
     db.session.commit()
 
-    # Create a new document associated with the submission
-    document = Documents(
-        title=document_title,
-        file_url=file_url,
-        submission_id=submission.id
-    )
-    db.session.add(document)
-    db.session.commit()
+    return {"message": "Milestone documents submitted successfully"}, 201
 
-    return {"message": "Milestone document submitted successfully", "submission_id": submission.id}, 201
 
-@app.route('/student/milestone_management/individual/feedback/<int:milestone_id>', methods=['GET'])
-@roles_required("Student") 
+@app.route(
+    "/student/milestone_management/individual/feedback/<int:milestone_id>",
+    methods=["GET"],
+)
+@roles_required("Student")
 def get_feedback(milestone_id):
-    team_id = request.args.get('team_id')
+    team_id = request.args.get("team_id")
 
     # Find the latest feedback for the specific milestone and team
     submission = (
-        Submissions.query
-        .filter_by(task_id=milestone_id, team_id=team_id)
+        Submissions.query.filter_by(task_id=milestone_id, team_id=team_id)
         .order_by(Submissions.feedback_time.desc())
         .first()
     )
@@ -304,10 +353,12 @@ def get_feedback(milestone_id):
     if not submission or not submission.feedback:
         return abort(404, {"error": "Feedback not found for this milestone"})
 
-    return ({
-        "milestone_id": milestone_id,
-        "team_id": team_id,
-        "feedback": submission.feedback,
-        "feedback_by": submission.feedback_by,
-        "feedback_time": submission.feedback_time
-    }), 200
+    return (
+        {
+            "milestone_id": milestone_id,
+            "team_id": team_id,
+            "feedback": submission.feedback,
+            "feedback_by": submission.feedback_by,
+            "feedback_time": submission.feedback_time,
+        }
+    ), 200

@@ -30,6 +30,8 @@ app.config["SECURITY_LOGOUT_METHODS"] = None
 app.config["SECURITY_TOKEN_MAX_AGE"] = 60 * 60 * 24
 app.config["WTF_CSRF_ENABLED"] = False
 
+app.config["UPLOAD_FOLDER"] = "student_submissions"
+
 
 # initializing flask-migrate
 migrate = Migrate(app, db)
