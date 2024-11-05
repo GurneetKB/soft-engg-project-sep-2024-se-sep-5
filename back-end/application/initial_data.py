@@ -175,6 +175,7 @@ def seed_database(db):
                     message=f"The milestone '{milestone.title}' is due on {milestone.deadline.strftime('%Y-%m-%d')}.",
                     type="DEADLINE",
                     created_at=datetime.now(timezone.utc),
+                    milestone=milestone,
                 )
                 db.session.add(deadline_notification)
                 db.session.add(
@@ -187,6 +188,7 @@ def seed_database(db):
                     message=f"You have received feedback on '{milestone.title}'.",
                     type="FEEDBACK",
                     created_at=datetime.now(timezone.utc),
+                    milestone=milestone,
                 )
                 db.session.add(feedback_notification)
                 db.session.add(
@@ -199,6 +201,7 @@ def seed_database(db):
                     message=f"The milestone '{milestone.title}' has been updated.",
                     type="MILESTONE_UPDATE",
                     created_at=datetime.now(timezone.utc),
+                    milestone=milestone,
                 )
                 db.session.add(milestone_update_notification)
                 db.session.add(

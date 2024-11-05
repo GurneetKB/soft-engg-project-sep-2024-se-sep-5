@@ -138,7 +138,6 @@
 
     .card {
         width: 100%;
-        max-width: 600px;
         border-radius: 0.5rem;
         border: 1px solid #e9ecef;
     }

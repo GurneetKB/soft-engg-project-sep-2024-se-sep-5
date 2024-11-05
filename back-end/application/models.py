@@ -197,11 +197,19 @@ class Notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     message = db.Column(db.Text, nullable=False)
+    milestone_id = db.Column(
+        db.Integer, db.ForeignKey("milestones.id", ondelete="CASCADE")
+    )
     type = db.Column(db.Enum(NotificationType), nullable=False)
     created_at = db.Column(db.DateTime)
     user_notifications = db.relationship(
         "UserNotifications",
         back_populates="notifications",
+        lazy="subquery",
+        uselist=False,
+    )
+    milestone = db.relationship(
+        "Milestones",
         lazy="subquery",
         uselist=False,
     )
