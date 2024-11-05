@@ -1,24 +1,3 @@
-<template>
-  <div>
-    <select v-model="selectedMilestoneId" @change="fetchMilestoneDetails">
-      <option value="" disabled>Select a milestone</option>
-      <option v-for="milestone in milestones" :key="milestone.id" :value="milestone.id">
-        {{ milestone.title }}
-      </option>
-    </select>
-
-    <div v-if="milestoneDetails">
-      <h2>{{ milestoneDetails.title }}</h2>
-      <p>{{ milestoneDetails.description }}</p>
-      <p>Deadline: {{ milestoneDetails.deadline }}</p>
-      <p>Created At: {{ milestoneDetails.created_at }}</p>
-    </div>
-
-    <LoadingPlaceholder v-if="loading" />
-    <div v-if="error">{{ error }}</div>
-  </div>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { fetchfunct } from '@/components/fetch.js'
@@ -66,3 +45,24 @@ const fetchMilestoneDetails = async () => {
     }
 }
 </script>
+
+<template>
+  <div>
+    <select v-model="selectedMilestoneId" @change="fetchMilestoneDetails">
+      <option value="" disabled>Select a milestone</option>
+      <option v-for="milestone in milestones" :key="milestone.id" :value="milestone.id">
+        {{ milestone.title }}
+      </option>
+    </select>
+
+    <div v-if="milestoneDetails">
+      <h2>{{ milestoneDetails.title }}</h2>
+      <p>{{ milestoneDetails.description }}</p>
+      <p>Deadline: {{ milestoneDetails.deadline }}</p>
+      <p>Created At: {{ milestoneDetails.created_at }}</p>
+    </div>
+
+    <LoadingPlaceholder v-if="loading" />
+    <div v-if="error">{{ error }}</div>
+  </div>
+</template>
