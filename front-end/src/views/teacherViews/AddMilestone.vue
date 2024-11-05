@@ -1,22 +1,53 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue';
+import { fetchfunct, checkerror, checksuccess } from '@/components/fetch.js';
 
-const count = ref(0)
+// Define reactive properties to hold form data and response message
+const milestoneData = ref({
+  title: '',
+  description: '',
+  deadline: '',
+  tasks: ['']
+});
 
-function increment() {
-  count.value++
-}
+const responseMessage = ref('');
 
-onMounted(() => {
-  console.log(`The initial count is ${count.value}.`)
-})
+// Method to add a new task input
+const addTask = () => {
+  milestoneData.value.tasks.push('');
+};
 
-const tasks = ref([''])
+// Method to handle form submission
+const publishMilestone = async () => {
+  console.log("inside publish milestone");
+  console.log(milestoneData.value);
 
-function addTask() {
-  tasks.value.push('')
-}
+  try {
+    const response = await fetch('http://127.0.0.1:5000/instructor/milestone/publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(milestoneData.value)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    responseMessage.value = 'Milestone published successfully!';
+    console.log(data); // handle response data if needed
+
+    // Reset form
+    milestoneData.value = { title: '', description: '', deadline: '', tasks: [''] };
+  } catch (error) {
+    responseMessage.value = `Error: ${error.message}`;
+    console.error('Error:', error);
+  }
+};
 </script>
+
 
 <template>
   <div class="page-wrapper">
@@ -31,6 +62,8 @@ function addTask() {
             class="form-control form-control-lg custom-input"
             id="titleInput"
             placeholder="Enter milestone title"
+            v-model="milestoneData.title"
+
           />
         </div>
 
@@ -43,6 +76,8 @@ function addTask() {
             id="descriptionArea"
             rows="4"
             placeholder="Enter milestone description"
+            v-model="milestoneData.description"
+
           ></textarea>
         </div>
 
@@ -53,6 +88,8 @@ function addTask() {
             class="form-control form-control-lg custom-input"
             id="deadlineInput"
             :min="new Date().toISOString().slice(0, 16)"
+            v-model="milestoneData.deadline"
+
           />
         </div>
 
@@ -67,7 +104,7 @@ function addTask() {
               type="text"
               class="form-control custom-input"
               :placeholder="'Enter task ' + (index + 1)"
-              v-model="tasks[index]"
+              v-model="milestoneData.tasks[index]"
             />
           </div>
           <div class="text-center mt-3">
@@ -82,10 +119,12 @@ function addTask() {
         </div>
 
         <div class="text-center">
-          <button class="btn btn-gradient btn-lg px-5">
+          <button @click="publishMilestone" class="btn btn-gradient btn-lg px-5">
             <i class="bi bi-check2-circle me-2"></i>
             Publish Milestone
           </button>
+          <p v-if="responseMessage" class="mt-3">{{ responseMessage }}</p>
+
         </div>
       </div>
     </div>
