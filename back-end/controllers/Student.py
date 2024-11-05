@@ -217,9 +217,7 @@ def get_milestones():
     return {"milestones": milestone_list}, 200
 
 
-@app.route(
-    "/student/milestone_management/individual/<int:milestone_id>", methods=["GET"]
-)
+@app.route("/student/milestone_management/individual/<int:milestone_id>", methods=["GET"])
 @roles_required("Student")
 def get_milestone_details(milestone_id):
     milestone = Milestones.query.get(milestone_id)
@@ -231,7 +229,13 @@ def get_milestone_details(milestone_id):
             "description": milestone.description,
             "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
             "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "created_by": milestone.created_by,
+            "tasks": [
+                {
+                    "id": task.id,
+                    "description": task.description,
+                    #"is_completed": bool(task.submissions)  # Mark as completed if there are any submissions
+                } for task in milestone.task_milestones
+            ]
         }
         return milestone_data, 200
     else:
