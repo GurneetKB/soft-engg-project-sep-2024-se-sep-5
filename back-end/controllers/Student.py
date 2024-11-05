@@ -14,6 +14,14 @@ from flask import abort, request
 from datetime import datetime, timezone
 
 
+def get_team_id(user):
+    return (
+        db.session.query(team_students.c.team_id)
+        .filter(team_students.c.student_id == user.id)
+        .scalar()
+    )
+
+
 @app.route("/student/notifications", methods=["GET"])
 @roles_required("Student")
 def get_notifications():
@@ -148,11 +156,7 @@ def set_notification_preferences():
 @roles_required("Student")
 def get_team_milestones():
     # Get the team ID associated with the current student
-    team_id = (
-        db.session.query(team_students.c.team_id)
-        .filter(team_students.c.student_id == current_user.id)
-        .scalar()
-    )
+    team_id = get_team_id(current_user)
 
     if not team_id:
         abort(400, "No team is assigned to you yet.")
@@ -217,10 +221,16 @@ def get_milestones():
     return {"milestones": milestone_list}, 200
 
 
-@app.route("/student/milestone_management/individual/<int:milestone_id>", methods=["GET"])
+@app.route(
+    "/student/milestone_management/individual/<int:milestone_id>", methods=["GET"]
+)
 @roles_required("Student")
 def get_milestone_details(milestone_id):
+    team_id = get_team_id(current_user)
     milestone = Milestones.query.get(milestone_id)
+    team_submissions = db.session.query(Submissions.id).filter(
+        Submissions.team_id == team_id
+    )
     if milestone:
         # Prepare a dictionary with the milestone details
         milestone_data = {
@@ -231,11 +241,14 @@ def get_milestone_details(milestone_id):
             "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "tasks": [
                 {
-                    "id": task.id,
+                    "task_id": task.id,
                     "description": task.description,
-                    #"is_completed": bool(task.submissions)  # Mark as completed if there are any submissions
-                } for task in milestone.task_milestones
-            ]
+                    "is_completed": team_submissions.filter(
+                        Submissions.task_id == task.id
+                    ).scalar(),
+                }
+                for task in milestone.task_milestones
+            ],
         }
         return milestone_data, 200
     else:
