@@ -10,8 +10,7 @@ from application.models import (
     team_students,
     db,
 )
-from sqlalchemy.orm import joinedload
-from flask import abort, jsonify, request
+from flask import abort, request
 from datetime import datetime, timezone
 
 
@@ -201,37 +200,39 @@ def get_team_milestones():
 
     return response_data, 200
 
+
 # Define the endpoint to get details of a specific milestone
-@app.route('/student/milestone_management/individual', methods=['GET'])
+@app.route("/student/milestone_management/individual", methods=["GET"])
 @roles_required("Student")
 def get_milestones():
     # Fetch all milestones for the student
     milestones = Milestones.query.all()
     milestone_list = [
         {
-            'id': milestone.id,
-            'title': milestone.title,
-        } for milestone in milestones
+            "id": milestone.id,
+            "title": milestone.title,
+        }
+        for milestone in milestones
     ]
-    return {'milestones': milestone_list}, 200
+    return {"milestones": milestone_list}, 200
 
 
-@app.route('/student/milestone_management/individual/<int:milestone_id>', methods=['GET'])
+@app.route(
+    "/student/milestone_management/individual/<int:milestone_id>", methods=["GET"]
+)
 @roles_required("Student")
 def get_milestone_details(milestone_id):
     milestone = Milestones.query.get(milestone_id)
     if milestone:
         # Prepare a dictionary with the milestone details
         milestone_data = {
-            'id': milestone.id,
-            'title': milestone.title,
-            'description': milestone.description,
-            'deadline': milestone.deadline.strftime('%Y-%m-%d %H:%M:%S'),
-            'created_at': milestone.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'created_by': milestone.created_by,
+            "id": milestone.id,
+            "title": milestone.title,
+            "description": milestone.description,
+            "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_by": milestone.created_by,
         }
         return milestone_data, 200
     else:
         return abort(404, "Milestone not found")
-
-
