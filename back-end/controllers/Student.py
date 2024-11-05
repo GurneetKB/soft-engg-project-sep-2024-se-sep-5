@@ -1,6 +1,7 @@
 from application.setup import app
 from flask_security import current_user, roles_required
 from application.models import (
+    Documents,
     Milestones,
     Submissions,
     Tasks,
@@ -221,9 +222,7 @@ def get_milestones():
     return {"milestones": milestone_list}, 200
 
 
-@app.route(
-    "/student/milestone_management/individual/<int:milestone_id>", methods=["GET"]
-)
+@app.route("/student/milestone_management/individual/<int:milestone_id>", methods=["GET"])
 @roles_required("Student")
 def get_milestone_details(milestone_id):
     team_id = get_team_id(current_user)
@@ -253,3 +252,62 @@ def get_milestone_details(milestone_id):
         return milestone_data, 200
     else:
         return abort(404, "Milestone not found")
+
+
+@app.route('/student/milestone_management/individual/<int:milestone_id>', methods=['POST'])
+@roles_required("Student")  
+def submit_milestone(milestone_id):
+    data = request.get_json()
+    team_id = data.get('team_id')
+    document_title = data.get('title')
+    file_url = data.get('file_url')
+
+    # Check if milestone and team exist
+    milestone = Milestones.query.get(milestone_id)
+    team = Teams.query.get(team_id)
+    if not milestone or not team:
+        return abort(404, "Milestone or team not found")
+
+    # Create a new submission
+    submission = Submissions(
+        task_id=milestone_id,
+        team_id=team_id,
+        submission_time=datetime.utcnow(),
+    )
+    db.session.add(submission)
+    db.session.commit()
+
+    # Create a new document associated with the submission
+    document = Documents(
+        title=document_title,
+        file_url=file_url,
+        submission_id=submission.id
+    )
+    db.session.add(document)
+    db.session.commit()
+
+    return {"message": "Milestone document submitted successfully", "submission_id": submission.id}, 201
+
+@app.route('/student/milestone_management/individual/feedback/<int:milestone_id>', methods=['GET'])
+@roles_required("Student") 
+def get_feedback(milestone_id):
+    team_id = request.args.get('team_id')
+
+    # Find the latest feedback for the specific milestone and team
+    submission = (
+        Submissions.query
+        .filter_by(task_id=milestone_id, team_id=team_id)
+        .order_by(Submissions.feedback_time.desc())
+        .first()
+    )
+
+    if not submission or not submission.feedback:
+        return abort(404, {"error": "Feedback not found for this milestone"})
+
+    return ({
+        "milestone_id": milestone_id,
+        "team_id": team_id,
+        "feedback": submission.feedback,
+        "feedback_by": submission.feedback_by,
+        "feedback_time": submission.feedback_time
+    }), 200

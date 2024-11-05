@@ -1,18 +1,15 @@
 <template>
-
     <div class="container-fluid p-4">
         <div class="milestone-progress-view max-w-800 mx-auto">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="m-0">Individual Milestone</h4>
             </div>
 
-            <LoadingPlaceholder v-if="loadingOnMount" variant="text" :count="3" :lines="[2]" spacing="p-4"
-                :withBorder="true" />
+            <LoadingPlaceholder v-if="loadingOnMount" variant="text" :count="3" :lines="[2]" spacing="p-4" :withBorder="true" />
 
             <div v-else class="form-group">
                 <label for="milestone-select" class="form-label">Select a Milestone</label>
-                <select id="milestone-select" class="form-select" v-model="selectedMilestoneId"
-                    @change="fetchMilestoneDetails">
+                <select id="milestone-select" class="form-select" v-model="selectedMilestoneId" @change="fetchMilestoneDetails">
                     <option :value="null" disabled>Milestones</option>
                     <option v-for="milestone in milestones" :key="milestone.id" :value="milestone.id">
                         {{ milestone.title }}
@@ -32,12 +29,8 @@
                             </div>
                         </div>
                         <div class="mt-3">
-                            <p class="mb-2">
-                                <strong>Deadline:</strong> {{ formatDate(milestoneDetails.deadline) }}
-                            </p>
-                            <p class="mb-0">
-                                <strong>Created At:</strong> {{ formatDate(milestoneDetails.created_at) }}
-                            </p>
+                            <p class="mb-2"><strong>Deadline:</strong> {{ formatDate(milestoneDetails.deadline) }}</p>
+                            <p class="mb-0"><strong>Created At:</strong> {{ formatDate(milestoneDetails.created_at) }}</p>
                         </div>
                     </div>
                 </div>
@@ -50,6 +43,17 @@
                             {{ task.description }}
                         </li>
                     </ul>
+                </div>
+
+                <!-- Submit and View Feedback Buttons -->
+                <div class="mt-4 d-flex gap-3">
+                    <button class="btn submit-btn" @click="submitMilestone">Submit Milestone</button>
+                    <button class="btn feedback-btn" @click="fetchFeedback">View Feedback</button>
+                </div>
+
+                <div v-if="feedback" class="alert alert-info mt-4" role="alert">
+                    <h5>Feedback</h5>
+                    <p>{{ feedback }}</p>
                 </div>
             </div>
 
@@ -70,44 +74,38 @@
     import { fetchfunct } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
-    const milestones = ref( [] )
-    const selectedMilestoneId = ref( null )
-    const milestoneDetails = ref( null )
-    const loadingOnMount = ref( true )
-    const loading = ref( false )
-    const error = ref( null )
+    const milestones = ref([])
+    const selectedMilestoneId = ref(null)
+    const milestoneDetails = ref(null)
+    const loadingOnMount = ref(true)
+    const loading = ref(false)
+    const error = ref(null)
+    const feedback = ref(null)
 
-    onMounted( async () =>
-    {
+    onMounted(async () => {
         loadingOnMount.value = true
 
-        const response = await fetchfunct( '/student/milestone_management/individual' )
-        if ( response.ok )
-        {
+        const response = await fetchfunct('/student/milestone_management/individual')
+        if (response.ok) {
             const data = await response.json()
             milestones.value = data.milestones
-        } else
-        {
+        } else {
             error.value = 'Failed to fetch milestones'
         }
 
         loadingOnMount.value = false
-    } )
+    })
 
-    const fetchMilestoneDetails = async () =>
-    {
-        if ( selectedMilestoneId.value !== null )
-        {
+    const fetchMilestoneDetails = async () => {
+        if (selectedMilestoneId.value !== null) {
             loading.value = true
             error.value = null
 
-            const response = await fetchfunct( `/student/milestone_management/individual/${ selectedMilestoneId.value }` )
-            if ( response.ok )
-            {
+            const response = await fetchfunct(`/student/milestone_management/individual/${selectedMilestoneId.value}`)
+            if (response.ok) {
                 milestoneDetails.value = await response.json()
                 error.value = null
-            } else
-            {
+            } else {
                 error.value = 'Error fetching milestone details'
             }
 
@@ -115,16 +113,40 @@
         }
     }
 
-    const formatDate = ( timestamp ) =>
-    {
-        return new Date( timestamp ).toLocaleDateString( 'en-US', {
+    const submitMilestone = async () => {
+        if (selectedMilestoneId.value !== null) {
+            const response = await fetchfunct(`/student/milestone_management/individual/${selectedMilestoneId.value}`, {
+                method: 'POST'
+            })
+
+            if (response.ok) {
+                alert('Milestone submitted successfully')
+            } else {
+                error.value = 'Error submitting milestone'
+            }
+        }
+    }
+
+    const fetchFeedback = async () => {
+        if (selectedMilestoneId.value !== null) {
+            const response = await fetchfunct(`/student/milestone_management/individual/feedback/${selectedMilestoneId.value}`)
+            if (response.ok) {
+                feedback.value = await response.json().feedback
+            } else {
+                error.value = 'Error fetching feedback'
+            }
+        }
+    }
+
+    const formatDate = (timestamp) => {
+        return new Date(timestamp).toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        } )
+        })
     }
 </script>
 
@@ -140,13 +162,6 @@
         width: 100%;
         border-radius: 0.5rem;
         border: 1px solid #e9ecef;
-    }
-
-    .card-header {
-        background-color: #f0f4f8;
-        border-top-left-radius: 0.5rem;
-        border-top-right-radius: 0.5rem;
-        padding: 1.5rem;
     }
 
     .card-body {
@@ -175,8 +190,9 @@
         border: 1px solid #e9ecef;
     }
 
-    .form-check-input:checked {
-        background-color: green;
+    .submit-btn, .feedback-btn {
+        background-color: var(--navbar-bg);
+        color: #fff;
     }
 
     .milestone-name-highlight {
