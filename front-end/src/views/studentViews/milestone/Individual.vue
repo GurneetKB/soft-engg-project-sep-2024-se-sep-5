@@ -5,17 +5,13 @@
                 <h4 class="m-0">Individual Milestone</h4>
             </div>
 
-            <LoadingPlaceholder v-if="loadingOnMount" variant="text" :count="3" :lines="[2]" spacing="p-4"
-                :withBorder="true" />
+            <LoadingPlaceholder v-if="loadingOnMount" variant="text" :count="3" :lines="[2]" spacing="p-4" :withBorder="true" />
 
             <div v-else class="form-group">
                 <label for="milestone-select" class="form-label">Select a Milestone</label>
-                <select id="milestone-select" class="form-select" v-model="selectedMilestoneId"
-                    @change="fetchMilestoneDetails">
-                    <option :value="null" disabled>Milestones</option>
-                    <option v-for="milestone in milestones" :key="milestone.id" :value="milestone.id">
-                        {{ milestone.title }}
-                    </option>
+                <select id="milestone-select" class="form-select" v-model="selectedMilestoneId" @change="fetchMilestoneDetails">
+                    <option :value="null" disabled>Select a Milestone</option>
+                    <option v-for="milestone in milestones" :key="milestone.id" :value="milestone.id">{{ milestone.title }}</option>
                 </select>
             </div>
 
@@ -32,8 +28,7 @@
                         </div>
                         <div class="mt-3">
                             <p class="mb-2"><strong>Deadline:</strong> {{ formatDate(milestoneDetails.deadline) }}</p>
-                            <p class="mb-0"><strong>Created At:</strong> {{ formatDate(milestoneDetails.created_at) }}
-                            </p>
+                            <p class="mb-0"><strong>Created At:</strong> {{ formatDate(milestoneDetails.created_at) }}</p>
                         </div>
                     </div>
                 </div>
@@ -45,22 +40,26 @@
                             <input type="checkbox" class="form-check-input" :checked="task.is_completed" disabled />
                             {{ task.description }}
 
-                            <!-- Conditional file input for each task, only visible in submission mode -->
-                            <input v-if="submissionMode" type="file" class="form-control mt-2"
-                                @change="selectFile(task.task_id, $event)" />
+                            <input v-if="submissionMode" type="file" class="form-control mt-2" @change="selectFile(task.task_id, $event)" />
                         </li>
                     </ul>
                 </div>
 
-                <!-- Submit and View Feedback Buttons -->
                 <div class="mt-4 d-flex gap-3">
                     <button class="btn submit-btn" @click="handleSubmitButtonClick">Submit Milestone</button>
                     <button class="btn feedback-btn" @click="fetchFeedback">View Feedback</button>
                 </div>
 
-                <div v-if="feedback" class="alert alert-info mt-4" role="alert">
+                <div v-if="feedback && feedback.length" class="alert alert-info mt-4" role="alert">
                     <h5>Feedback</h5>
-                    <p>{{ feedback }}</p>
+                    <ul class="list-group">
+                        <li v-for="(item, index) in feedback" :key="index" class="list-group-item">
+                            <p><strong>Task:</strong> {{ item.task_description }}</p>
+                            <p><strong>Feedback:</strong> {{ item.feedback }}</p>
+                            <p v-if="item.feedback_by"><strong>Feedback By:</strong> {{ item.feedback_by }}</p>
+                            <p><strong>Feedback Time:</strong> {{ formatDate(item.feedback_time) }}</p>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -77,142 +76,107 @@
 </template>
 
 <script setup>
-    import { ref, onMounted } from 'vue'
-    import { checkerror, checksuccess, fetchfunct } from '@/components/fetch.js'
-    import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-    import { useAlertStore } from '@/stores/alert';
+import { ref, onMounted } from 'vue'
+import { checkerror, checksuccess, fetchfunct } from '@/components/fetch.js'
+import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+import { useAlertStore } from '@/stores/alert'
 
-    const milestones = ref( [] )
-    const selectedMilestoneId = ref( null )
-    const milestoneDetails = ref( null )
-    const loadingOnMount = ref( true )
-    const loading = ref( false )
-    const error = ref( null )
-    const feedback = ref( null )
-    const selectedFiles = ref( {} ) // Object to hold selected files for each task
-    const submissionMode = ref( false ) // State to track submission mode
+const milestones = ref([])
+const selectedMilestoneId = ref(null)
+const milestoneDetails = ref(null)
+const loadingOnMount = ref(true)
+const loading = ref(false)
+const error = ref(null)
+const feedback = ref(null)
+const selectedFiles = ref({})
+const submissionMode = ref(false)
 
-    onMounted( async () =>
-    {
-        loadingOnMount.value = true
+onMounted(async () => {
+    loadingOnMount.value = true
+    const response = await fetchfunct('/student/milestone_management/individual')
+    if (response.ok) {
+        const data = await response.json()
+        milestones.value = data.milestones
+    } else {
+        error.value = 'Failed to fetch milestones'
+    }
+    loadingOnMount.value = false
+})
 
-        const response = await fetchfunct( '/student/milestone_management/individual' )
-        if ( response.ok )
-        {
-            const data = await response.json()
-            milestones.value = data.milestones
-        } else
-        {
-            error.value = 'Failed to fetch milestones'
+const fetchMilestoneDetails = async () => {
+    if (selectedMilestoneId.value !== null) {
+        loading.value = true
+        error.value = null
+        const response = await fetchfunct(`/student/milestone_management/individual/${selectedMilestoneId.value}`)
+        if (response.ok) {
+            milestoneDetails.value = await response.json()
+        } else {
+            error.value = 'Error fetching milestone details'
         }
+        loading.value = false
+    }
+}
 
-        loadingOnMount.value = false
-    } )
+const selectFile = (taskId, event) => {
+    selectedFiles.value[taskId] = event.target.files[0]
+}
 
-    const fetchMilestoneDetails = async () =>
-    {
-        if ( selectedMilestoneId.value !== null )
-        {
-            loading.value = true
+const handleSubmitButtonClick = () => {
+    if (submissionMode.value) {
+        submitMilestone()
+    } else {
+        submissionMode.value = true
+    }
+}
+
+const submitMilestone = async () => {
+    if (selectedMilestoneId.value !== null) {
+        const formData = new FormData()
+        for (const [taskId, file] of Object.entries(selectedFiles.value)) {
+            formData.append(`file_${taskId}`, file)
+        }
+        const response = await fetchfunct(`/student/milestone_management/individual/${selectedMilestoneId.value}`, {
+            method: 'POST',
+            body: formData
+        })
+        if (response.ok) {
+            checksuccess(response)
+            milestoneDetails.value.tasks.forEach(task => {
+                if (selectedFiles.value[task.task_id]) {
+                    task.is_completed = true
+                }
+            })
+            submissionMode.value = false
+            selectedFiles.value = {}
             error.value = null
-
-            const response = await fetchfunct( `/student/milestone_management/individual/${ selectedMilestoneId.value }` )
-            if ( response.ok )
-            {
-                milestoneDetails.value = await response.json()
-                error.value = null
-            } else
-            {
-                error.value = 'Error fetching milestone details'
-            }
-
-            loading.value = false
+        } else {
+            error.value = 'Error submitting documents.'
         }
     }
+}
 
-    const selectFile = ( taskId, event ) =>
-    {
-        selectedFiles.value[ taskId ] = event.target.files[ 0 ]
-    }
-
-    const handleSubmitButtonClick = () =>
-    {
-        if ( submissionMode.value )
-        {
-            submitMilestone() // If submissionMode is already active, submit the milestone
-        } else
-        {
-            submissionMode.value = true // Otherwise, activate submission mode
+const fetchFeedback = async () => {
+    if (selectedMilestoneId.value !== null) {
+        const response = await fetchfunct(`/student/milestone_management/individual/feedback/${selectedMilestoneId.value}`);
+        if (response.ok) {
+            const data = await response.json();
+            feedback.value = data.feedback_data; // Assign the feedback array to feedback.value
+        } else {
+            error.value = 'Error fetching feedback';
         }
     }
+};
 
-    const submitMilestone = async () =>
-    {
-        if ( selectedMilestoneId.value !== null )
-        {
-            const formData = new FormData()
-
-            // Add files to the form data
-            for ( const [ taskId, file ] of Object.entries( selectedFiles.value ) )
-            {
-                formData.append( taskId, file )
-            }
-
-            const response = await fetchfunct( `/student/milestone_management/individual/${ selectedMilestoneId.value }`, {
-                method: 'POST',
-                body: formData
-            } )
-
-            if ( response.ok )
-            {
-                checksuccess( response )
-                // Update task completion status 
-                milestoneDetails.value.tasks.forEach( task =>
-                {
-                    if ( selectedFiles.value[ task.task_id ] )
-                    {
-                        task.is_completed = true
-                    }
-                } )
-
-                // Reset to initial state after successful submission
-                submissionMode.value = false
-                selectedFiles.value = {}
-                error.value = null
-            } else
-            {
-                error.value = 'Error submitting documents.'
-            }
-        }
-    }
-
-
-    const fetchFeedback = async () =>
-    {
-        if ( selectedMilestoneId.value !== null )
-        {
-            const response = await fetchfunct( `/student/milestone_management/individual/feedback/${ selectedMilestoneId.value }` )
-            if ( response.ok )
-            {
-                feedback.value = await response.json().feedback
-            } else
-            {
-                error.value = 'Error fetching feedback'
-            }
-        }
-    }
-
-    const formatDate = ( timestamp ) =>
-    {
-        return new Date( timestamp ).toLocaleDateString( 'en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        } )
-    }
+const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
 </script>
 
 <style scoped>

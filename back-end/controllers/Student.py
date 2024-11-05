@@ -335,30 +335,47 @@ def submit_milestone(milestone_id):
     return {"message": "Milestone documents submitted successfully"}, 201
 
 
-@app.route(
-    "/student/milestone_management/individual/feedback/<int:milestone_id>",
-    methods=["GET"],
-)
+@app.route("/student/milestone_management/individual/feedback/<int:milestone_id>", methods=["GET"])
 @roles_required("Student")
 def get_feedback(milestone_id):
-    team_id = request.args.get("team_id")
+    team_id = get_team_id(current_user)
+    
+    # Fetch all tasks related to the milestone
+    tasks = Tasks.query.filter(milestone_id==int(milestone_id)).all()
 
-    # Find the latest feedback for the specific milestone and team
-    submission = (
-        Submissions.query.filter_by(task_id=milestone_id, team_id=team_id)
-        .order_by(Submissions.feedback_time.desc())
-        .first()
-    )
+    if not tasks:
+        return abort(404, {"error": "No tasks found for this milestone"})
 
-    if not submission or not submission.feedback:
-        return abort(404, {"error": "Feedback not found for this milestone"})
+    feedback_data = []
 
-    return (
-        {
-            "milestone_id": milestone_id,
-            "team_id": team_id,
-            "feedback": submission.feedback,
-            "feedback_by": submission.feedback_by,
-            "feedback_time": submission.feedback_time,
-        }
-    ), 200
+    for task in tasks:
+        # Find the latest submission with feedback for each task and team
+        submission = (
+            Submissions.query.filter_by(task_id=task.id, team_id=team_id)
+            .order_by(Submissions.feedback_time.desc())
+            .first()
+        )
+
+        # Add feedback details for each task if feedback is available
+        if submission and submission.feedback:
+            feedback_data.append(
+                {
+                    "task_id": task.id,
+                    "task_description": task.description,
+                    "feedback": submission.feedback,
+                    "feedback_by": submission.feedback_by,
+                    "feedback_time": submission.feedback_time,
+                }
+            )
+
+    if not feedback_data:
+        return abort(404, {"error": "No feedback found for any task in this milestone"})
+
+    return {
+        "milestone_id": milestone_id,
+        "team_id": team_id,
+        "feedback_data": feedback_data,
+    }, 200
+
+
+

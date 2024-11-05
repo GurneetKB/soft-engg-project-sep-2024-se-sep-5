@@ -197,4 +197,4 @@ coverage
 *.tsbuildinfo
 
 
-/student_submissions
+student_submissions/
