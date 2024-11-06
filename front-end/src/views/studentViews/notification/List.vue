@@ -2,6 +2,7 @@
     import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
     import { fetchfunct, checkerror, checksuccess } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+    import { convert_date_to_UTC } from '@/components/date';
 
     const notifications = ref( [] )
     const loading = ref( true )
@@ -24,7 +25,7 @@
                 console.log( notification.id )
                 return {
                     ...notification,
-                    read_at: new Date().toGMTString()
+                    read_at: new Date().toUTCString()
                 }
             }
             return notification
@@ -38,7 +39,7 @@
         {// Update all notifications locally
             notifications.value = notifications.value.map( notification => ( {
                 ...notification,
-                read_at: new Date().toISOString()
+                read_at: new Date().toUTCString()
             } ) )
             checksuccess( response )
         }
@@ -50,7 +51,7 @@
 
     const formatDate = ( timestamp ) =>
     {
-        return new Date( timestamp ).toLocaleDateString( 'en-US', {
+        return convert_date_to_UTC( timestamp ).toLocaleDateString( 'en-US', {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',

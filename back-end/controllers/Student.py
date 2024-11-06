@@ -11,7 +11,7 @@ from application.models import (
     team_students,
     db,
 )
-from flask import abort, request
+from flask import abort, make_response, request, send_file
 from datetime import datetime, timezone
 import os
 
@@ -74,7 +74,7 @@ def get_notification_detail(notification_id):
     return data, 200
 
 
-@app.route("/student/notifications/mark_all_as_read")
+@app.route("/student/notifications/mark_all_as_read", methods=["GET"])
 @roles_required("Student")
 def mark_all_notifications_as_read():
 
@@ -151,7 +151,7 @@ def set_notification_preferences():
 
     db.session.commit()
 
-    return {"message": "Notification preferences updated successfully."}, 200
+    return {"message": "Notification preferences updated successfully."}, 201
 
 
 @app.route("/student/milestone_management/overall", methods=["GET"])
@@ -230,7 +230,7 @@ def get_milestones():
 def get_milestone_details(milestone_id):
     team_id = get_team_id(current_user)
     milestone = Milestones.query.get(milestone_id)
-    team_submissions = db.session.query(Submissions.id).filter(
+    team_submissions = db.session.query(Submissions).filter(
         Submissions.team_id == team_id
     )
     if milestone and team_id:
@@ -241,17 +241,23 @@ def get_milestone_details(milestone_id):
             "description": milestone.description,
             "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
             "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "tasks": [
+            "tasks": [],
+        }
+        for task in milestone.task_milestones:
+            task_submission = team_submissions.filter(
+                Submissions.task_id == task.id
+            ).scalar()
+            milestone_data["tasks"].append(
                 {
                     "task_id": task.id,
                     "description": task.description,
-                    "is_completed": team_submissions.filter(
-                        Submissions.task_id == task.id
-                    ).scalar(),
+                    "is_completed": True if task_submission else False,
+                    "feedback": task_submission.feedback if task_submission else None,
+                    "feedback_time": (
+                        task_submission.feedback_time if task_submission else None
+                    ),
                 }
-                for task in milestone.task_milestones
-            ],
-        }
+            )
         return milestone_data, 200
     else:
         return abort(404, "Milestone/team not found.")
@@ -292,8 +298,8 @@ def submit_milestone(milestone_id):
     for key in request.files:
         task_id = key
         file = request.files.get(key)
-        # Ensure task exists under the current milestone
-        if task_id in milestone_tasks and file:
+        # Ensure task exists under the current milestone and the file is a PDF
+        if task_id in milestone_tasks and file.filename.lower().endswith(".pdf"):
 
             # Generate document title and save file
             document_title = f"{milestone.title}_Task{task_id}_Team{team.name}"
@@ -326,25 +332,32 @@ def submit_milestone(milestone_id):
             tasks.append(task_id)
 
         else:
+            # remove the files that were saved till now
             for saved_file in saved_files:
                 os.remove(saved_file)
-            abort(f"Task {task_id} is not valid for this milestone", 400)
+            abort(
+                400,
+                f"Task {task_id} is not valid for this milestone or the file is not a PDF",
+            )
 
     db.session.commit()
 
     return {"message": "Milestone documents submitted successfully"}, 201
 
 
-@app.route("/student/milestone_management/individual/feedback/<int:milestone_id>", methods=["GET"])
+@app.route(
+    "/student/milestone_management/individual/feedback/<int:milestone_id>",
+    methods=["GET"],
+)
 @roles_required("Student")
 def get_feedback(milestone_id):
     team_id = get_team_id(current_user)
-    
+
     # Fetch all tasks related to the milestone
-    tasks = Tasks.query.filter(milestone_id==int(milestone_id)).all()
+    tasks = Tasks.query.filter(milestone_id == int(milestone_id)).all()
 
     if not tasks:
-        return abort(404, {"error": "No tasks found for this milestone"})
+        return abort(404, "No tasks found for this milestone")
 
     feedback_data = []
 
@@ -361,21 +374,38 @@ def get_feedback(milestone_id):
             feedback_data.append(
                 {
                     "task_id": task.id,
-                    "task_description": task.description,
                     "feedback": submission.feedback,
-                    "feedback_by": submission.feedback_by,
                     "feedback_time": submission.feedback_time,
                 }
             )
 
     if not feedback_data:
-        return abort(404, {"error": "No feedback found for any task in this milestone"})
+        return abort(404, "No feedback found for any task in this milestone")
 
     return {
-        "milestone_id": milestone_id,
-        "team_id": team_id,
         "feedback_data": feedback_data,
     }, 200
 
 
+@app.route("/student/download_submission/<int:task_id>", methods=["GET"])
+@roles_required("Student")
+def download_submission(task_id):
+    team_id = get_team_id(current_user)
+    submission = Submissions.query.filter(
+        Submissions.task_id == task_id, Submissions.team_id == team_id
+    ).first()
 
+    if not submission or not submission.documents:
+        return abort(404, "Submission or document not found")
+
+    document = submission.documents
+
+    # Check file existence
+    if not os.path.exists(document.file_url):
+        return abort(404, "File not found")
+
+    file_response = make_response(send_file(document.file_url))
+    file_response.headers["Content-Disposition"] = (
+        f'attachment; filename="{document.title}.pdf"'
+    )
+    return file_response

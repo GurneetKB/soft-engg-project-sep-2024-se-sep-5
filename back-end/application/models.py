@@ -175,7 +175,11 @@ class Submissions(db.Model):
     feedback_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     feedback_time = db.Column(db.DateTime)
     documents = db.relationship(
-        "Documents", back_populates="submission", lazy="subquery", cascade="all, delete"
+        "Documents",
+        back_populates="submission",
+        lazy="subquery",
+        cascade="all, delete",
+        uselist=False,
     )
     team = db.relationship("Teams", back_populates="submissions", lazy="subquery")
     tasks = db.relationship("Tasks", back_populates="submissions", lazy="subquery")
@@ -189,7 +193,10 @@ class Documents(db.Model):
         db.Integer, db.ForeignKey("submissions.id", ondelete="CASCADE")
     )
     submission = db.relationship(
-        "Submissions", back_populates="documents", lazy="subquery"
+        "Submissions",
+        back_populates="documents",
+        lazy="subquery",
+        uselist=False,
     )
 
 

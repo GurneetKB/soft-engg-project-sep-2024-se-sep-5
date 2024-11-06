@@ -3,6 +3,7 @@
     import { ref, onMounted } from 'vue'
     import { fetchfunct, checkerror } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+    import { convert_date_to_UTC } from '@/components/date.js'
 
     const route = useRoute()
     const router = useRouter()
@@ -12,7 +13,7 @@
 
     const formatDate = ( timestamp ) =>
     {
-        return new Date( timestamp ).toLocaleDateString( 'en-US', {
+        return convert_date_to_UTC( timestamp ).toLocaleDateString( 'en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',

@@ -1,6 +1,6 @@
 <script setup>
     import { ref, onMounted } from 'vue'
-    import { fetchfunct, checkerror, checksuccess } from '@/components/fetch.js'
+    import { fetchfunct, checksuccess } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
     const preferences = ref( {
@@ -162,7 +162,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end">
-                        <button class="btn btn-primary" @click="savePreferences" :disabled="saving">
+                        <button class="btn nav-color-btn" @click="savePreferences" :disabled="saving">
                             <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
                             {{ saving ? 'Saving...' : 'Save Preferences' }}
                         </button>
