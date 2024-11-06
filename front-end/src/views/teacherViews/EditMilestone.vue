@@ -1,59 +1,77 @@
-<script setup>
-import { ref } from 'vue';
-import { fetchfunct, checkerror, checksuccess } from '@/components/fetch.js';
+<script>
+export default {
+  props: ['id'],
+  data() {
+    return {
+      milestone_data :[],
+      }
+  },
 
-// Define reactive properties to hold form data and response message
-const milestoneData = ref({
-  title: '',
-  description: '',
-  deadline: '',
-  tasks: ['']
-});
-
-const responseMessage = ref('');
-
-// Method to add a new task input
-const addTask = () => {
-  milestoneData.value.tasks.push('');
-};
-
-// Method to handle form submission
-const publishMilestone = async () => {
-  console.log("inside publish milestone");
-  console.log(milestoneData.value);
-
-  try {
-    const response = await fetch('http://127.0.0.1:5000/api/instructor/milestone', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(milestoneData.value)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
+  mounted() {
+    console.log('Received Milestone ID:', this.id); // Check if ID is received
+    if (this.id) {
+      this.fetchMilestoneDetails(this.id);
+    } else {
+      console.error('Milestone ID is undefined');
     }
+  },
+  methods: {
+    async fetchMilestoneDetails(id) {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/instructor/milestone/${id}`);
+        const data = await res.json();
+        if (res.ok) {
+          console.log('Milestone Data:', data);
+          this.milestone_data = data
+          // Process milestone data
+        } else {
+          console.error('Failed to fetch milestone details:', res.status);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    },
 
-    const data = await response.json();
-    responseMessage.value = 'Milestone published successfully!';
-    console.log(data); // handle response data if needed
+    async updateMilestone() {
+      try {
+        const { title, description, deadline } = this.milestone_data;
+        // Use the `id` prop to update the milestone
+        const res = await fetch(`http://127.0.0.1:5000/api/instructor/milestone/${this.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // Include any other fields you need to update
+            title,
+        description,
+        deadline,
+        tasks: this.tasks,
+          }),
+        });
 
-    // Reset form
-    milestoneData.value = { title: '', description: '', deadline: '', tasks: [''] };
-  } catch (error) {
-    responseMessage.value = `Error: ${error.message}`;
-    console.error('Error:', error);
+        if (res.ok) {
+          console.log('Milestone updated successfully');
+          // Optionally, navigate back to the milestone list or show a success message
+          this.$router.push({ name: 'milestone_list' }); // Example route
+        } else {
+          console.error('Failed to update milestone');
+        }
+      } catch (error) {
+        console.error('Error updating milestone:', error);
+      }
+    }
   }
 };
-</script>
 
+  
+
+
+</script>
 
 <template>
   <div class="page-wrapper">
     <div class="container my-5">
       <div class="card shadow-lg p-4 mx-auto">
-        <h2 class="mb-4 text-center gradient-text">Create New Milestone</h2>
+        <h2 class="mb-4 text-center gradient-text">Edit Milestone</h2>
 
         <div class="mb-4">
           <label for="titleInput" class="form-label fw-bold">Title</label>
@@ -61,9 +79,7 @@ const publishMilestone = async () => {
             type="text"
             class="form-control form-control-lg custom-input"
             id="titleInput"
-            placeholder="Enter milestone title"
-            v-model="milestoneData.title"
-
+            v-model="milestone_data.title"
           />
         </div>
 
@@ -75,9 +91,7 @@ const publishMilestone = async () => {
             class="form-control custom-input"
             id="descriptionArea"
             rows="4"
-            placeholder="Enter milestone description"
-            v-model="milestoneData.description"
-
+            v-model="milestone_data.description"
           ></textarea>
         </div>
 
@@ -87,9 +101,8 @@ const publishMilestone = async () => {
             type="datetime-local"
             class="form-control form-control-lg custom-input"
             id="deadlineInput"
+            v-model="milestone_data.deadline"
             :min="new Date().toISOString().slice(0, 16)"
-            v-model="milestoneData.deadline"
-
           />
         </div>
 
@@ -104,7 +117,7 @@ const publishMilestone = async () => {
               type="text"
               class="form-control custom-input me-2"
               :placeholder="'Enter task ' + (index + 1)"
-              v-model="milestoneData.tasks[index]"
+              v-model="tasks[index]"
             />
             <button
               v-if="tasks.length > 1"
@@ -128,12 +141,14 @@ const publishMilestone = async () => {
         </div>
 
         <div class="text-center">
-          <button @click="publishMilestone" class="btn btn-gradient btn-lg px-5">
-            <i class="bi bi-check2-circle me-2"></i>
-            Publish Milestone
+          <button
+            class="btn btn-gradient btn-lg px-5"
+            @click="updateMilestone()"
+            style="font-family: 'Segoe UI', Arial, sans-serif"
+          >
+            <i class="bi bi-arrow-clockwise me-2"></i>
+            Update Milestone
           </button>
-          <p v-if="responseMessage" class="mt-3">{{ responseMessage }}</p>
-
         </div>
       </div>
     </div>
@@ -188,7 +203,7 @@ const publishMilestone = async () => {
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   padding: 12px;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; */
 }
 
 .custom-input:focus {
@@ -201,7 +216,7 @@ const publishMilestone = async () => {
   background: #159957;
   border: none;
   color: white;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; */
   font-weight: 500;
   letter-spacing: 0.5px;
   border-radius: 10px;

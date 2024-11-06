@@ -64,7 +64,8 @@
         const response = await fetchfunct( 'student/notifications' )
         if ( response.ok )
         {
-            notifications.value = await response.json()
+            const data = await response.json()
+            notifications.value = data.notifications
         }
         else
         {

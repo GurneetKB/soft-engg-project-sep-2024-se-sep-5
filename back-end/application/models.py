@@ -82,7 +82,10 @@ class Users(db.Model, UserMixin):
         cascade="all, delete",
     )
     notifications = db.relationship(
-        "Notifications", back_populates="user", lazy="subquery", cascade="all, delete"
+        "UserNotifications",
+        back_populates="user",
+        lazy="subquery",
+        cascade="all, delete",
     )
 
 
@@ -109,9 +112,6 @@ class Teams(db.Model):
         back_populates="teams_as_member",
         lazy="subquery",
     )
-    milestone_status = db.relationship(
-        "TeamMilestones", back_populates="team", lazy="subquery", cascade="all, delete"
-    )
     submissions = db.relationship(
         "Submissions", back_populates="team", lazy="subquery", cascade="all, delete"
     )
@@ -134,46 +134,41 @@ class Milestones(db.Model):
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.Text)
     deadline = db.Column(db.DateTime, nullable=False)
-    requirements = db.Column(db.JSON)
     created_at = db.Column(db.DateTime)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     creator = db.relationship(
         "Users", back_populates="created_milestones", lazy="subquery"
     )
-    team_milestones = db.relationship(
-        "TeamMilestones",
+    task_milestones = db.relationship(
+        "Tasks",
         back_populates="milestone",
         lazy="subquery",
         cascade="all, delete",
     )
 
 
-class TeamMilestones(db.Model):
+class Tasks(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    team_id = db.Column(
-        db.Integer,
-        db.ForeignKey("teams.id", ondelete="CASCADE"),
-        nullable=False,
-    )
     milestone_id = db.Column(
         db.Integer,
         db.ForeignKey("milestones.id", ondelete="CASCADE"),
         nullable=False,
     )
-    completion_percentage = db.Column(db.Float, default=0.0, nullable=False)
-    team = db.relationship("Teams", back_populates="milestone_status", lazy="subquery")
+    description = db.Column(db.Text)
     milestone = db.relationship(
-        "Milestones",
-        back_populates="team_milestones",
+        "Milestones", back_populates="task_milestones", lazy="subquery", uselist=False
+    )
+    submissions = db.relationship(
+        "Submissions",
+        back_populates="tasks",
         lazy="subquery",
+        cascade="all, delete",
     )
 
 
 class Submissions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    milestone_id = db.Column(
-        db.Integer, db.ForeignKey("milestones.id", ondelete="CASCADE")
-    )
+    task_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="CASCADE"))
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id", ondelete="CASCADE"))
     submission_time = db.Column(db.DateTime)
     feedback = db.Column(db.Text)
@@ -183,6 +178,7 @@ class Submissions(db.Model):
         "Documents", back_populates="submission", lazy="subquery", cascade="all, delete"
     )
     team = db.relationship("Teams", back_populates="submissions", lazy="subquery")
+    tasks = db.relationship("Tasks", back_populates="submissions", lazy="subquery")
 
 
 class Documents(db.Model):
@@ -199,16 +195,37 @@ class Documents(db.Model):
 
 class Notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
     title = db.Column(db.String, nullable=False)
     message = db.Column(db.Text, nullable=False)
     type = db.Column(db.Enum(NotificationType), nullable=False)
     created_at = db.Column(db.DateTime)
+    user_notifications = db.relationship(
+        "UserNotifications",
+        back_populates="notifications",
+        lazy="subquery",
+        uselist=False,
+    )
+
+
+class UserNotifications(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    notification_id = db.Column(
+        db.Integer,
+        db.ForeignKey("notifications.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     read_at = db.Column(db.DateTime)
     user = db.relationship(
         "Users", back_populates="notifications", lazy="subquery", uselist=False
+    )
+    notifications = db.relationship(
+        "Notifications",
+        back_populates="user_notifications",
+        lazy="subquery",
+        uselist=False,
     )
 
 

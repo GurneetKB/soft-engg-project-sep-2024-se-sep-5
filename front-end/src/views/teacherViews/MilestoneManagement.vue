@@ -1,3 +1,4 @@
+
 <template>
   <section class="py-5">
     <div class="container px-4">
@@ -46,9 +47,11 @@
           class="milestone-item mb-4"
         >
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="milestone-title">{{ milestone.name }}</h5>
-            <button class="btn btn-edit" @click="editMilestone(milestone)">
-              <i class="bi bi-pencil-square"></i>
+            <h5 class="milestone-title">{{ milestone.title }}</h5>
+            <button class="btn btn-edit" @click="editMilestone(milestone.id)">
+              <RouterLink class="nav-link" to="/teacher/edit_milestone">
+                <i class="bi bi-pencil-square"></i>
+              </RouterLink>
             </button>
           </div>
           <div class="progress">
@@ -152,13 +155,7 @@
 export default {
   data() {
     return {
-      milestones: [
-        { name: 'Milestone 1', progress: 100 },
-        { name: 'Milestone 2', progress: 52 },
-        { name: 'Milestone 3', progress: 10 },
-        { name: 'Milestone 4', progress: 0 },
-        { name: 'Milestone 5', progress: 0 },
-      ],
+      milestones: [],
     }
   },
   computed: {
@@ -176,5 +173,32 @@ export default {
       })
     },
   },
+  methods:
+  {
+    async getAllMilestones() {
+        const res = await fetch('http://127.0.0.1:5000/api/instructor/all_milestone', {
+          method: 'GET',
+         
+        })
+        const data = await res.json().catch((e) => {})
+
+        if (res.ok) {
+
+          this.milestones = data
+
+          console.log(this.milestones)
+        } else {
+          
+          this.error = res.status
+        }
+      },
+      editMilestone(id) {
+    this.$router.push({ name: 'edit_milestone', params: { id } });
+  }
+  },
+  mounted(){
+    this.getAllMilestones()
+  }
+
 }
 </script>
