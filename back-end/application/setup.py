@@ -42,6 +42,8 @@ app.config["SECURITY_LOGOUT_METHODS"] = None
 app.config["SECURITY_TOKEN_MAX_AGE"] = 60 * 60 * 24
 app.config["WTF_CSRF_ENABLED"] = False
 
+app.config["UPLOAD_FOLDER"] = "student_submissions"
+
 
 
 # initializing flask-migrate
@@ -86,8 +88,9 @@ class CustomResponse(Response):
     def __init__(self, response=None, *args, **kwargs):
         kwargs["headers"] = {
             "Access-Control-Allow-Origin": "http://localhost:5173",
-            "Access-Control-Allow-Headers": "Authentication-Token,content-type",
+            "Access-Control-Allow-Headers": "Authentication-Token,Content-Type",
             "Access-Control-Allow-Methods": "*",
+            "Access-Control-Expose-Headers": "Content-Disposition",
         }
         return super(CustomResponse, self).__init__(response, *args, **kwargs)
 

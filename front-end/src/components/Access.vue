@@ -87,14 +87,14 @@
                     <h1 class="modal-title fs-5">
                         <b>{{access}}</b>
                     </h1>
-                    <button class="btn btn-outline-danger" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body">
                     <div v-if="access=='Logout'">
                         <div class="mb-3">Do you want to logout?</div>
                         <div class='d-grid gap-2'>
-                            <button class="btn btn-outline-primary" @click="logout">Confirm</button>
+                            <button class="btn nav-color-btn" @click="logout">Confirm</button>
                         </div>
                     </div>
                     <div v-else>
@@ -112,7 +112,7 @@
                                 <ErrorMessage class="form-text" name="password"></ErrorMessage>
                             </div>
                             <div class='d-grid gap-2'>
-                                <button class='btn btn-outline-primary'>Login</button>
+                                <button class='btn nav-color-btn'>Login</button>
                             </div>
                         </Form>
                     </div>

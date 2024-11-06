@@ -40,3 +40,12 @@ select {
 .pointer-link {
   cursor: pointer;
 }
+
+.nav-color-btn {
+  background-color: var(--navbar-bg) !important;
+  color: #fff !important;
+}
+
+.nav-color {
+  color: var(--navbar-bg)
+}
