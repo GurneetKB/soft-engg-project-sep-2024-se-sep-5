@@ -82,7 +82,11 @@ class MilestoneAPI(Resource):
             print("Error updating milestone:", e)
             return {"message": "An error occurred while updating the milestone."}, 500
     
-    
+    def delete(self,milestone_id):
+        delete_object = Milestones.query.filter_by(id=milestone_id).first()      
+        db.session.delete(delete_object)
+        db.session.commit()
+        return jsonify({'status':"deleted",'message': "Milestone is deleted"})
 
 
 class MilestoneAllAPI(Resource):    
