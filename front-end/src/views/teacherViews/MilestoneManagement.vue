@@ -194,7 +194,26 @@ export default {
       },
       editMilestone(id) {
     this.$router.push({ name: 'edit_milestone', params: { id } });
-  }
+  },
+  async deleteMilestone(milestone_id) {
+            if(confirm("Do you really want to delete?")){
+            const res = await fetch(`http://127.0.0.1:5000/api/instructor/milestone/${milestone_id}`, {
+              method: 'DELETE',
+              headers: {
+                'Authentication-Token': this.token,
+              },
+            })
+            const data = await res.json().catch((e) => {})
+    
+            if (res.ok) {              
+              this.$router.go(0)
+            } else {
+              
+              this.error = res.status
+            }
+          }
+          },
+  
   },
   mounted(){
     this.getAllMilestones()
