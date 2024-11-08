@@ -6,20 +6,12 @@ from application.models import Users, Roles, db
 from application.initial_data import seed_database
 import os
 from flask_restful import Api
-from flask_cors import CORS
 
 from application.api.milestoneAPI import MilestoneAPI, MilestoneAllAPI
 
 
 # instantiate the flask application
 app = Flask("Tracky")
-#app.config.from_object(__name__)
-
-
-
-# Configure CORS to allow requests from your frontend
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}},
-     supports_credentials=True)
 
 
 # initializing flask-restful API

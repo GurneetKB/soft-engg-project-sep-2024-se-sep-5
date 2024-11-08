@@ -2,9 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import Notfound from '@/views/NotFound.vue'
 import { useAlertStore } from '@/stores/alert'
+import { useIdentityStore } from '@/stores/identity'
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+const router = createRouter( {
+  history: createWebHistory( import.meta.env.BASE_URL ),
   routes: [
     {
       path: '/',
@@ -14,59 +15,67 @@ const router = createRouter({
       },
       component: HomeView,
     },
+
+
     {
       path: '/about',
       name: 'about',
       meta: {
         title: 'About page',
       },
-      component: () => import('../views/AboutView.vue'),
+      component: () => import( '../views/AboutView.vue' ),
     },
+
+
     {
       path: '/student/milestone_management',
       name: 'StudentMilestoneView',
       meta: {
         title: 'Milestone management',
         auth_role: 'Student',
+        requiresAuth: true
       },
       component: () =>
-        import('../views/studentViews/milestone/MilestoneTab.vue'),
+        import( '../views/studentViews/milestone/MilestoneTab.vue' ),
       children: [
         {
           path: '',
           name: 'OverallView',
           component: () =>
-            import('../views/studentViews/milestone/Overall.vue'),
+            import( '../views/studentViews/milestone/Overall.vue' ),
         },
         {
           path: 'individual',
           name: 'IndividualView',
           component: () =>
-            import('../views/studentViews/milestone/Individual.vue'),
+            import( '../views/studentViews/milestone/Individual.vue' ),
         },
       ],
     },
+
+
     {
       path: '/student/notification_management',
       meta: {
         title: 'Notification management',
         auth_role: 'Student',
+        requiresAuth: true
       },
       component: () =>
-        import('../views/studentViews/notification/NotificationTab.vue'),
+        import( '../views/studentViews/notification/NotificationTab.vue' ),
       children: [
         {
           path: '',
           name: 'NotificationView',
           component: () =>
-            import('../views/studentViews/notification/List.vue'),
+            import( '../views/studentViews/notification/List.vue' ),
           children: [
             {
               path: ':id',
               name: 'NotificationDetail',
               props: true,
               component: () =>
-                import('../views/studentViews/notification/Detail.vue'),
+                import( '../views/studentViews/notification/Detail.vue' ),
             },
           ],
         },
@@ -74,54 +83,83 @@ const router = createRouter({
           path: 'preference',
           name: 'NotificationPreference',
           component: () =>
-            import('../views/studentViews/notification/Preference.vue'),
+            import( '../views/studentViews/notification/Preference.vue' ),
         },
       ],
     },
-    {
-      path: '/teacher/dashboard',
-      name: 'instructor_dashboard',
-      meta: {
-        title: 'Instructor Dashboard',
-      },
-      component: () => import('../views/teacherViews/InstructorDashboard.vue'),
-    },
+
+
 
     {
       path: '/teacher/milestone_management',
       name: 'milestone_management',
       meta: {
         title: 'Milestone Management',
+        auth_role: [ 'Instructor', 'TA' ],
+        requiresAuth: true
       },
-      component: () => import('../views/teacherViews/MilestoneManagement.vue'),
+      component: () => import( '../views/teacherViews/MilestoneManagement.vue' ),
+      children: [
+        {
+          path: 'add_milestone',
+          name: 'AddMilestone',
+          meta: {
+            title: 'Add Milestone',
+            auth_role: [ 'Instructor', 'TA' ],
+            requiresAuth: true
+          },
+          component: () => import( '../views/teacherViews/AddMilestone.vue' ),
+        },
+        {
+          path: 'edit_milestone/:id',
+          name: 'EditMilestone',
+          meta: {
+            title: 'Edit Milestone',
+            auth_role: [ 'Instructor', 'TA' ],
+            requiresAuth: true
+          },
+          component: () => import( '../views/teacherViews/EditMilestone.vue' ),
+          props: true
+        },
+      ]
     },
+
 
     {
       path: '/teacher/team_management',
-      name: 'team_management',
       meta: {
-        title: 'Team Management',
+        title: 'Team management',
+        auth_role: [ 'Instructor', 'TA' ],
+        requiresAuth: true
       },
-      component: () => import('../views/teacherViews/TeamManagement.vue'),
-    },
-
-    {
-      path: '/teacher/add_milestone',
-      name: 'add_milestone',
-      meta: {
-        title: 'Add Milestone',
-      },
-      component: () => import('../views/teacherViews/AddMilestone.vue'),
-    },
-
-    {
-      path: '/teacher/edit_milestone/:id',
-      name: 'edit_milestone',
-      meta: {
-        title: 'Edit Milestone',
-      },
-      component: () => import('../views/teacherViews/EditMilestone.vue'),
-      props:true
+      component: () =>
+        import( '../views/teacherViews/TeamTab.vue' ),
+      children: [
+        {
+          path: '',
+          name: 'OverallTeamView',
+          component: () =>
+            import( '../views/studentViews/notification/List.vue' )
+        },
+        {
+          path: 'detail',
+          name: 'TeamDetailView',
+          component: () =>
+            import( '../views/studentViews/notification/Preference.vue' ),
+        },
+        {
+          path: 'progress',
+          name: 'TeamProgessView',
+          component: () =>
+            import( '../views/studentViews/notification/Preference.vue' ),
+        },
+        {
+          path: 'github_view',
+          name: 'TeamGithubView',
+          component: () =>
+            import( '../views/studentViews/notification/Preference.vue' ),
+        },
+      ],
     },
 
     {
@@ -130,28 +168,48 @@ const router = createRouter({
       component: Notfound,
     },
   ],
-  scrollBehavior(to, from, savedposition) {
-    if (savedposition) return savedposition
+  scrollBehavior ( to, from, savedposition )
+  {
+    if ( savedposition ) return savedposition
     return { x: 0, y: 0 }
   },
-})
+} )
 
-router.beforeEach((to, from) => {
+router.beforeEach( ( to, from ) =>
+{
   document.title = to.meta.title || 'Tracky'
 
-  if (to.meta.requiresAuth) {
-    if (!useIdentityStore().identity.includes(to.meta.auth_role)) {
-      useAlertStore().alertpush([
+  if ( to.meta.requiresAuth )
+  {
+    let bool = true
+    if ( typeof to.meta.auth_role === "string" )
+    {
+      bool = !useIdentityStore().identity.includes( to.meta.auth_role )
+    }
+    else if ( typeof to.meta.auth_role === "object" )
+    {
+      for ( const identity of to.meta.auth_role )
+      {
+        if ( useIdentityStore().identity.includes( identity ) )
+        {
+          bool = false
+          break
+        }
+      }
+    }
+    if ( bool )
+    {
+      useAlertStore().alertpush( [
         {
           msg: "You don't have sufficient for this action! Please login with the correct account.",
           type: 'alert-danger',
         },
-      ])
+      ] )
       return {
         path: '/',
       }
     }
   }
-})
+} )
 
 export default router
