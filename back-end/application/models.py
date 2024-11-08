@@ -120,12 +120,14 @@ class Teams(db.Model):
         back_populates="teams_as_instructor",
         foreign_keys=[instructor_id],
         lazy="subquery",
+        uselist=False,
     )
     ta = db.relationship(
         "Users",
         back_populates="teams_as_ta",
         foreign_keys=[ta_id],
         lazy="subquery",
+        uselist=False,
     )
 
 
