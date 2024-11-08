@@ -1,10 +1,8 @@
-
 from flask_restful import Resource, Api, reqparse, fields, marshal, abort
 from application.models import db, Milestones
 from datetime import datetime, timezone
 from flask import abort, request, jsonify
-from flask_security import current_user, roles_required
-
+from flask_security import current_user, roles_accepted
 
 
 milestone_fields = {
@@ -12,7 +10,6 @@ milestone_fields = {
     "title": fields.String,
     "description": fields.String,
     "deadline": fields.DateTime,
-
 }
 
 milestone_update = reqparse.RequestParser()
@@ -27,10 +24,13 @@ milestone_update.add_argument(
     "description",
     type=str,
     help="description is required and should be a string",
-    required=True
+    required=True,
 )
 
+
 class MilestoneAPI(Resource):
+
+    @roles_accepted("Instructor", "TA")
     def post(self):
         print("inside api")
         data = request.get_json()
@@ -39,18 +39,25 @@ class MilestoneAPI(Resource):
         deadline = data.get("deadline")
         deadline = datetime.fromisoformat(deadline)
 
-        #requirements = data.get("requirements")
-        milestone_object = Milestones(title = title, description = description, deadline = deadline,created_by=current_user.id if current_user.is_authenticated else None, created_at =datetime.utcnow())
+        # requirements = data.get("requirements")
+        milestone_object = Milestones(
+            title=title,
+            description=description,
+            deadline=deadline,
+            created_by=current_user.id if current_user.is_authenticated else None,
+            created_at=datetime.utcnow(),
+        )
         db.session.add(milestone_object)
         db.session.commit()
 
         return {"message": "milestone  published successfully."}, 200
-    
+
+    @roles_accepted("Instructor", "TA")
     def get(self, milestone_id):
         milestone_object = Milestones.query.filter_by(id=milestone_id).first()
         return marshal(milestone_object, milestone_fields)
-    
 
+    @roles_accepted("Instructor", "TA")
     def put(self, milestone_id):
         print("Inside edit API")
 
@@ -80,20 +87,18 @@ class MilestoneAPI(Resource):
             db.session.rollback()  # Roll back in case of any error
             print("Error updating milestone:", e)
             return {"message": "An error occurred while updating the milestone."}, 500
-    
-    def delete(self,milestone_id):
-        delete_object = Milestones.query.filter_by(id=milestone_id).first()      
+
+    @roles_accepted("Instructor", "TA")
+    def delete(self, milestone_id):
+        delete_object = Milestones.query.filter_by(id=milestone_id).first()
         db.session.delete(delete_object)
         db.session.commit()
-        return jsonify({'status':"deleted",'message': "Milestone is deleted"})
+        return jsonify({"status": "deleted", "message": "Milestone is deleted"})
 
 
-class MilestoneAllAPI(Resource):    
+class MilestoneAllAPI(Resource):
+
+    @roles_accepted("Instructor", "TA")
     def get(self):
         milestone_object = Milestones.query.all()
         return marshal(milestone_object, milestone_fields)
-    
-
-  
-    
-

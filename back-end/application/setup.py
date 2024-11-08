@@ -6,24 +6,16 @@ from application.models import Users, Roles, db
 from application.initial_data import seed_database
 import os
 from flask_restful import Api
-from flask_cors import CORS
 
-from application.api.milestoneAPI import MilestoneAPI, MilestoneAllAPI
+from controllers.api.milestoneAPI import MilestoneAPI, MilestoneAllAPI
 
 
 # instantiate the flask application
 app = Flask("Tracky")
-#app.config.from_object(__name__)
-
-
-
-# Configure CORS to allow requests from your frontend
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}},
-     supports_credentials=True)
 
 
 # initializing flask-restful API
-api = Api(prefix='/api')
+api = Api(prefix="/api")
 
 ## for flask-sqlalchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///track.sqlite3"
@@ -45,7 +37,6 @@ app.config["WTF_CSRF_ENABLED"] = False
 app.config["UPLOAD_FOLDER"] = "student_submissions"
 
 
-
 # initializing flask-migrate
 migrate = Migrate(app, db)
 
@@ -65,11 +56,14 @@ with app.app_context():
 
 
 # Register the Milestone API route
-api.add_resource(MilestoneAPI,"/instructor/milestone", "/instructor/milestone/<milestone_id>")
-api.add_resource(MilestoneAllAPI,"/instructor/all_milestone")
+api.add_resource(
+    MilestoneAPI, "/instructor/milestone", "/instructor/milestone/<milestone_id>"
+)
+api.add_resource(MilestoneAllAPI, "/instructor/all_milestone")
 
 # Initialize API with app
 api.init_app(app)
+
 
 ## disabling sending of cookie
 class CustomSessionInterface(SecureCookieSessionInterface):
@@ -96,6 +90,3 @@ class CustomResponse(Response):
 
 
 app.response_class = CustomResponse
-
-
-

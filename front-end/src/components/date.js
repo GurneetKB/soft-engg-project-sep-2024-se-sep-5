@@ -14,3 +14,15 @@ export function convert_date_to_UTC ( date )
     // Construct a new date in UTC
     return new Date( Date.UTC( year, month, day, hour, minute, second ) );
 }
+
+export const formatDate = ( timestamp ) =>
+{
+    return convert_date_to_UTC( timestamp ).toLocaleDateString( 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    } )
+}

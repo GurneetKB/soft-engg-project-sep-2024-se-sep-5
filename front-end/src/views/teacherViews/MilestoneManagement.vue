@@ -166,7 +166,7 @@ export default {
   data() {
     return {
       milestones: [],
-      studen_count : null
+      all_students : null
     }
   },
   computed: {
