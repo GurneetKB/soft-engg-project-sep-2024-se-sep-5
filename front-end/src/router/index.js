@@ -92,13 +92,13 @@ const router = createRouter( {
 
     {
       path: '/teacher/milestone_management',
-      name: 'milestone_management',
+      name: 'MilestoneManagement',
       meta: {
         title: 'Milestone Management',
         auth_role: [ 'Instructor', 'TA' ],
         requiresAuth: true
       },
-      component: () => import( '../views/teacherViews/MilestoneManagement.vue' ),
+      component: () => import( '../views/teacherViews/milestone/MilestoneManagement.vue' ),
       children: [
         {
           path: 'add_milestone',
@@ -108,7 +108,7 @@ const router = createRouter( {
             auth_role: [ 'Instructor', 'TA' ],
             requiresAuth: true
           },
-          component: () => import( '../views/teacherViews/AddMilestone.vue' ),
+          component: () => import( '../views/teacherViews/milestone/AddMilestone.vue' ),
         },
         {
           path: 'edit_milestone/:id',
@@ -118,7 +118,7 @@ const router = createRouter( {
             auth_role: [ 'Instructor', 'TA' ],
             requiresAuth: true
           },
-          component: () => import( '../views/teacherViews/EditMilestone.vue' ),
+          component: () => import( '../views/teacherViews/milestone/EditMilestone.vue' ),
           props: true
         },
       ]
@@ -133,31 +133,31 @@ const router = createRouter( {
         requiresAuth: true
       },
       component: () =>
-        import( '../views/teacherViews/TeamTab.vue' ),
+        import( '../views/teacherViews/team/TeamTab.vue' ),
       children: [
         {
           path: '',
           name: 'OverallTeamView',
           component: () =>
-            import( '../views/studentViews/notification/List.vue' )
+            import( '../views/teacherViews/team/TeamManagement.vue' )
         },
         {
           path: 'detail',
           name: 'TeamDetailView',
           component: () =>
-            import( '../views/studentViews/notification/Preference.vue' ),
+            import( '../views/teacherViews/team/TeamDetail.vue' ),
         },
         {
           path: 'progress',
           name: 'TeamProgessView',
           component: () =>
-            import( '../views/studentViews/notification/Preference.vue' ),
+            import( '../views/teacherViews/team/TeamProgress.vue' ),
         },
         {
           path: 'github_view',
           name: 'TeamGithubView',
           component: () =>
-            import( '../views/studentViews/notification/Preference.vue' ),
+            import( '../views/teacherViews/team/TeamGithub.vue' ),
         },
       ],
     },
@@ -168,11 +168,15 @@ const router = createRouter( {
       component: Notfound,
     },
   ],
+
+
   scrollBehavior ( to, from, savedposition )
   {
     if ( savedposition ) return savedposition
     return { x: 0, y: 0 }
   },
+
+
 } )
 
 router.beforeEach( ( to, from ) =>

@@ -2,7 +2,7 @@
     import { ref, onMounted, computed } from 'vue'
     import { checksuccess, fetchfunct } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-    import { convert_date_to_UTC } from '@/components/date';
+    import { formatDate, convert_date_to_UTC } from '@/components/date';
     import { downloadFile } from '@/components/download';
     import { useAlertStore } from '@/stores/alert';
 
@@ -115,18 +115,6 @@
         }
 
     };
-
-    const formatDate = ( timestamp ) =>
-    {
-        return convert_date_to_UTC( timestamp ).toLocaleDateString( 'en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        } )
-    }
 
     // Computed property to check if the deadline has passed
     const isPastDeadline = computed( () =>

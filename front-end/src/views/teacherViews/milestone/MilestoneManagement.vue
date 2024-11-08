@@ -1,5 +1,5 @@
 <template>
-  <router-view v-if="$route.name!=='milestone_management'"></router-view>
+  <router-view v-if="$route.name!=='MilestoneManagement'"></router-view>
   <div v-else>
     <section class="py-5">
       <div class="container px-4">

@@ -1,13 +1,18 @@
 from application.setup import app
-from flask_security import current_user, roles_required
-from application.models import Notifications, NotificationPreferences, db, Milestones
+from flask_security import current_user, roles_accepted
+from application.models import (
+    Notifications,
+    NotificationPreferences,
+    db,
+    Milestones,
+    Teams,
+)
 from flask import abort, request
 from datetime import datetime, timezone
 
 
-
 @app.route("/instructor/milestone/publish", methods=["POST"])
-#@roles_required("Instructor")
+@roles_accepted("Instructor", "TA")
 def publishMilestones():
     # Parse the request JSON for preference settings
     data = request.get_json()
@@ -16,9 +21,29 @@ def publishMilestones():
     deadline = data.get("deadline")
     deadline = datetime.fromisoformat(deadline)
 
-    #requirements = data.get("requirements")
-    milestoneToUpload = Milestones(title = title, description = description, deadline = deadline,created_by=current_user.id if current_user.is_authenticated else None, created_at =datetime.utcnow())
+    milestoneToUpload = Milestones(
+        title=title,
+        description=description,
+        deadline=deadline,
+        created_by=current_user.id if current_user.is_authenticated else None,
+        created_at=datetime.now(timezone.utc),
+    )
     db.session.add(milestoneToUpload)
     db.session.commit()
 
     return {"message": "milestone  published successfully."}, 200
+
+
+@app.route("/teacher/team_management/individual", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_teams():
+
+    teams = Teams.query.all()
+    team_list = [
+        {
+            "id": team.id,
+            "name": team.name,
+        }
+        for team in teams
+    ]
+    return {"teams": team_list}, 200
