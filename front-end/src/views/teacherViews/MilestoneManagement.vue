@@ -166,6 +166,7 @@ export default {
   data() {
     return {
       milestones: [],
+      studen_count : null
     }
   },
   computed: {
@@ -205,7 +206,7 @@ export default {
       this.$router.push({ name: 'edit_milestone', params: { id } })
     },
     async deleteMilestone(milestone_id) {
-      if (confirm('Do you really want to delete?')) {
+      if (confirm('Do you really want to delete the milestone?')) {
         const res = await fetch(
           `http://127.0.0.1:5000/api/instructor/milestone/${milestone_id}`,
           {
@@ -224,9 +225,28 @@ export default {
         }
       }
     },
+    
+    async getAllStudents() {
+      console.log("inside getall students")
+            const res = await fetch(`http://127.0.0.1:5000/student/all`, {
+              method: 'GET',
+             
+            })
+            const data = await res.json().catch((e) => {})
+    
+            if (res.ok) {
+              console.log(data)
+              this.studen_count=data
+              console.log(this.studen_count)
+            } else {
+                            this.error = res.status
+            }
+          },
+
   },
   mounted() {
     this.getAllMilestones()
+    this.getAllStudents()
   },
 }
 </script>
