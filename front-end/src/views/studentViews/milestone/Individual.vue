@@ -149,6 +149,15 @@
                 </select>
             </div>
 
+            <div v-if="loading" class="d-flex justify-content-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div v-if="error" class="alert alert-danger mt-4" role="alert">
+                {{ error }}
+            </div>
+
             <div v-if="milestoneDetails" class="mt-4">
                 <div class="milestone-card card mb-4">
                     <div class="card-body">
@@ -222,15 +231,6 @@
                     </div>
                 </div>
 
-            </div>
-
-            <div v-if="loading" class="d-flex justify-content-center my-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-            <div v-if="error" class="alert alert-danger mt-4" role="alert">
-                {{ error }}
             </div>
         </div>
     </div>

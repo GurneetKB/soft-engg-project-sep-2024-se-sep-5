@@ -246,7 +246,7 @@ def get_milestone_details(milestone_id):
         for task in milestone.task_milestones:
             task_submission = team_submissions.filter(
                 Submissions.task_id == task.id
-            ).scalar()
+            ).first()
             milestone_data["tasks"].append(
                 {
                     "task_id": task.id,

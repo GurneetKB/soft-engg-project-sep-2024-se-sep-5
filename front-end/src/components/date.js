@@ -1,7 +1,12 @@
 export function convert_date_to_UTC ( date )
 {
     // Parse the deadline date string to extract the date components
+
     const parsedDate = new Date( date );
+    if ( date.includes( " GMT" ) )
+    {
+        return parsedDate
+    }
 
     // Extract individual components
     const year = parsedDate.getFullYear();
