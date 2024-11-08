@@ -54,7 +54,6 @@ class MilestoneAPI(Resource):
 
     @roles_accepted("Instructor", "TA")
     def get(self, milestone_id):
-        print("inside get api")
         milestone_object = Milestones.query.filter_by(id=milestone_id).first()
         return marshal(milestone_object, milestone_fields)
 
@@ -101,6 +100,5 @@ class MilestoneAllAPI(Resource):
 
     @roles_accepted("Instructor", "TA")
     def get(self):
-        print("inside get api")
         milestone_object = Milestones.query.all()
         return marshal(milestone_object, milestone_fields)
