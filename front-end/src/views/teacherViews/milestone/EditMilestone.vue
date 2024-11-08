@@ -1,4 +1,5 @@
 <script>
+  import { fetchfunct } from '@/components/fetch';
   export default {
     props: [ 'id' ],
     data ()
@@ -27,8 +28,8 @@
       {
         try
         {
-          const res = await fetch(
-            `http://127.0.0.1:5000/api/instructor/milestone/${ id }`,
+          const res = await fetchfunct(
+            `api/instructor/milestone/${ id }`,
           )
           const data = await res.json()
           if ( res.ok )
@@ -48,8 +49,8 @@
         try
         {
           const { title, description, deadline, tasks } = this.milestone_data
-          const res = await fetch(
-            `http://127.0.0.1:5000/api/instructor/milestone/${ this.id }`,
+          const res = await fetchfunct(
+            `api/instructor/milestone/${ this.id }`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },

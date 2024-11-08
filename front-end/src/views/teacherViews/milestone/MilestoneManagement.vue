@@ -151,6 +151,7 @@
 </style>
 
 <script>
+  import { fetchfunct } from '@/components/fetch';
   export default {
     data ()
     {
@@ -181,12 +182,7 @@
     methods: {
       async getAllMilestones ()
       {
-        const res = await fetch(
-          'http://127.0.0.1:5000/api/instructor/all_milestone',
-          {
-            method: 'GET',
-          },
-        )
+        const res = await fetchfunct( 'api/instructor/all_milestone' )
         const data = await res.json().catch( e => { } )
 
         if ( res.ok )
@@ -203,13 +199,10 @@
       {
         if ( confirm( 'Do you really want to delete?' ) )
         {
-          const res = await fetch(
-            `http://127.0.0.1:5000/api/instructor/milestone/${ milestone_id }`,
+          const res = await fetchfunct(
+            `api/instructor/milestone/${ milestone_id }`,
             {
-              method: 'DELETE',
-              headers: {
-                'Authentication-Token': this.token,
-              },
+              method: 'DELETE'
             },
           )
           const data = await res.json().catch( e => { } )

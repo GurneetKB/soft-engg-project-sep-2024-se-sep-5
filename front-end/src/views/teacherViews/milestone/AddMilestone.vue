@@ -1,6 +1,7 @@
 <script setup>
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { fetchfunct } from '@/components/fetch';
 
   const router = useRouter()
   const milestoneData = ref( {
@@ -24,8 +25,8 @@
 
     try
     {
-      const response = await fetch(
-        'http://127.0.0.1:5000/api/instructor/milestone',
+      const response = await fetchfunct(
+        'api/instructor/milestone',
         {
           method: 'POST',
           headers: {
