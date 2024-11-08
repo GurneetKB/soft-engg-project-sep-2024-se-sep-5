@@ -1,4 +1,3 @@
-
 <template>
   <section class="py-5">
     <div class="container px-4">
@@ -46,13 +45,24 @@
           :key="milestone.name"
           class="milestone-item mb-4"
         >
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="milestone-title">{{ milestone.title }}</h5>
-            <button class="btn btn-edit" @click="editMilestone(milestone.id)">
-              <RouterLink class="nav-link" to="/teacher/edit_milestone">
-                <i class="bi bi-pencil-square"></i>
-              </RouterLink>
-            </button>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="milestone-title mb-0">{{ milestone.title }}</h5>
+            <div class="btn-group">
+              <button
+                class="btn btn-outline-primary btn-sm me-2"
+                @click="editMilestone(milestone.id)"
+              >
+                <RouterLink class="nav-link" to="/teacher/edit_milestone">
+                  <i class="bi bi-pencil-square"></i>
+                </RouterLink>
+              </button>
+              <button
+                class="btn btn-outline-danger btn-sm"
+                @click="deleteMilestone(milestone.id)"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </div>
           <div class="progress">
             <div
@@ -173,51 +183,50 @@ export default {
       })
     },
   },
-  methods:
-  {
+  methods: {
     async getAllMilestones() {
-        const res = await fetch('http://127.0.0.1:5000/api/instructor/all_milestone', {
+      const res = await fetch(
+        'http://127.0.0.1:5000/api/instructor/all_milestone',
+        {
           method: 'GET',
-         
-        })
-        const data = await res.json().catch((e) => {})
+        },
+      )
+      const data = await res.json().catch(e => {})
+
+      if (res.ok) {
+        this.milestones = data
+
+        console.log(this.milestones)
+      } else {
+        this.error = res.status
+      }
+    },
+    editMilestone(id) {
+      this.$router.push({ name: 'edit_milestone', params: { id } })
+    },
+    async deleteMilestone(milestone_id) {
+      if (confirm('Do you really want to delete?')) {
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/instructor/milestone/${milestone_id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authentication-Token': this.token,
+            },
+          },
+        )
+        const data = await res.json().catch(e => {})
 
         if (res.ok) {
-
-          this.milestones = data
-
-          console.log(this.milestones)
+          this.$router.go(0)
         } else {
-          
           this.error = res.status
         }
-      },
-      editMilestone(id) {
-    this.$router.push({ name: 'edit_milestone', params: { id } });
+      }
+    },
   },
-  async deleteMilestone(milestone_id) {
-            if(confirm("Do you really want to delete?")){
-            const res = await fetch(`http://127.0.0.1:5000/api/instructor/milestone/${milestone_id}`, {
-              method: 'DELETE',
-              headers: {
-                'Authentication-Token': this.token,
-              },
-            })
-            const data = await res.json().catch((e) => {})
-    
-            if (res.ok) {              
-              this.$router.go(0)
-            } else {
-              
-              this.error = res.status
-            }
-          }
-          },
-  
-  },
-  mounted(){
+  mounted() {
     this.getAllMilestones()
-  }
-
+  },
 }
 </script>

@@ -1,53 +1,56 @@
 <script setup>
-import { ref } from 'vue';
-import { fetchfunct, checkerror, checksuccess } from '@/components/fetch.js';
+import { ref } from 'vue'
 
-// Define reactive properties to hold form data and response message
 const milestoneData = ref({
   title: '',
   description: '',
   deadline: '',
-  tasks: ['']
-});
+  tasks: ref(['']),
+})
 
-const responseMessage = ref('');
+function addTask() {
+  milestoneData.value.tasks.push('')
+}
 
-// Method to add a new task input
-const addTask = () => {
-  milestoneData.value.tasks.push('');
-};
+const responseMessage = ref('')
 
-// Method to handle form submission
 const publishMilestone = async () => {
-  console.log("inside publish milestone");
-  console.log(milestoneData.value);
+  console.log('inside publish milestone')
+  console.log(milestoneData.value)
 
   try {
-    const response = await fetch('http://127.0.0.1:5000/api/instructor/milestone', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      'http://127.0.0.1:5000/api/instructor/milestone',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(milestoneData.value),
       },
-      body: JSON.stringify(milestoneData.value)
-    });
+    )
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
+      throw new Error(`Error: ${response.statusText}`)
     }
 
-    const data = await response.json();
-    responseMessage.value = 'Milestone published successfully!';
-    console.log(data); // handle response data if needed
+    const data = await response.json()
+    responseMessage.value = 'Milestone published successfully!'
+    console.log(data) // handle response data if needed
 
     // Reset form
-    milestoneData.value = { title: '', description: '', deadline: '', tasks: [''] };
+    milestoneData.value = {
+      title: '',
+      description: '',
+      deadline: '',
+      tasks: [''],
+    }
   } catch (error) {
-    responseMessage.value = `Error: ${error.message}`;
-    console.error('Error:', error);
+    responseMessage.value = `Error: ${error.message}`
+    console.error('Error:', error)
   }
-};
+}
 </script>
-
 
 <template>
   <div class="page-wrapper">
@@ -63,7 +66,6 @@ const publishMilestone = async () => {
             id="titleInput"
             placeholder="Enter milestone title"
             v-model="milestoneData.title"
-
           />
         </div>
 
@@ -77,7 +79,6 @@ const publishMilestone = async () => {
             rows="4"
             placeholder="Enter milestone description"
             v-model="milestoneData.description"
-
           ></textarea>
         </div>
 
@@ -89,14 +90,13 @@ const publishMilestone = async () => {
             id="deadlineInput"
             :min="new Date().toISOString().slice(0, 16)"
             v-model="milestoneData.deadline"
-
           />
         </div>
 
         <div class="task-list mb-4">
           <label for="tasksInput" class="form-label fw-bold">Tasks</label>
           <div
-            v-for="(task, index) in tasks"
+            v-for="index in milestoneData.tasks"
             :key="index"
             class="task-item mb-3 d-flex align-items-center"
           >
@@ -107,8 +107,8 @@ const publishMilestone = async () => {
               v-model="milestoneData.tasks[index]"
             />
             <button
-              v-if="tasks.length > 1"
-              @click="tasks.splice(index, 1)"
+              v-if="milestoneData.tasks.length > 1"
+              @click="milestoneData.tasks.splice(index, 1)"
               type="button"
               class="btn btn-outline-danger rounded-circle delete-btn"
               style="width: 25px; height: 23px; padding: 0"
@@ -128,12 +128,16 @@ const publishMilestone = async () => {
         </div>
 
         <div class="text-center">
-          <button @click="publishMilestone" class="btn btn-gradient btn-lg px-5">
+          <button
+            @click="publishMilestone"
+            class="btn btn-gradient btn-lg px-5"
+          >
             <i class="bi bi-check2-circle me-2"></i>
             Publish Milestone
           </button>
-          <p v-if="responseMessage" class="mt-3">{{ responseMessage }}</p>
-
+          <p v-if="responseMessage" class="mt-3 text-success">
+            {{ responseMessage }}
+          </p>
         </div>
       </div>
     </div>

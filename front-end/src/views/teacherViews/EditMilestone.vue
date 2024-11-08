@@ -3,68 +3,68 @@ export default {
   props: ['id'],
   data() {
     return {
-      milestone_data :[],
-      }
+      milestone_data: {
+        title: '',
+        description: '',
+        deadline: '',
+        tasks: [],
+      },
+    }
   },
-
   mounted() {
-    console.log('Received Milestone ID:', this.id); // Check if ID is received
     if (this.id) {
-      this.fetchMilestoneDetails(this.id);
+      this.fetchMilestoneDetails(this.id)
     } else {
-      console.error('Milestone ID is undefined');
+      console.error('Milestone ID is undefined')
     }
   },
   methods: {
     async fetchMilestoneDetails(id) {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/instructor/milestone/${id}`);
-        const data = await res.json();
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/instructor/milestone/${id}`,
+        )
+        const data = await res.json()
         if (res.ok) {
-          console.log('Milestone Data:', data);
           this.milestone_data = data
-          // Process milestone data
         } else {
-          console.error('Failed to fetch milestone details:', res.status);
+          console.error('Failed to fetch milestone details:', res.status)
         }
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('Error fetching milestone:', error)
       }
     },
-
     async updateMilestone() {
       try {
-        const { title, description, deadline } = this.milestone_data;
-        // Use the `id` prop to update the milestone
-        const res = await fetch(`http://127.0.0.1:5000/api/instructor/milestone/${this.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            // Include any other fields you need to update
-            title,
-        description,
-        deadline,
-        tasks: this.tasks,
-          }),
-        });
-
+        const { title, description, deadline, tasks } = this.milestone_data
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/instructor/milestone/${this.id}`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, deadline, tasks }),
+          },
+        )
         if (res.ok) {
-          console.log('Milestone updated successfully');
-          // Optionally, navigate back to the milestone list or show a success message
-          this.$router.push({ name: 'milestone_list' }); // Example route
+          this.$router.push({ name: 'milestone_list' })
         } else {
-          console.error('Failed to update milestone');
+          console.error('Failed to update milestone')
         }
       } catch (error) {
-        console.error('Error updating milestone:', error);
+        console.error('Error updating milestone:', error)
       }
-    }
-  }
-};
-
-  
-
-
+    },
+    addTask() {
+      if (!this.milestone_data.tasks) {
+        this.milestone_data.tasks = []
+      }
+      this.milestone_data.tasks.push({ text: '' })
+    },
+    removeTask(index) {
+      this.milestone_data.tasks.splice(index, 1)
+    },
+  },
+}
 </script>
 
 <template>
@@ -109,19 +109,18 @@ export default {
         <div class="task-list mb-4">
           <label for="tasksInput" class="form-label fw-bold">Tasks</label>
           <div
-            v-for="(task, index) in tasks"
+            v-for="(task, index) in milestone_data.tasks"
             :key="index"
-            class="task-item mb-3 d-flex align-items-center"
+            class="mb-4 d-flex align-items-center"
           >
             <input
               type="text"
               class="form-control custom-input me-2"
               :placeholder="'Enter task ' + (index + 1)"
-              v-model="tasks[index]"
+              v-model="task.text"
             />
             <button
-              v-if="tasks.length > 1"
-              @click="tasks.splice(index, 1)"
+              @click="removeTask(index)"
               type="button"
               class="btn btn-outline-danger rounded-circle delete-btn"
               style="width: 25px; height: 23px; padding: 0"
@@ -166,7 +165,6 @@ export default {
   padding: 0;
   align-items: center;
   justify-content: center;
-  /* transition: transform 0.2s ease; */
 }
 
 .add-btn:hover {
@@ -203,7 +201,6 @@ export default {
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   padding: 12px;
-  /* transition: all 0.3s ease; */
 }
 
 .custom-input:focus {
@@ -216,7 +213,6 @@ export default {
   background: #159957;
   border: none;
   color: white;
-  /* transition: all 0.3s ease; */
   font-weight: 500;
   letter-spacing: 0.5px;
   border-radius: 10px;
