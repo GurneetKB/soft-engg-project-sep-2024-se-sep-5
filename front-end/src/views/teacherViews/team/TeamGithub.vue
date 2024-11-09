@@ -1,153 +1,175 @@
 <script setup>
-    import { ref, onMounted } from 'vue'
-    import { fetchfunct } from '@/components/fetch.js'
-    import SearchableDropdown from '@/components/SearchableDropdown.vue';
-    import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+import { ref, onMounted } from 'vue'
+import { fetchfunct } from '@/components/fetch.js'
+import SearchableDropdown from '@/components/SearchableDropdown.vue'
+import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
-    const teams = ref( [] )
-    const selectedTeamId = ref( null )
-    const teamDetails = ref( [] )
-    const loadingOnMount = ref( true )
-    const loading = ref( false )
-    const error = ref( null )
-    const milestones = ref([
-    { name: 'Milestone 1' },
-    { name: 'Milestone 2' },
-    { name: 'Milestone 3' },
-    { name: 'Milestone 4' },
-]);
-    onMounted( async () =>
-    {
-        loadingOnMount.value = true
-        const response = await fetchfunct( 'teacher/team_management/individual' )
-        if ( response.ok )
-        {
-            const data = await response.json()
-            teams.value = data.teams
-        } else
-        {
-            error.value = 'Failed to fetch teams'
-        }
-        loadingOnMount.value = false
-    } )
+const teams = ref([])
+const selectedTeamId = ref(null)
+const teamDetails = ref([])
+const loadingOnMount = ref(true)
+const loading = ref(false)
+const error = ref(null)
+const milestones = ref([
+  { name: 'Milestone 1' },
+  { name: 'Milestone 2' },
+  { name: 'Milestone 3' },
+  { name: 'Milestone 4' },
+])
+onMounted(async () => {
+  loadingOnMount.value = true
+  const response = await fetchfunct('teacher/team_management/individual')
+  if (response.ok) {
+    const data = await response.json()
+    teams.value = data.teams
+  } else {
+    error.value = 'Failed to fetch teams'
+  }
+  loadingOnMount.value = false
+})
 
-    const fetchTeamDetails = async () =>
-    {
-        if ( selectedTeamId.value !== null )
-        {
-            loading.value = true
-            error.value = null
-            const response = await fetchfunct( `teacher/team_management/individual/github/${ selectedTeamId.value }` )
-            if ( response.ok )
-            {
-            
-            const data = await response.json()
-            teamDetails.value = data
-            milestones.value = data.milestones
-            error.value = null
-
-            } else
-            {
-                error.value = 'Error fetching team details'
-            }
-            loading.value = false
-        }
+const fetchTeamDetails = async () => {
+  if (selectedTeamId.value !== null) {
+    loading.value = true
+    error.value = null
+    const response = await fetchfunct(
+      `teacher/team_management/individual/github/${selectedTeamId.value}`,
+    )
+    if (response.ok) {
+      const data = await response.json()
+      teamDetails.value = data
+      milestones.value = data.milestones
+      error.value = null
+    } else {
+      error.value = 'Error fetching team details'
     }
+    loading.value = false
+  }
+}
 </script>
+
 <template>
-    <div class="container-fluid p-4">
-      <div class="team-progress-view max-w-800 mx-auto">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h4 class="m-0">Individual Team Github Details</h4>
+  <div class="container-fluid p-4">
+    <div class="team-progress-view max-w-800 mx-auto">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0">Individual Team Github Details</h4>
+      </div>
+
+      <LoadingPlaceholder
+        v-if="loadingOnMount"
+        variant="text"
+        :count="3"
+        :lines="[2]"
+        spacing="p-4"
+        :withBorder="true"
+      />
+
+      <SearchableDropdown
+        v-model="selectedTeamId"
+        @change="fetchTeamDetails"
+        :options="teams"
+        v-else
+      />
+
+      <div v-if="selectedTeamId" class="mt-4">
+        <div v-if="loading" class="d-flex justify-content-center my-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
-  
-        <LoadingPlaceholder v-if="loadingOnMount" variant="text" :count="3" :lines="[2]" spacing="p-4" :withBorder="true" />
-  
-        <SearchableDropdown v-model="selectedTeamId" @change="fetchTeamDetails" :options="teams" v-else />
-  
-        <!-- Show these sections only if a team is selected -->
-        <div v-if="selectedTeamId" class="mt-4">
-          <!-- Loading spinner while fetching team details -->
-          <div v-if="loading" class="d-flex justify-content-center my-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-  
-          <!-- Error message if fetching team details fails -->
-          <div v-if="error" class="alert alert-danger mt-4" role="alert">
-            {{ error }}
-          </div>
-  
-          <!-- Team details (GitHub activity and milestones) -->
-          <div v-if="teamDetails" class="github-commits card">
-            <br>
+
+        <div v-if="error" class="alert alert-danger mt-4" role="alert">
+          {{ error }}
+        </div>
+
+        <div v-if="teamDetails" class="github-commits card mb-4">
+          <div class="card-body text-center">
             <h3>GitHub Activities</h3>
             <h5>GitHub Commits: {{ teamDetails.totalCommits }}</h5>
             <h5>Lines added: {{ teamDetails.linesOfCodeAdded }}</h5>
             <h5>Lines deleted: {{ teamDetails.linesOfCodeDeleted }}</h5>
-            <br>
           </div>
-  
-          <!-- Timeline for milestones -->
-          <div class="timeline">
-            <div v-for="(milestone, index) in milestones" :key="index" class="milestone">
-              <div class="circle"></div>
-              <p class="milestone-name">{{ milestone.name }}</p>
-              <p class="milestone-commits">Commits: {{ milestone.commits }}</p>
-              <p class="milestone-commits">Added: {{ milestone.linesOfCodeAdded }}</p>
-              <p class="milestone-commits">Deleted: {{ milestone.linesOfCodeDeleted }}</p>
-              <div v-if="index < milestones.length - 1" class="progress-line"></div>
+        </div>
+
+        <!-- New Timeline Style -->
+        <div class="timeline">
+          <div
+            v-for="(milestone, index) in milestones"
+            :key="index"
+            class="timeline-item"
+          >
+            <div class="timeline-icon">
+              <span class="badge">✓</span>
+            </div>
+            <div class="timeline-content">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <h5 class="card-title mb-0">{{ milestone.name }}</h5>
+                    <span class="badge bg-primary">Milestone</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <p>Commits: {{ milestone.commits }}</p>
+                  <p>Lines Added: {{ milestone.linesOfCodeAdded }}</p>
+                  <p>Lines Deleted: {{ milestone.linesOfCodeDeleted }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </template>
-  
-  <style scoped>
-  .github-commits {
-    text-align: center;
-  }
-  .timeline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    position: relative;
-  }
-  .milestone {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    width: 100%;
-  }
-  .circle {
-    width: 20px;
-    height: 20px;
-    background-color: black;
-    border-radius: 50%;
-    margin-bottom: 5px;
-  }
-  .milestone-name {
-    font-weight: bold;
-    margin-top: 5px;
-  }
-  .milestone-commits {
-    color: gray;
-  }
-  .progress-line {
-    width: calc(100% - 40px); /* Adjust for padding between milestones */
-    height: 2px;
-    background-color: lightgray;
-    position: absolute;
-    top: 10px; /* Adjust to align with circles */
-    left: 50%;
-    transform: translateX(50%);
-    z-index: -1;
-  }
-  .milestone + .milestone .progress-line {
-    display: block;
-  }
-  </style>
+  </div>
+</template>
+
+<style scoped>
+.timeline {
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-item {
+  display: flex;
+  position: relative;
+}
+
+.timeline-item::before {
+  background: #dee2e6;
+  content: '';
+  height: 100%;
+  left: 19px;
+  position: absolute;
+  top: 20px;
+  width: 2px;
+  z-index: -1;
+}
+
+.timeline-icon {
+  margin-right: 15px;
+}
+
+.timeline-icon .badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0d6efd;
+  color: white;
+  margin-top: 20px;
+}
+
+.timeline-content {
+  flex: 1 1 auto;
+  padding: 0 0 0 1rem;
+}
+
+.card {
+  max-height: 300px;
+  overflow-y: auto;
+}
+</style>
