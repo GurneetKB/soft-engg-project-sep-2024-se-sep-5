@@ -8,7 +8,7 @@ from application.models import (
     Milestones,
     Teams,
 )
-from flask import abort, request, send_file
+from flask import abort, request, send_file, jsonify
 from datetime import datetime, timezone
 import os
 
@@ -207,3 +207,65 @@ def provide_feedback(team_id, task_id):
     submission.feedback_time = datetime.now(timezone.utc)
     db.session.commit()
     return {"message": "The feedback is successfully provided."}, 201
+
+
+team_data = {
+    "1": {
+        "totalCommits": 120,
+        "linesOfCodeAdded": 5000,
+        "linesOfCodeDeleted": 300,
+        "milestones": [
+            {"name": "Milestone 1", "commits": 30, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 100},
+            {"name": "Milestone 2", "commits": 25, "linesOfCodeAdded": 1300, "linesOfCodeDeleted": 50},
+            {"name": "Milestone 3", "commits": 40, "linesOfCodeAdded": 1600, "linesOfCodeDeleted": 100},
+            {"name": "Milestone 4", "commits": 25, "linesOfCodeAdded": 900, "linesOfCodeDeleted": 50}
+        ]
+    },
+    "2": {
+        "totalCommits": 85,
+        "linesOfCodeAdded": 4200,
+        "linesOfCodeDeleted": 250,
+        "milestones": [
+            {"name": "Milestone 1", "commits": 20, "linesOfCodeAdded": 1000, "linesOfCodeDeleted": 80},
+            {"name": "Milestone 2", "commits": 15, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 60},
+            {"name": "Milestone 3", "commits": 30, "linesOfCodeAdded": 1500, "linesOfCodeDeleted": 70},
+            {"name": "Milestone 4", "commits": 20, "linesOfCodeAdded": 500, "linesOfCodeDeleted": 40}
+        ]
+    },
+        "3": {
+        "totalCommits": 85,
+        "linesOfCodeAdded": 4200,
+        "linesOfCodeDeleted": 250,
+        "milestones": [
+            {"name": "Milestone 1", "commits": 20, "linesOfCodeAdded": 1000, "linesOfCodeDeleted": 80},
+            {"name": "Milestone 2", "commits": 15, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 60},
+            {"name": "Milestone 3", "commits": 30, "linesOfCodeAdded": 1500, "linesOfCodeDeleted": 70},
+            {"name": "Milestone 4", "commits": 20, "linesOfCodeAdded": 500, "linesOfCodeDeleted": 40}
+        ]
+    },
+       "4": {
+        "totalCommits": 85,
+        "linesOfCodeAdded": 4200,
+        "linesOfCodeDeleted": 250,
+        "milestones": [
+            {"name": "Milestone 1", "commits": 20, "linesOfCodeAdded": 1000, "linesOfCodeDeleted": 80},
+            {"name": "Milestone 2", "commits": 15, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 60},
+            {"name": "Milestone 3", "commits": 30, "linesOfCodeAdded": 1500, "linesOfCodeDeleted": 70},
+            {"name": "Milestone 4", "commits": 20, "linesOfCodeAdded": 500, "linesOfCodeDeleted": 40}
+        ]
+    },
+}
+
+@app.route('/teacher/team_management/individual/github/<team_id>', methods=['GET'])
+def get_github_details(team_id):
+    team_details = team_data.get(team_id)
+    if team_details:
+        return jsonify({
+            "teamId": team_id,
+            "totalCommits": team_details["totalCommits"],
+            "linesOfCodeAdded": team_details["linesOfCodeAdded"],
+            "linesOfCodeDeleted": team_details["linesOfCodeDeleted"],
+            "milestones": team_details["milestones"]
+        })
+    else:
+        return jsonify({"error": "Team not found"}), 404
