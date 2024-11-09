@@ -7,15 +7,13 @@ from application.initial_data import seed_database
 import os
 from flask_restful import Api
 
-from controllers.api.milestoneAPI import MilestoneAPI, MilestoneAllAPI
-
 
 # instantiate the flask application
 app = Flask("Tracky")
 
 
 # initializing flask-restful API
-api = Api(prefix="/api")
+api = Api(app, prefix="/api")
 
 ## for flask-sqlalchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///track.sqlite3"
@@ -53,16 +51,6 @@ with app.app_context():
 
     if not Users.query.first():  # if instructor role is not created
         seed_database(db)
-
-
-# Register the Milestone API route
-api.add_resource(
-    MilestoneAPI, "/instructor/milestone", "/instructor/milestone/<milestone_id>"
-)
-api.add_resource(MilestoneAllAPI, "/instructor/all_milestone")
-
-# Initialize API with app
-api.init_app(app)
 
 
 ## disabling sending of cookie

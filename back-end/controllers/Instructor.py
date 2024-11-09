@@ -2,7 +2,6 @@ from application.setup import app
 from flask_security import current_user, roles_accepted
 from application.models import (
     Tasks,
-    Users,
     db,
     Submissions,
     Milestones,
@@ -13,16 +12,31 @@ from datetime import datetime, timezone
 import os
 
 
+def get_teams_under_user(user):
+    if current_user.has_role("Instructor"):
+        teams = Teams.query.filter(Teams.instructor_id == user.id).all()
+    else:
+        teams = Teams.query.filter(Teams.ta_id == user.id).all()
+    return teams
+
+
+def get_single_team_under_user(user, team_id):
+    if current_user.has_role("Instructor"):
+        team = Teams.query.filter(
+            Teams.instructor_id == user.id, Teams.id == team_id
+        ).first()
+    else:
+        team = Teams.query.filter(Teams.ta_id == user.id, Teams.id == team_id).first()
+    return team
+
+
 @app.route("/teacher/milestone_management/numbers", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_student_no():
-
-    teams = Teams.query.all()
+    teams = get_teams_under_user(current_user)
     students = 0
-    for user in Users.query.all():
-        for role in user.roles:
-            if role.name == "Student":
-                students += 1
+    for team in teams:
+        students += len(team.members)
 
     return {"no_of_teams": len(teams), "no_of_students": students}
 
@@ -34,8 +48,8 @@ def get_overall_teams_progress():
     response_data = []
     milestones = db.session.query(Milestones).all()
     milestone_count = len(milestones)
-
-    for team in db.session.query(Teams):
+    teams = get_teams_under_user(current_user)
+    for team in teams:
         completion_rate = 0
 
         for milestone in milestones:
@@ -76,7 +90,7 @@ def get_overall_teams_progress():
 @roles_accepted("Instructor", "TA")
 def get_teams():
 
-    teams = Teams.query.all()
+    teams = get_teams_under_user(current_user)
     team_list = [
         {
             "id": team.id,
@@ -91,7 +105,7 @@ def get_teams():
 @roles_accepted("Instructor", "TA")
 def get_team_details(team_id):
 
-    team = Teams.query.get(team_id)
+    team = get_single_team_under_user(current_user, team_id)
     if not team:
         abort(404, "Team not found")
     team = {
@@ -118,44 +132,44 @@ def get_team_details(team_id):
 @roles_accepted("Instructor", "TA")
 def get_team_progress(team_id):
 
+    team = get_single_team_under_user(current_user, team_id)
+    if not team:
+        abort(404, "Team not found")
+
     milestones = Milestones.query.all()
     team_submissions = db.session.query(Submissions).filter(
         Submissions.team_id == team_id
     )
-    if team_id:
-        milestones_data = []
-        for milestone in milestones:
-            individual_milestone = {
-                "id": milestone.id,
-                "title": milestone.title,
-                "description": milestone.description,
-                "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
-                "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "tasks": [],
-            }
-            for task in milestone.task_milestones:
-                task_submission = team_submissions.filter(
-                    Submissions.task_id == task.id
-                ).first()
-                individual_milestone["tasks"].append(
-                    {
-                        "task_id": task.id,
-                        "description": task.description,
-                        "is_completed": True if task_submission else False,
-                        "feedback": (
-                            task_submission.feedback if task_submission else None
-                        ),
-                        "feedback_time": (
-                            task_submission.feedback_time if task_submission else None
-                        ),
-                    }
-                )
+    milestones_data = []
 
-            milestones_data.append(individual_milestone)
+    for milestone in milestones:
+        individual_milestone = {
+            "id": milestone.id,
+            "title": milestone.title,
+            "description": milestone.description,
+            "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "tasks": [],
+        }
+        for task in milestone.task_milestones:
+            task_submission = team_submissions.filter(
+                Submissions.task_id == task.id
+            ).first()
+            individual_milestone["tasks"].append(
+                {
+                    "task_id": task.id,
+                    "description": task.description,
+                    "is_completed": True if task_submission else False,
+                    "feedback": (task_submission.feedback if task_submission else None),
+                    "feedback_time": (
+                        task_submission.feedback_time if task_submission else None
+                    ),
+                }
+            )
 
-        return milestones_data, 200
-    else:
-        return abort(404, "Team not found.")
+        milestones_data.append(individual_milestone)
+
+    return milestones_data, 200
 
 
 @app.route(
@@ -164,6 +178,11 @@ def get_team_progress(team_id):
 )
 @roles_accepted("Instructor", "TA")
 def view_submission(team_id, task_id):
+
+    team = get_single_team_under_user(current_user, team_id)
+    if not team:
+        abort(404, "Team not found")
+
     submission = Submissions.query.filter(
         Submissions.task_id == task_id, Submissions.team_id == team_id
     ).first()
@@ -186,6 +205,11 @@ def view_submission(team_id, task_id):
 )
 @roles_accepted("Instructor", "TA")
 def provide_feedback(team_id, task_id):
+
+    team = get_single_team_under_user(current_user, team_id)
+    if not team:
+        abort(404, "Team not found")
+
     data = request.get_json()
     if not data or "feedback" not in data:
         return abort(400, "Feedback data is required")
@@ -215,57 +239,140 @@ team_data = {
         "linesOfCodeAdded": 5000,
         "linesOfCodeDeleted": 300,
         "milestones": [
-            {"name": "Milestone 1", "commits": 30, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 100},
-            {"name": "Milestone 2", "commits": 25, "linesOfCodeAdded": 1300, "linesOfCodeDeleted": 50},
-            {"name": "Milestone 3", "commits": 40, "linesOfCodeAdded": 1600, "linesOfCodeDeleted": 100},
-            {"name": "Milestone 4", "commits": 25, "linesOfCodeAdded": 900, "linesOfCodeDeleted": 50}
-        ]
+            {
+                "name": "Milestone 1",
+                "commits": 30,
+                "linesOfCodeAdded": 1200,
+                "linesOfCodeDeleted": 100,
+            },
+            {
+                "name": "Milestone 2",
+                "commits": 25,
+                "linesOfCodeAdded": 1300,
+                "linesOfCodeDeleted": 50,
+            },
+            {
+                "name": "Milestone 3",
+                "commits": 40,
+                "linesOfCodeAdded": 1600,
+                "linesOfCodeDeleted": 100,
+            },
+            {
+                "name": "Milestone 4",
+                "commits": 25,
+                "linesOfCodeAdded": 900,
+                "linesOfCodeDeleted": 50,
+            },
+        ],
     },
     "2": {
         "totalCommits": 85,
         "linesOfCodeAdded": 4200,
         "linesOfCodeDeleted": 250,
         "milestones": [
-            {"name": "Milestone 1", "commits": 20, "linesOfCodeAdded": 1000, "linesOfCodeDeleted": 80},
-            {"name": "Milestone 2", "commits": 15, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 60},
-            {"name": "Milestone 3", "commits": 30, "linesOfCodeAdded": 1500, "linesOfCodeDeleted": 70},
-            {"name": "Milestone 4", "commits": 20, "linesOfCodeAdded": 500, "linesOfCodeDeleted": 40}
-        ]
+            {
+                "name": "Milestone 1",
+                "commits": 20,
+                "linesOfCodeAdded": 1000,
+                "linesOfCodeDeleted": 80,
+            },
+            {
+                "name": "Milestone 2",
+                "commits": 15,
+                "linesOfCodeAdded": 1200,
+                "linesOfCodeDeleted": 60,
+            },
+            {
+                "name": "Milestone 3",
+                "commits": 30,
+                "linesOfCodeAdded": 1500,
+                "linesOfCodeDeleted": 70,
+            },
+            {
+                "name": "Milestone 4",
+                "commits": 20,
+                "linesOfCodeAdded": 500,
+                "linesOfCodeDeleted": 40,
+            },
+        ],
     },
-        "3": {
+    "3": {
         "totalCommits": 85,
         "linesOfCodeAdded": 4200,
         "linesOfCodeDeleted": 250,
         "milestones": [
-            {"name": "Milestone 1", "commits": 20, "linesOfCodeAdded": 1000, "linesOfCodeDeleted": 80},
-            {"name": "Milestone 2", "commits": 15, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 60},
-            {"name": "Milestone 3", "commits": 30, "linesOfCodeAdded": 1500, "linesOfCodeDeleted": 70},
-            {"name": "Milestone 4", "commits": 20, "linesOfCodeAdded": 500, "linesOfCodeDeleted": 40}
-        ]
+            {
+                "name": "Milestone 1",
+                "commits": 20,
+                "linesOfCodeAdded": 1000,
+                "linesOfCodeDeleted": 80,
+            },
+            {
+                "name": "Milestone 2",
+                "commits": 15,
+                "linesOfCodeAdded": 1200,
+                "linesOfCodeDeleted": 60,
+            },
+            {
+                "name": "Milestone 3",
+                "commits": 30,
+                "linesOfCodeAdded": 1500,
+                "linesOfCodeDeleted": 70,
+            },
+            {
+                "name": "Milestone 4",
+                "commits": 20,
+                "linesOfCodeAdded": 500,
+                "linesOfCodeDeleted": 40,
+            },
+        ],
     },
-       "4": {
+    "4": {
         "totalCommits": 85,
         "linesOfCodeAdded": 4200,
         "linesOfCodeDeleted": 250,
         "milestones": [
-            {"name": "Milestone 1", "commits": 20, "linesOfCodeAdded": 1000, "linesOfCodeDeleted": 80},
-            {"name": "Milestone 2", "commits": 15, "linesOfCodeAdded": 1200, "linesOfCodeDeleted": 60},
-            {"name": "Milestone 3", "commits": 30, "linesOfCodeAdded": 1500, "linesOfCodeDeleted": 70},
-            {"name": "Milestone 4", "commits": 20, "linesOfCodeAdded": 500, "linesOfCodeDeleted": 40}
-        ]
+            {
+                "name": "Milestone 1",
+                "commits": 20,
+                "linesOfCodeAdded": 1000,
+                "linesOfCodeDeleted": 80,
+            },
+            {
+                "name": "Milestone 2",
+                "commits": 15,
+                "linesOfCodeAdded": 1200,
+                "linesOfCodeDeleted": 60,
+            },
+            {
+                "name": "Milestone 3",
+                "commits": 30,
+                "linesOfCodeAdded": 1500,
+                "linesOfCodeDeleted": 70,
+            },
+            {
+                "name": "Milestone 4",
+                "commits": 20,
+                "linesOfCodeAdded": 500,
+                "linesOfCodeDeleted": 40,
+            },
+        ],
     },
 }
 
-@app.route('/teacher/team_management/individual/github/<team_id>', methods=['GET'])
+
+@app.route("/teacher/team_management/individual/github/<team_id>", methods=["GET"])
 def get_github_details(team_id):
     team_details = team_data.get(team_id)
     if team_details:
-        return jsonify({
-            "teamId": team_id,
-            "totalCommits": team_details["totalCommits"],
-            "linesOfCodeAdded": team_details["linesOfCodeAdded"],
-            "linesOfCodeDeleted": team_details["linesOfCodeDeleted"],
-            "milestones": team_details["milestones"]
-        })
+        return jsonify(
+            {
+                "teamId": team_id,
+                "totalCommits": team_details["totalCommits"],
+                "linesOfCodeAdded": team_details["linesOfCodeAdded"],
+                "linesOfCodeDeleted": team_details["linesOfCodeDeleted"],
+                "milestones": team_details["milestones"],
+            }
+        )
     else:
         return jsonify({"error": "Team not found"}), 404

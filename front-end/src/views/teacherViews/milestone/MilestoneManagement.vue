@@ -2,8 +2,11 @@
   import { ref, computed, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { fetchfunct } from '@/components/fetch'
+  import { useIdentityStore } from '@/stores/identity'
+  import { storeToRefs } from 'pinia'
 
   const router = useRouter()
+  const { identity } = storeToRefs( useIdentityStore() )
 
   // State
   const milestones = ref( [] )
@@ -17,13 +20,13 @@
     return milestones.value.map( milestone =>
     {
       let status = 'light'
-      if ( milestone.progress === 100 )
+      if ( milestone.completion_rate === 100 )
       {
         status = 'success'
-      } else if ( milestone.progress > 50 )
+      } else if ( milestone.completion_rate > 50 )
       {
         status = 'warning'
-      } else if ( milestone.progress > 0 && milestone.progress <= 50 )
+      } else if ( milestone.completion_rate > 0 && milestone.completion_rate <= 50 )
       {
         status = 'danger'
       }
@@ -118,7 +121,8 @@
       <div class="container hero-section py-5 rounded-lg px-4 shadow-sm">
         <div class="text-center mb-4 position-relative">
           <h2 class="main-title text-dark">Milestones</h2>
-          <button class="btn btn-success rounded-circle add-button position-absolute" style="right: 20px; top: 0">
+          <button class="btn btn-success rounded-circle add-button position-absolute"
+            v-if="identity.includes('Instructor')" style=" right: 20px; top: 0">
             <RouterLink class="nav-link" to="/teacher/milestone_management/add_milestone">
               <i class="bi bi-plus fs-0" style="font-size: 4rem"></i>
             </RouterLink>
@@ -128,7 +132,8 @@
           <div v-for="milestone in milestonesWithStatus" :key="milestone.name" class="milestone-item mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="milestone-title mb-0">{{ milestone.title }}</h5>
-              <div class="d-flex gap-2">
+              <span class="progress-text">{{ milestone.completion_rate }}%</span>
+              <div class="d-flex gap-2" v-if="identity.includes('Instructor')">
                 <RouterLink class="btn btn-outline-primary btn-sm"
                   :to="`/teacher/milestone_management/edit_milestone/${milestone.id}`">
                   <i class="bi bi-pencil-square"></i>
@@ -140,7 +145,7 @@
             </div>
             <div class="progress">
               <div :class="'progress-bar progress-bar-' + milestone.status" role="progressbar"
-                :style="{ width: milestone.progress + '%' }">
+                :style="{ width: milestone.completion_rate + '%' }">
               </div>
             </div>
           </div>

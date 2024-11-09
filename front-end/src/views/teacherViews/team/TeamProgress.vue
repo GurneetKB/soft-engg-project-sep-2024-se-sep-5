@@ -18,7 +18,7 @@
 
     // Pagination
     const currentPage = ref( 1 )
-    const milestonesPerPage = 2
+    const milestonesPerPage = 1
 
     // Calculate total pages
     const totalPages = computed( () =>

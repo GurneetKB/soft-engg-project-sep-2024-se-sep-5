@@ -1,7 +1,7 @@
-from flask_restful import Resource, Api, reqparse, fields, marshal, abort
-from application.models import db, Milestones
-from datetime import datetime, timezone
-from flask import abort, request, jsonify
+from flask_restful import Resource, reqparse, fields, marshal
+from application.models import Submissions, Tasks, Teams, db, Milestones
+from datetime import datetime
+from flask import request, jsonify
 from flask_security import current_user, roles_accepted
 
 
@@ -10,6 +10,7 @@ milestone_fields = {
     "title": fields.String,
     "description": fields.String,
     "deadline": fields.DateTime,
+    "completion_rate": fields.Float,
 }
 
 milestone_update = reqparse.RequestParser()
@@ -30,9 +31,8 @@ milestone_update.add_argument(
 
 class MilestoneAPI(Resource):
 
-    @roles_accepted("Instructor", "TA")
+    @roles_accepted("Instructor")
     def post(self):
-        print("inside api")
         data = request.get_json()
         title = data.get("title")
         description = data.get("description")
@@ -57,10 +57,8 @@ class MilestoneAPI(Resource):
         milestone_object = Milestones.query.filter_by(id=milestone_id).first()
         return marshal(milestone_object, milestone_fields)
 
-    @roles_accepted("Instructor", "TA")
+    @roles_accepted("Instructor")
     def put(self, milestone_id):
-        print("Inside edit API")
-
         # Fetch the milestone by ID
         milestone_object = Milestones.query.filter_by(id=milestone_id).first()
 
@@ -70,7 +68,6 @@ class MilestoneAPI(Resource):
 
         # Parse arguments
         args = milestone_update.parse_args()
-        print(args)
 
         # Check for required fields and update milestone fields
         if "title" in args and args["title"]:
@@ -81,14 +78,12 @@ class MilestoneAPI(Resource):
         # Commit changes
         try:
             db.session.commit()
-            print("Milestone updated:", milestone_object)
             return {"message": "Milestone updated successfully."}, 200
         except Exception as e:
             db.session.rollback()  # Roll back in case of any error
-            print("Error updating milestone:", e)
             return {"message": "An error occurred while updating the milestone."}, 500
 
-    @roles_accepted("Instructor", "TA")
+    @roles_accepted("Instructor")
     def delete(self, milestone_id):
         delete_object = Milestones.query.filter_by(id=milestone_id).first()
         db.session.delete(delete_object)
@@ -100,5 +95,47 @@ class MilestoneAllAPI(Resource):
 
     @roles_accepted("Instructor", "TA")
     def get(self):
-        milestone_object = Milestones.query.all()
-        return marshal(milestone_object, milestone_fields)
+        # Get all milestones
+        milestone_objects = Milestones.query.all()
+
+        # Get teams based on user role
+        teams_query = Teams.query
+        if current_user.has_role("TA"):
+            teams_query = teams_query.filter(Teams.ta_id == current_user.id)
+        elif current_user.has_role("Instructor"):
+            teams_query = teams_query.filter(Teams.instructor_id == current_user.id)
+
+        # Get total number of teams for this user
+        total_teams = teams_query.count()
+
+        # If there are no teams, avoid division by zero
+        if total_teams == 0:
+            return marshal(milestone_objects, milestone_fields)
+
+        for milestone in milestone_objects:
+            # Get all tasks for this milestone
+            tasks = milestone.task_milestones
+
+            if not tasks:
+                milestone.completion_rate = 0.0
+                continue
+
+            # Count teams under this TA/instructor that completed all tasks
+            completed_teams = (
+                db.session.query(Submissions.team_id)
+                .join(Tasks, Tasks.id == Submissions.task_id)
+                .join(Teams, Teams.id == Submissions.team_id)
+                .filter(
+                    Tasks.milestone_id == milestone.id,
+                    Teams.id.in_(teams_query.with_entities(Teams.id)),
+                )
+                .group_by(Submissions.team_id)
+                .having(db.func.count(db.distinct(Submissions.task_id)) == len(tasks))
+                .count()
+                or 0
+            )
+
+            # Calculate completion rate as percentage
+            milestone.completion_rate = (completed_teams / total_teams) * 100
+
+        return marshal(milestone_objects, milestone_fields)

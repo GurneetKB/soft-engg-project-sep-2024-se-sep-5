@@ -105,7 +105,7 @@ const router = createRouter( {
           name: 'AddMilestone',
           meta: {
             title: 'Add Milestone',
-            auth_role: [ 'Instructor', 'TA' ],
+            auth_role: 'Instructor',
             requiresAuth: true
           },
           component: () => import( '../views/teacherViews/milestone/AddMilestone.vue' ),
@@ -115,7 +115,7 @@ const router = createRouter( {
           name: 'EditMilestone',
           meta: {
             title: 'Edit Milestone',
-            auth_role: [ 'Instructor', 'TA' ],
+            auth_role: 'Instructor',
             requiresAuth: true
           },
           component: () => import( '../views/teacherViews/milestone/EditMilestone.vue' ),
