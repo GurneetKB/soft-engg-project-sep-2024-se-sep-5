@@ -39,9 +39,7 @@
         throw new Error( `Error: ${ response.statusText }` )
       }
 
-      const data = await response.json()
       responseMessage.value = 'Milestone published successfully!'
-      console.log( data ) // handle response data if needed
 
       // Reset form
       milestoneData.value = {

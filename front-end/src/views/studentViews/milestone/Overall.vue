@@ -29,7 +29,7 @@
     <div class="container-fluid p-4">
         <div class="milestone-progress-view max-w-800 mx-auto">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="m-0">Milestone Progress</h4>
+                <h4 class="m-0">Overall Progress</h4>
             </div>
 
             <LoadingPlaceholder v-if="loading" variant="text" :count="3" :lines="[2]" spacing="p-4"

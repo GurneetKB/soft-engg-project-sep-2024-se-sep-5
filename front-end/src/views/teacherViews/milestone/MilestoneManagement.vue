@@ -8,13 +8,11 @@
   const router = useRouter()
   const { identity } = storeToRefs( useIdentityStore() )
 
-  // State
   const milestones = ref( [] )
   const noOfStudents = ref( 0 )
   const noOfTeams = ref( 0 )
   const error = ref( null )
 
-  // Computed
   const milestonesWithStatus = computed( () =>
   {
     return milestones.value.map( milestone =>
@@ -34,7 +32,7 @@
     } )
   } )
 
-  // Methods
+
   const getAllMilestones = async () =>
   {
     const res = await fetchfunct( 'api/instructor/all_milestone' )
@@ -76,7 +74,6 @@
     }
   }
 
-  // Lifecycle
   onMounted( () =>
   {
     getAllMilestones()
@@ -132,7 +129,7 @@
           <div v-for="milestone in milestonesWithStatus" :key="milestone.name" class="milestone-item mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="milestone-title mb-0">{{ milestone.title }}</h5>
-              <span class="progress-text">{{ milestone.completion_rate }}%</span>
+              <span class="progress-text ms-auto me-2">{{ milestone.completion_rate }}%</span>
               <div class="d-flex gap-2" v-if="identity.includes('Instructor')">
                 <RouterLink class="btn btn-outline-primary btn-sm"
                   :to="`/teacher/milestone_management/edit_milestone/${milestone.id}`">

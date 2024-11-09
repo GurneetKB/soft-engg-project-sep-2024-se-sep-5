@@ -3,7 +3,6 @@
   import { fetchfunct } from '@/components/fetch.js'
   import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
-  // Reactive state
   const teams = ref( [] )
   const currentPage = ref( 1 )
   const itemsPerPage = ref( 5 )
@@ -11,7 +10,6 @@
   const loading = ref( true )
   const error = ref( null )
 
-  // Computed properties
   const filteredTeams = computed( () =>
   {
     return teams.value
@@ -38,7 +36,6 @@
     return Array.from( { length: totalPages.value }, ( _, i ) => i + 1 )
   } )
 
-  // Methods
   const teamsWithStatus = ( teams ) =>
   {
     return teams.map( team =>
@@ -66,7 +63,6 @@
     }
   }
 
-  // Lifecycle hook
   onMounted( async () =>
   {
     loading.value = true

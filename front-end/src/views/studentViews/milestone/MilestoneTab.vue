@@ -4,6 +4,6 @@
 
 <template>
     <Tabs :tabs="[{ name: 'OverallView', label: 'Overall progress', to: '/student/milestone_management' },
-        { name: 'IndividualView', label: 'Individual progress', to: '/student/milestone_management/individual' }]">
+        { name: 'IndividualView', label: 'Milestone-wise progress', to: '/student/milestone_management/individual' }]">
     </Tabs>
 </template>

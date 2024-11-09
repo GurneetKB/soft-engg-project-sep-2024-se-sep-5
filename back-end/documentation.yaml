@@ -1,0 +1,768 @@
+openapi: 3.0.1
+info:
+  title: Project Tracking  API
+  description: API for managing milestones, notifications, and submissions of projects.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:5000
+
+components:
+  securitySchemes:
+    authToken:
+      type: apiKey
+      in: header
+      name: Authentication-Token
+  schemas:
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the notification
+        title:
+          type: string
+          description: Title of the notification
+        type:
+          type: string
+          description: Type of the notification
+        created_at:
+          type: string
+          format: date-time
+        read_at:
+          type: string
+          format: date-time
+    NotificationPreferences:
+      type: object
+      properties:
+        email_deadline_notifications:
+          type: boolean
+        in_app_deadline_notifications:
+          type: boolean
+        email_feedback_notifications:
+          type: boolean
+        in_app_feedback_notifications:
+          type: boolean
+    Milestone:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        completion_rate:
+          type: number
+          format: float
+
+security:
+  - authToken: []
+
+paths:
+  /login:
+    post:
+      summary: "User login endpoint"
+      description: "Authenticates the user and returns authentication and CSRF tokens."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "testuser"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        "200":
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                  response:
+                    type: object
+                    properties:
+                      csrf_token:
+                        type: string
+                        example: "ImFjMzJjMWM5MDgyYzAxZDhiMzViMTNlNjMzZWI4ZDU0ZjAwODM2YzAi.Zy966w.y0QCezj1Onskkb_MQr2OT4QJWcQ"
+                      user:
+                        type: object
+                        properties:
+                          authentication_token:
+                            type: string
+                            example: "WyJCdGVqTnp6dzlJYlo2VHJDU1VOVzRrNUtHTjlCdnJvZDRwV05UTFN5QWxlN3pGOXRLenM3SzRKN0psbEFDdjJiIl0.Zy966w.kY5TPjTPZrpnoQI_zAhnd0Hk4X0"
+        "401":
+          description: "Unauthorized access"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid username or password"
+
+  /user/role:
+    get:
+      summary: Retrieve user roles
+      description: Returns the roles associated with the current user.
+      responses:
+        '200':
+          description: A list of user roles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '401':
+          description: Unauthorized, user not authenticated.
+
+  /logout:
+    get:
+      summary: Log out the current user
+      description: Invalidate all user authentication tokens and log the user out.
+      responses:
+        '200':
+          description: Successful logout.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized, user not authenticated.
+
+  /teacher/milestone_management/numbers:
+    get:
+      summary: Get number of teams and students
+      description: Returns the count of teams and students under the current instructor or TA.
+      responses:
+        '200':
+          description: Team and student counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  no_of_teams:
+                    type: integer
+                  no_of_students:
+                    type: integer
+
+  /teacher/team_management/overall:
+    get:
+      summary: Get overall teams progress
+      description: Returns the progress of all teams under the instructor or TA.
+      responses:
+        '200':
+          description: A list of team progress data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    progress:
+                      type: integer
+
+  /teacher/team_management/individual:
+    get:
+      summary: Retrieve all teams under user
+      description: Returns a list of teams under the current instructor or TA.
+      responses:
+        '200':
+          description: List of teams.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  teams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+
+  /teacher/team_management/individual/detail/{team_id}:
+    get:
+      summary: Get details for a specific team
+      description: Retrieves detailed information for a specified team.
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Team details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  team:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      members:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            username:
+                              type: string
+                            email:
+                              type: string
+                      github_repo_url:
+                        type: string
+                      instructor:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          username:
+                            type: string
+                      ta:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          username:
+                            type: string
+        '404':
+          description: Team not found.
+
+  /teacher/team_management/individual/progress/{team_id}:
+    get:
+      summary: Get team progress for a specific team
+      description: Returns progress information for each milestone of a specified team.
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Milestone progress data for the team.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    deadline:
+                      type: string
+                      format: date-time
+                    created_at:
+                      type: string
+                      format: date-time
+                    tasks:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          task_id:
+                            type: integer
+                          description:
+                            type: string
+                          is_completed:
+                            type: boolean
+                          feedback:
+                            type: string
+                          feedback_time:
+                            type: string
+                            format: date-time
+        '404':
+          description: Team not found.
+
+  /teacher/team_management/individual/submission/{team_id}/{task_id}:
+    get:
+      summary: View submission document for a task
+      description: Provides the submission document file for a specified team and task.
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Submission document file.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Submission or document not found.
+
+  /teacher/team_management/individual/feedback/{team_id}/{task_id}:
+    post:
+      summary: Provide feedback for a task
+      description: Submits feedback for a specific task completed by a team.
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  type: string
+                rating:
+                  type: integer
+      responses:
+        '200':
+          description: Feedback submitted successfully.
+        '400':
+          description: Bad request, invalid feedback or rating.
+
+
+  /teacher/team_management/individual/github/{team_id}:
+    get:
+      summary: Get GitHub details for a specific team
+      description: Retrieves GitHub commit and code changes data for a specified team.
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: GitHub details for the team.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  teamId:
+                    type: string
+                  totalCommits:
+                    type: integer
+                  linesOfCodeAdded:
+                    type: integer
+                  linesOfCodeDeleted:
+                    type: integer
+                  milestones:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        commits:
+                          type: integer
+                        linesOfCodeAdded:
+                          type: integer
+                        linesOfCodeDeleted:
+                          type: integer
+        '404':
+          description: Team not found.
+
+/api/instructor/milestone:
+    post:
+      summary: Create a new milestone
+      description: "Allows an instructor to create a new milestone for the course."
+      security:
+        - authToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Final Project Submission"
+                description:
+                  type: string
+                  example: "Complete the final project and submit the documentation."
+                deadline:
+                  type: string
+                  format: date-time
+                  example: "2024-12-15T23:59:59"
+      responses:
+        "200":
+          description: "Milestone successfully created."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Milestone published successfully."
+        "401":
+          description: "Unauthorized, only instructors are allowed to create milestones."
+        "500":
+          description: "Internal server error occurred while creating the milestone."
+
+    put:
+      summary: Update an existing milestone
+      description: "Allows an instructor to update the details of an existing milestone."
+      security:
+        - authToken: []
+      parameters:
+        - name: milestone_id
+          in: path
+          required: true
+          description: "ID of the milestone to be updated."
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Updated Final Project Submission"
+                description:
+                  type: string
+                  example: "Updated description for final project submission."
+      responses:
+        "200":
+          description: "Milestone successfully updated."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Milestone updated successfully."
+        "400":
+          description: "Bad request, missing required fields or invalid data."
+        "404":
+          description: "Milestone not found."
+        "500":
+          description: "Internal server error occurred while updating the milestone."
+
+    delete:
+      summary: Delete a milestone
+      description: "Allows an instructor to delete a milestone."
+      security:
+        - authToken: []
+      parameters:
+        - name: milestone_id
+          in: path
+          required: true
+          description: "ID of the milestone to be deleted."
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: "Milestone successfully deleted."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "deleted"
+                  message:
+                    type: string
+                    example: "Milestone is deleted."
+        "404":
+          description: "Milestone not found."
+        "500":
+          description: "Internal server error occurred while deleting the milestone."
+
+  /api/instructor/all_milestone:
+    get:
+      summary: Get all milestones for the instructor or TA
+      description: "Retrieve a list of all milestones in the system. Includes completion rates based on task submissions by teams."
+      security:
+        - authToken: []
+      responses:
+        "200":
+          description: "A list of all milestones."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    title:
+                      type: string
+                      example: "Midterm Project"
+                    description:
+                      type: string
+                      example: "The midterm project submission for the course."
+                    deadline:
+                      type: string
+                      format: date-time
+                      example: "2024-10-15T23:59:59"
+                    completion_rate:
+                      type: number
+                      format: float
+                      example: 75.0
+        "401":
+          description: "Unauthorized, only instructors or TAs are allowed to access milestones."
+        "500":
+          description: "Internal server error occurred while fetching milestones."
+
+  /student/notifications:
+    get:
+      summary: Get notifications for the current student
+      security:
+        - authToken: []
+      responses:
+        '200':
+          description: A list of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+
+  /student/notifications/{notification_id}:
+    get:
+      summary: Get details of a specific notification
+      security:
+        - authToken: []
+      parameters:
+        - in: path
+          name: notification_id
+          schema:
+            type: integer
+          required: true
+          description: ID of the notification
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+
+  /student/notifications/mark_all_as_read:
+    get:
+      summary: Mark all notifications as read
+      security:
+        - authToken: []
+      responses:
+        '200':
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /student/notifications/preferences:
+    get:
+      summary: Get the current user's notification preferences
+      security:
+        - authToken: []
+      responses:
+        '200':
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferences'
+
+    put:
+      summary: Update the current user's notification preferences
+      security:
+        - authToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreferences'
+      responses:
+        '201':
+          description: Notification preferences updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /student/milestone_management/overall:
+    get:
+      summary: Get milestones for the student's team
+      security:
+        - authToken: []
+      responses:
+        '200':
+          description: Team milestones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  team_name:
+                    type: string
+                  milestones:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Milestone'
+
+  /student/milestone_management/individual:
+    get:
+      summary: Get list of all milestones
+      security:
+        - authToken: []
+      responses:
+        '200':
+          description: List of milestones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  milestones:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Milestone'
+
+  /student/milestone_management/individual/{milestone_id}:
+    get:
+      summary: Get details of a specific milestone
+      security:
+        - authToken: []
+      parameters:
+        - in: path
+          name: milestone_id
+          schema:
+            type: integer
+          required: true
+          description: ID of the milestone
+      responses:
+        '200':
+          description: Milestone details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+
+    post:
+      summary: Submit a milestone
+      security:
+        - authToken: []
+      parameters:
+        - in: path
+          name: milestone_id
+          schema:
+            type: integer
+          required: true
+          description: ID of the milestone
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to upload
+      responses:
+        '201':
+          description: Milestone submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /student/download_submission/{task_id}:
+    get:
+      summary: Download submission for a task
+      security:
+        - authToken: []
+      parameters:
+        - in: path
+          name: task_id
+          schema:
+            type: integer
+          required: true
+          description: ID of the task
+      responses:
+        '200':
+          description: File downloaded
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  
