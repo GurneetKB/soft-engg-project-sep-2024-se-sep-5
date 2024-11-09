@@ -1,8 +1,8 @@
 from application.setup import app
 from flask_security import current_user, roles_accepted
 from application.models import (
-    Notifications,
-    NotificationPreferences,
+    Tasks,
+    Users,
     db,
     Submissions,
     Milestones,
@@ -11,6 +11,65 @@ from application.models import (
 from flask import abort, request, send_file
 from datetime import datetime, timezone
 import os
+
+
+@app.route("/teacher/milestone_management/numbers", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_team_student_no():
+
+    teams = Teams.query.all()
+    students = 0
+    for user in Users.query.all():
+        for role in user.roles:
+            if role.name == "Student":
+                students += 1
+
+    return {"no_of_teams": len(teams), "no_of_students": students}
+
+
+@app.route("/teacher/team_management/overall", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_overall_teams_progress():
+
+    response_data = []
+    milestones = db.session.query(Milestones).all()
+    milestone_count = len(milestones)
+
+    for team in db.session.query(Teams):
+        completion_rate = 0
+
+        for milestone in milestones:
+            # Get the number of tasks in the milestone
+            task_count = (
+                db.session.query(db.func.count(Tasks.id))
+                .filter(Tasks.milestone_id == milestone.id)
+                .scalar()
+            )
+
+            # Get the number of submissions associated with the milestone tasks
+            submission_count = (
+                db.session.query(db.func.count(Submissions.id))
+                .join(Tasks, Submissions.task_id == Tasks.id)
+                .filter(Submissions.team_id == team.id)
+                .filter(Tasks.milestone_id == milestone.id)
+                .scalar()
+            )
+
+            completion_rate += (
+                (submission_count / (task_count * milestone_count))
+                if task_count != 0
+                else 0
+            )
+
+        # Prepare the response data
+        response_data.append(
+            {
+                "name": team.name,
+                "progress": round(completion_rate * 100),
+            }
+        )
+
+    return response_data, 200
 
 
 @app.route("/teacher/team_management/individual", methods=["GET"])
@@ -26,6 +85,31 @@ def get_teams():
         for team in teams
     ]
     return {"teams": team_list}, 200
+
+
+@app.route("/teacher/team_management/individual/detail/<int:team_id>", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_team_details(team_id):
+
+    team = Teams.query.get(team_id)
+    if not team:
+        abort(404, "Team not found")
+    team = {
+        "id": team.id,
+        "name": team.name,
+        "members": [
+            {
+                "id": member.id,
+                "username": member.username,
+                "email": member.email,
+            }
+            for member in team.members
+        ],
+        "github_repo_url": team.github_repo_url,
+        "instructor": {"id": team.instructor.id, "username": team.instructor.username},
+        "ta": {"id": team.ta.id, "username": team.ta.username},
+    }
+    return {"team": team}, 200
 
 
 @app.route(

@@ -49,3 +49,8 @@ select {
 .nav-color {
   color: var(--navbar-bg)
 }
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}

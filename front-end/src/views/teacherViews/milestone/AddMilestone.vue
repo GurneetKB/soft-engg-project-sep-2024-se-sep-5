@@ -20,8 +20,6 @@
 
   const publishMilestone = async () =>
   {
-    console.log( 'inside publish milestone' )
-    console.log( milestoneData.value )
 
     try
     {
@@ -64,7 +62,7 @@
   <div class="page-wrapper">
     <div class="container my-5">
       <div class="card shadow-lg p-4 mx-auto">
-        <button @click="$router.back()" class="me-auto p-2 btn btn-link text-decoration-none">
+        <button @click="router.back()" class="me-auto p-2 btn btn-link text-decoration-none">
           ← Back
         </button>
         <h2 class="mb-4 text-center gradient-text">Create New Milestone</h2>

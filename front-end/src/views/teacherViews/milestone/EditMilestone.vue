@@ -1,95 +1,97 @@
-<script>
-  import { fetchfunct } from '@/components/fetch';
-  export default {
-    props: [ 'id' ],
-    data ()
+<script setup>
+  import { ref, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { fetchfunct } from '@/components/fetch'
+
+  const props = defineProps( {
+    id: {
+      type: String,
+      required: true
+    }
+  } )
+
+  const router = useRouter()
+
+  const milestone_data = ref( {
+    title: '',
+    description: '',
+    deadline: '',
+    tasks: []
+  } )
+
+  const fetchMilestoneDetails = async ( id ) =>
+  {
+    try
     {
-      return {
-        milestone_data: {
-          title: '',
-          description: '',
-          deadline: '',
-          tasks: [],
-        },
-      }
-    },
-    mounted ()
-    {
-      if ( this.id )
+      const res = await fetchfunct( `api/instructor/milestone/${ id }` )
+      const data = await res.json()
+      if ( res.ok )
       {
-        this.fetchMilestoneDetails( this.id )
+        milestone_data.value = data
       } else
       {
-        console.error( 'Milestone ID is undefined' )
+        console.error( 'Failed to fetch milestone details:', res.status )
       }
-    },
-    methods: {
-      async fetchMilestoneDetails ( id )
-      {
-        try
-        {
-          const res = await fetchfunct(
-            `api/instructor/milestone/${ id }`,
-          )
-          const data = await res.json()
-          if ( res.ok )
-          {
-            this.milestone_data = data
-          } else
-          {
-            console.error( 'Failed to fetch milestone details:', res.status )
-          }
-        } catch ( error )
-        {
-          console.error( 'Error fetching milestone:', error )
-        }
-      },
-      async updateMilestone ()
-      {
-        try
-        {
-          const { title, description, deadline, tasks } = this.milestone_data
-          const res = await fetchfunct(
-            `api/instructor/milestone/${ this.id }`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify( { title, description, deadline, tasks } ),
-            },
-          )
-          if ( res.ok )
-          {
-            this.$router.push( { name: 'milestone_list' } )
-          } else
-          {
-            console.error( 'Failed to update milestone' )
-          }
-        } catch ( error )
-        {
-          console.error( 'Error updating milestone:', error )
-        }
-      },
-      addTask ()
-      {
-        if ( !this.milestone_data.tasks )
-        {
-          this.milestone_data.tasks = []
-        }
-        this.milestone_data.tasks.push( { text: '' } )
-      },
-      removeTask ( index )
-      {
-        this.milestone_data.tasks.splice( index, 1 )
-      },
-    },
+    } catch ( error )
+    {
+      console.error( 'Error fetching milestone:', error )
+    }
   }
+
+  const updateMilestone = async () =>
+  {
+    try
+    {
+      const { title, description, deadline, tasks } = milestone_data.value
+      const res = await fetchfunct( `api/instructor/milestone/${ props.id }`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify( { title, description, deadline, tasks } ),
+      } )
+      if ( res.ok )
+      {
+        router.push( { name: 'milestone_list' } )
+      } else
+      {
+        console.error( 'Failed to update milestone' )
+      }
+    } catch ( error )
+    {
+      console.error( 'Error updating milestone:', error )
+    }
+  }
+
+  const addTask = () =>
+  {
+    if ( !milestone_data.value.tasks )
+    {
+      milestone_data.value.tasks = []
+    }
+    milestone_data.value.tasks.push( { text: '' } )
+  }
+
+  const removeTask = ( index ) =>
+  {
+    milestone_data.value.tasks.splice( index, 1 )
+  }
+
+  onMounted( () =>
+  {
+    if ( props.id )
+    {
+      fetchMilestoneDetails( props.id )
+    } else
+    {
+      console.error( 'Milestone ID is undefined' )
+    }
+  } )
 </script>
 
 <template>
   <div class="page-wrapper">
     <div class="container my-5">
       <div class="card shadow-lg p-4 mx-auto">
-        <button @click="$router.back()" class="me-auto p-2 btn btn-link text-decoration-none">
+        <button @click="router.back()" class="me-auto p-2 btn btn-link text-decoration-none">
           ← Back
         </button>
         <h2 class="mb-4 text-center gradient-text">Edit Milestone</h2>
@@ -130,8 +132,7 @@
         </div>
 
         <div class="text-center">
-          <button class="btn btn-gradient btn-lg px-5" @click="updateMilestone()"
-            style="font-family: 'Segoe UI', Arial, sans-serif">
+          <button class="btn btn-gradient btn-lg px-5" @click="updateMilestone()">
             <i class="bi bi-arrow-clockwise me-2"></i>
             Update Milestone
           </button>

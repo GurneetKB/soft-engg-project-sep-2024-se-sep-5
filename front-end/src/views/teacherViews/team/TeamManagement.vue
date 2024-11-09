@@ -1,3 +1,87 @@
+<script setup>
+  import { ref, computed, onMounted } from 'vue'
+  import { fetchfunct } from '@/components/fetch.js'
+  import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+
+  // Reactive state
+  const teams = ref( [] )
+  const currentPage = ref( 1 )
+  const itemsPerPage = ref( 5 )
+  const searchQuery = ref( '' )
+  const loading = ref( true )
+  const error = ref( null )
+
+  // Computed properties
+  const filteredTeams = computed( () =>
+  {
+    return teams.value
+      .filter( team =>
+        team.name.toLowerCase().includes( searchQuery.value.toLowerCase() )
+      )
+      .sort( ( a, b ) => a.name.localeCompare( b.name ) )
+  } )
+
+  const totalPages = computed( () =>
+  {
+    return Math.ceil( filteredTeams.value.length / itemsPerPage.value )
+  } )
+
+  const paginatedTeams = computed( () =>
+  {
+    const start = ( currentPage.value - 1 ) * itemsPerPage.value
+    const end = start + itemsPerPage.value
+    return teamsWithStatus( filteredTeams.value ).slice( start, end )
+  } )
+
+  const pageNumbers = computed( () =>
+  {
+    return Array.from( { length: totalPages.value }, ( _, i ) => i + 1 )
+  } )
+
+  // Methods
+  const teamsWithStatus = ( teams ) =>
+  {
+    return teams.map( team =>
+    {
+      let status = 'light'
+      if ( team.progress === 100 )
+      {
+        status = 'success'
+      } else if ( team.progress > 50 )
+      {
+        status = 'warning'
+      } else if ( team.progress > 0 && team.progress <= 50 )
+      {
+        status = 'danger'
+      }
+      return { ...team, status }
+    } )
+  }
+
+  const goToPage = ( page ) =>
+  {
+    if ( page >= 1 && page <= totalPages.value )
+    {
+      currentPage.value = page
+    }
+  }
+
+  // Lifecycle hook
+  onMounted( async () =>
+  {
+    loading.value = true
+    const response = await fetchfunct( 'teacher/team_management/overall' )
+    if ( response.ok )
+    {
+      teams.value = await response.json()
+    } else
+    {
+      error.value = 'Failed to fetch milestones'
+    }
+    loading.value = false
+  } )
+</script>
+
 <template>
   <section class="py-5">
     <div class="container hero-section py-5 rounded-lg px-4 shadow-lg">
@@ -11,13 +95,18 @@
         </div>
       </div>
       <div class="team-wrapper">
-        <div v-if="paginatedTeams.length === 0" class="no-results">
+        <LoadingPlaceholder v-if="loading" variant="text" :count="3" :lines="[2]" spacing="p-4" :withBorder="true" />
+
+        <div v-else-if="error" class="alert alert-danger">
+          {{ error }}
+        </div>
+        <div v-if="paginatedTeams.length === 0 && !loading" class="no-results">
           No teams found matching your search.
         </div>
-        <div v-else v-for="team in paginatedTeams" :key="team.title" class="team-item mb-4">
+        <div v-else v-for="team in paginatedTeams" :key="team.name" class="team-item mb-4">
           <router-link to="/teacher/team_management/progress" class="text-decoration-none text-dark">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="team-title mb-0">{{ team.title }}</h5>
+              <h5 class="team-name mb-0">{{ team.name }}</h5>
               <span class="progress-text">{{ team.progress }}%</span>
             </div>
 
@@ -28,10 +117,16 @@
           </router-link>
         </div>
         <div class="pagination d-flex justify-content-center mt-5">
-          <button class="btn btn-primary mx-2" :disabled="currentPage === 1" @click="currentPage--">
+          <button class="btn btn-outline-primary mx-2" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
             <i class="fas fa-chevron-left"></i> Previous
           </button>
-          <button class="btn btn-primary mx-2" :disabled="currentPage === totalPages" @click="currentPage++">
+          <button v-for="page in pageNumbers" :key="page" class="btn mx-1"
+            :class="{ 'btn-primary': page === currentPage, 'btn-outline-primary': page !== currentPage }"
+            @click="goToPage(page)">
+            {{ page }}
+          </button>
+          <button class="btn btn-outline-primary mx-2"
+            :disabled="currentPage === totalPages || paginatedTeams.length === 0" @click="goToPage(currentPage + 1)">
             Next <i class="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -40,76 +135,6 @@
   </section>
 </template>
 
-<script>
-  export default {
-    data ()
-    {
-      return {
-        teams: [],
-        currentPage: 1,
-        itemsPerPage: 5,
-        searchQuery: '',
-      }
-    },
-    computed: {
-      filteredTeams ()
-      {
-        return this.teams
-          .filter( team =>
-            team.title.toLowerCase().includes( this.searchQuery.toLowerCase() ),
-          )
-          .sort( ( a, b ) => a.title.localeCompare( b.title ) )
-      },
-      totalPages ()
-      {
-        return Math.ceil( this.filteredTeams.length / this.itemsPerPage )
-      },
-      paginatedTeams ()
-      {
-        const start = ( this.currentPage - 1 ) * this.itemsPerPage
-        const end = start + this.itemsPerPage
-        return this.teamsWithStatus( this.filteredTeams ).slice( start, end )
-      },
-    },
-    methods: {
-      teamsWithStatus ( teams )
-      {
-        return teams.map( team =>
-        {
-          let status = 'light'
-          if ( team.progress === 100 )
-          {
-            status = 'success'
-          } else if ( team.progress > 50 )
-          {
-            status = 'warning'
-          } else if ( team.progress > 0 && team.progress <= 50 )
-          {
-            status = 'danger'
-          }
-          return { ...team, status }
-        } )
-      },
-    },
-    mounted ()
-    {
-      this.teams = [
-        { title: 'Alpha Team', progress: 100 },
-        { title: 'Beta Team', progress: 75 },
-        { title: 'Delta Team', progress: 50 },
-        { title: 'Gamma Team', progress: 25 },
-        { title: 'Echo Team', progress: 90 },
-        { title: 'Falcon Team', progress: 60 },
-        { title: 'Hawk Team', progress: 40 },
-        { title: 'Ice Team', progress: 85 },
-        { title: 'Jupiter Team', progress: 30 },
-        { title: 'Kilo Team', progress: 70 },
-        { title: 'Lima Team', progress: 95 },
-        { title: 'Metro Team', progress: 20 },
-      ]
-    },
-  }
-</script>
 
 <style scoped>
   .search-container {
@@ -152,7 +177,7 @@
     font-size: 2.5rem;
     font-weight: 800;
     background: #1a5f7a;
-    -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -186,20 +211,6 @@
 
   .progress-bar-light {
     background: #6c757d;
-  }
-
-  .btn-primary {
-    background: #007bff;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 50px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #0056b3;
-    transform: translateY(-2px);
   }
 
   .no-results {

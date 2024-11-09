@@ -18,7 +18,7 @@
     onMounted( async () =>
     {
         loadingOnMount.value = true
-        const response = await fetchfunct( '/student/milestone_management/individual' )
+        const response = await fetchfunct( 'student/milestone_management/individual' )
         if ( response.ok )
         {
             const data = await response.json()
@@ -36,7 +36,7 @@
         {
             loading.value = true
             error.value = null
-            const response = await fetchfunct( `/student/milestone_management/individual/${ selectedMilestoneId.value }` )
+            const response = await fetchfunct( `student/milestone_management/individual/${ selectedMilestoneId.value }` )
             if ( response.ok )
             {
                 milestoneDetails.value = await response.json()
@@ -74,7 +74,7 @@
             {
                 formData.append( taskId, file )
             }
-            const response = await fetchfunct( `/student/milestone_management/individual/${ selectedMilestoneId.value }`, {
+            const response = await fetchfunct( `student/milestone_management/individual/${ selectedMilestoneId.value }`, {
                 method: 'POST',
                 body: formData
             } )
@@ -101,7 +101,7 @@
 
     const download = async ( taskId ) =>
     {
-        const response = await fetchfunct( `/student/download_submission/${ taskId }` );
+        const response = await fetchfunct( `student/download_submission/${ taskId }` );
 
         if ( response.ok )
         {
@@ -259,11 +259,6 @@
         background-repeat: no-repeat;
         background-position: right 0.75rem center;
         background-size: 16px 12px;
-    }
-
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
     }
 
     .milestone-card {

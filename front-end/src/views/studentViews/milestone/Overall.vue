@@ -11,7 +11,7 @@
     onMounted( async () =>
     {
         loading.value = true
-        const response = await fetchfunct( '/student/milestone_management/overall' )
+        const response = await fetchfunct( 'student/milestone_management/overall' )
         if ( response.ok )
         {
             const data = await response.json()
@@ -92,5 +92,3 @@
         margin: 0;
     }
 </style>
-
-
