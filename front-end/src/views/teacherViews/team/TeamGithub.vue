@@ -40,11 +40,11 @@
       selectedMember.value = null // Reset selected member when changing teams
       members.value = [] // Clear previous members
 
-      const response = await fetchfunct( `teacher/team_management/individual/${ selectedTeamId.value }/members` )
+      const response = await fetchfunct( `teacher/team_management/individual/detail/${ selectedTeamId.value }` )
       if ( response.ok )
       {
         const data = await response.json()
-        members.value = [ { id: null, name: 'All Members' }, ...data.members ]
+        members.value = [ { id: null, name: 'All Members' }, ...data.team.members ]
       } else
       {
         checkerror( response )

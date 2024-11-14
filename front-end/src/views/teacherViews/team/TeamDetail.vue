@@ -104,7 +104,7 @@
                   </thead>
                   <tbody>
                     <tr v-for="member in teamDetails.team.members" :key="member.id">
-                      <td>{{ member.username }}</td>
+                      <td>{{ member.name }}</td>
                       <td>{{ member.email }}</td>
                     </tr>
                   </tbody>

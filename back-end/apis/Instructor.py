@@ -335,7 +335,7 @@ def get_team_details(team_id):
         "members": [
             {
                 "id": member.id,
-                "username": member.username,
+                "name": member.username,
                 "email": member.email,
             }
             for member in team.members
@@ -345,24 +345,6 @@ def get_team_details(team_id):
         "ta": {"id": team.ta.id, "username": team.ta.username},
     }
     return {"team": team}, 200
-
-
-@app.route("/teacher/team_management/individual/<int:team_id>/members", methods=["GET"])
-@roles_accepted("Instructor", "TA")
-def get_team_member_details(team_id):
-
-    team = get_single_team_under_user(current_user, team_id)
-    if not team:
-        return abort(404, "Team not found")
-    return {
-        "members": [
-            {
-                "id": member.id,
-                "name": member.username,
-            }
-            for member in team.members
-        ]
-    }, 200
 
 
 @app.route(
