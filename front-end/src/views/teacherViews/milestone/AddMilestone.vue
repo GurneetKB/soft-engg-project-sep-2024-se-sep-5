@@ -1,58 +1,65 @@
 <script setup>
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { fetchfunct } from '@/components/fetch';
+  import { checkerror, checksuccess, fetchfunct } from '@/components/fetch'
+  import { Form, Field, ErrorMessage, FieldArray } from 'vee-validate'
+  import * as Yup from 'yup'
 
   const router = useRouter()
-  const milestoneData = ref( {
+  const formValues = ref()
+  const initialValues = {
     title: '',
     description: '',
     deadline: '',
-    tasks: ref( [ '' ] ),
-  } )
-
-  function addTask ()
-  {
-    milestoneData.value.tasks.push( '' )
+    tasks: [ { description: '' } ]
   }
 
-  const responseMessage = ref( '' )
+  const validationSchema = Yup.object( {
+    title: Yup.string().required( 'Milestone title is required' ),
+    description: Yup.string().required( 'Milestone description is required' ),
+    deadline: Yup.date()
+      .min( new Date(), 'Deadline must be in the future' )
+      .required( 'Deadline is required' ),
+    tasks: Yup.array().of(
+      Yup.object().shape( {
+        description: Yup.string().required( 'Task description is required' )
+      } )
+    ).min( 1, 'At least one task is required' )
+  } )
 
-  const publishMilestone = async () =>
+  const loading = ref( false )
+
+  const handleCreateButtonClick = ( values ) =>
   {
+    new bootstrap.Modal( document.getElementById( 'createConfirmation' ) ).show()
+    formValues.value = values
+  }
 
-    try
-    {
-      const response = await fetchfunct(
-        'api/instructor/milestone',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify( milestoneData.value ),
-        },
-      )
-
-      if ( !response.ok )
+  const createMilestone = async () =>
+  {
+    bootstrap.Modal.getInstance( document.getElementById( 'createConfirmation' ) ).hide()
+    loading.value = true
+    formValues.value.deadline = new Date( formValues.value.deadline ).toUTCString()
+    const response = await fetchfunct(
+      'teacher/milestone_management',
       {
-        throw new Error( `Error: ${ response.statusText }` )
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify( formValues.value )
       }
+    )
 
-      responseMessage.value = 'Milestone published successfully!'
-
-      // Reset form
-      milestoneData.value = {
-        title: '',
-        description: '',
-        deadline: '',
-        tasks: [ '' ],
-      }
-    } catch ( error )
+    if ( response.ok )
     {
-      responseMessage.value = `Error: ${ error.message }`
-      console.error( 'Error:', error )
+      checksuccess( response )
+      router.push( "/teacher/milestone_management" )
+    } else
+    {
+      checkerror( response )
     }
+    loading.value = false
   }
 </script>
 
@@ -65,49 +72,84 @@
         </button>
         <h2 class="mb-4 text-center gradient-text">Create New Milestone</h2>
 
-        <div class="mb-4">
-          <label for="titleInput" class="form-label fw-bold">Title</label>
-          <input type="text" class="form-control form-control-lg custom-input" id="titleInput"
-            placeholder="Enter milestone title" v-model="milestoneData.title" />
-        </div>
+        <Form :validation-schema="validationSchema" :initial-values="initialValues" @submit="handleCreateButtonClick">
+          <div class="mb-4">
+            <label for="titleInput" class="form-label fw-bold">Title</label>
+            <Field name="title" type="text" id="titleInput" class="form-control form-control-lg custom-input"
+              placeholder="Enter milestone title" />
+            <ErrorMessage name="title" class="form-text" />
+          </div>
 
-        <div class="mb-4">
-          <label for="descriptionArea" class="form-label fw-bold">Description</label>
-          <textarea class="form-control custom-input" id="descriptionArea" rows="4"
-            placeholder="Enter milestone description" v-model="milestoneData.description"></textarea>
-        </div>
+          <div class="mb-4">
+            <label for="descriptionArea" class="form-label fw-bold">Description</label>
+            <Field name="description" as="textarea" id="descriptionArea" class="form-control custom-input" rows="4"
+              placeholder="Enter milestone description" />
+            <ErrorMessage name="description" class="form-text" />
+          </div>
 
-        <div class="mb-4">
-          <label for="deadlineInput" class="form-label fw-bold">Deadline</label>
-          <input type="datetime-local" class="form-control form-control-lg custom-input" id="deadlineInput"
-            :min="new Date().toISOString().slice(0, 16)" v-model="milestoneData.deadline" />
-        </div>
+          <div class="mb-4">
+            <label for="deadlineInput" class="form-label fw-bold">Deadline</label>
+            <Field name="deadline" type="datetime-local" id="deadlineInput"
+              class="form-control form-control-lg custom-input" :min="new Date().toISOString().slice(0, 16)" />
+            <ErrorMessage name="deadline" class="form-text" />
+          </div>
 
-        <div class="task-list mb-4">
-          <label for="tasksInput" class="form-label fw-bold">Tasks</label>
-          <div v-for="index in milestoneData.tasks" :key="index" class="task-item mb-3 d-flex align-items-center">
-            <input type="text" class="form-control custom-input me-2" :placeholder="'Enter task ' + (index + 1)"
-              v-model="milestoneData.tasks[index]" />
-            <button v-if="milestoneData.tasks.length > 1" @click="milestoneData.tasks.splice(index, 1)" type="button"
-              class="btn btn-outline-danger rounded-circle delete-btn" style="width: 25px; height: 23px; padding: 0">
-              <i class="bi bi-dash-lg"></i>
+          <div class="task-list mb-4">
+            <label class="form-label fw-bold">Tasks</label>
+            <FieldArray name="tasks" v-slot="{ fields, push, remove }">
+              <div v-for="(field, index) in fields" :key="field.key" class="task-item mb-3">
+                <div class="d-flex align-items-center">
+                  <Field :name="`tasks[${index}].description`" type="text" class="form-control custom-input me-2"
+                    :placeholder="`Enter task ${index + 1}`" />
+                  <button v-if="fields.length > 1" @click="remove(index)" type="button"
+                    class="btn btn-outline-danger rounded-circle delete-btn"
+                    style="width: 25px; height: 23px; padding: 0">
+                    <i class="bi bi-dash-lg"></i>
+                  </button>
+                </div>
+                <ErrorMessage :name="`tasks[${index}].description`" class="form-text" />
+              </div>
+              <div class="text-center mt-3">
+                <button @click="push({ description: '' })" type="button"
+                  class="btn btn-outline-primary rounded-circle add-btn">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </FieldArray>
+            <ErrorMessage name="tasks" class="form-text" />
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-gradient btn-lg px-5" :disabled="loading">
+              <span v-if="!loading"><i class="bi bi-check2-circle me-2"></i>Create Milestone</span>
+              <span v-else>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span class="align-middle"> Loading...</span>
+              </span>
             </button>
           </div>
-          <div class="text-center mt-3">
-            <button @click="addTask" type="button" class="btn btn-outline-primary rounded-circle add-btn">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
-        </div>
+        </Form>
+      </div>
+    </div>
+  </div>
 
-        <div class="text-center">
-          <button @click="publishMilestone" class="btn btn-gradient btn-lg px-5">
-            <i class="bi bi-check2-circle me-2"></i>
-            Publish Milestone
+  <div class="modal" tabindex="-1" role="dialog" id="createConfirmation">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Milestone Creation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to create the milestone?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancel
           </button>
-          <p v-if="responseMessage" class="mt-3 text-success">
-            {{ responseMessage }}
-          </p>
+          <button type="button" class="btn nav-color-btn" @click="createMilestone">
+            Create
+          </button>
         </div>
       </div>
     </div>
@@ -125,7 +167,6 @@
     padding: 0;
     align-items: center;
     justify-content: center;
-    /* transition: transform 0.2s ease; */
   }
 
   .add-btn:hover {
@@ -151,7 +192,7 @@
   }
 
   .gradient-text {
-    background: #1a5f7a;
+    background: var(--navbar-bg);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -166,13 +207,12 @@
   }
 
   .custom-input:focus {
-    border-color: #159957;
     box-shadow: 0 0 0 0.2rem rgba(21, 153, 87, 0.15);
     transform: translateY(-1px);
   }
 
   .btn-gradient {
-    background: #159957;
+    background: var(--navbar-bg);
     border: none;
     color: white;
     transition: all 0.3s ease;
@@ -182,20 +222,14 @@
   }
 
   .btn-gradient:hover {
-    background: #138346;
+    background: rgb(from var(--navbar-bg) r g b / 0.8);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   }
 
   .form-label {
-    color: #2c3e50;
+    color: var(--navbar-bg);
     margin-bottom: 8px;
     font-size: 1.1rem;
-  }
-
-  input::placeholder,
-  textarea::placeholder {
-    color: #999;
-    font-size: 0.95rem;
   }
 </style>

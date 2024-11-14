@@ -91,7 +91,7 @@
         </div>
       </div>
       <div class="team-wrapper">
-        <LoadingPlaceholder v-if="loading" variant="text" :count="3" :lines="[2]" spacing="p-4" :withBorder="true" />
+        <LoadingPlaceholder v-if="loading" variant="list-item" :count="5" />
 
         <div v-else-if="error" class="alert alert-danger">
           {{ error }}

@@ -1,44 +1,51 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { fetchfunct } from '@/components/fetch.js'
-import SearchableDropdown from '@/components/SearchableDropdown.vue'
-import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+  import { ref, onMounted } from 'vue'
+  import { fetchfunct } from '@/components/fetch.js'
+  import SearchableDropdown from '@/components/SearchableDropdown.vue'
+  import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
-const teams = ref([])
-const selectedTeamId = ref(null)
-const teamDetails = ref(null)
-const loadingOnMount = ref(true)
-const loading = ref(false)
-const error = ref(null)
+  const teams = ref( [] )
+  const selectedTeamId = ref( null )
+  const teamDetails = ref( null )
+  const loadingOnMount = ref( true )
+  const loading = ref( false )
+  const error = ref( null )
 
-onMounted(async () => {
-  loadingOnMount.value = true
-  const response = await fetchfunct('teacher/team_management/individual')
-  if (response.ok) {
-    const data = await response.json()
-    teams.value = data.teams
-  } else {
-    error.value = 'Failed to fetch teams'
-  }
-  loadingOnMount.value = false
-})
-
-const fetchTeamDetails = async () => {
-  if (selectedTeamId.value !== null) {
-    loading.value = true
-    error.value = null
-    const response = await fetchfunct(
-      `teacher/team_management/individual/detail/${selectedTeamId.value}`,
-    )
-    if (response.ok) {
-      teamDetails.value = await response.json()
-      error.value = null
-    } else {
-      error.value = 'Error fetching team details'
+  onMounted( async () =>
+  {
+    loadingOnMount.value = true
+    const response = await fetchfunct( 'teacher/team_management/individual' )
+    if ( response.ok )
+    {
+      const data = await response.json()
+      teams.value = data.teams
+    } else
+    {
+      error.value = 'Failed to fetch teams'
     }
-    loading.value = false
+    loadingOnMount.value = false
+  } )
+
+  const fetchTeamDetails = async () =>
+  {
+    if ( selectedTeamId.value !== null )
+    {
+      loading.value = true
+      error.value = null
+      const response = await fetchfunct(
+        `teacher/team_management/individual/detail/${ selectedTeamId.value }`,
+      )
+      if ( response.ok )
+      {
+        teamDetails.value = await response.json()
+        error.value = null
+      } else
+      {
+        error.value = 'Error fetching team details'
+      }
+      loading.value = false
+    }
   }
-}
 </script>
 
 <template>
@@ -47,22 +54,8 @@ const fetchTeamDetails = async () => {
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="m-0">Individual Team Details</h4>
       </div>
-
-      <LoadingPlaceholder
-        v-if="loadingOnMount"
-        variant="text"
-        :count="3"
-        :lines="[2]"
-        spacing="p-4"
-        :withBorder="true"
-      />
-
-      <SearchableDropdown
-        v-model="selectedTeamId"
-        @change="fetchTeamDetails"
-        :options="teams"
-        v-else
-      >
+      <LoadingPlaceholder v-if="loadingOnMount" variant="list-item" :count="5" />
+      <SearchableDropdown v-model="selectedTeamId" @change="fetchTeamDetails" :options="teams" v-else>
       </SearchableDropdown>
 
       <div v-if="loading" class="d-flex justify-content-center my-5">
@@ -84,11 +77,7 @@ const fetchTeamDetails = async () => {
             <div class="mb-4">
               <p>
                 <strong>GitHub Repository:</strong>
-                <a
-                  :href="teamDetails.team.github_repo_url"
-                  target="_blank"
-                  class="text-primary"
-                >
+                <a :href="teamDetails.team.github_repo_url" target="_blank" class="text-primary">
                   {{ teamDetails.team.github_repo_url }}
                 </a>
               </p>
@@ -114,10 +103,7 @@ const fetchTeamDetails = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr
-                      v-for="member in teamDetails.team.members"
-                      :key="member.id"
-                    >
+                    <tr v-for="member in teamDetails.team.members" :key="member.id">
                       <td>{{ member.username }}</td>
                       <td>{{ member.email }}</td>
                     </tr>
@@ -133,22 +119,22 @@ const fetchTeamDetails = async () => {
 </template>
 
 <style scoped>
-.card {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  border-radius: 0.5rem;
-}
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+  }
 
-.card-header {
-  background-color: var(--navbar-bg);
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-}
+  .card-header {
+    background-color: var(--navbar-bg);
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+  }
 
-.table {
-  margin-bottom: 0;
-}
+  .table {
+    margin-bottom: 0;
+  }
 
-.table th {
-  font-weight: 600;
-}
+  .table th {
+    font-weight: 600;
+  }
 </style>

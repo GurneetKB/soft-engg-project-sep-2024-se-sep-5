@@ -1,7 +1,11 @@
 <script setup>
   import { ref, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
-  import { fetchfunct } from '@/components/fetch'
+  import { checkerror, checksuccess, fetchfunct } from '@/components/fetch'
+  import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+  import { Form, Field, ErrorMessage, FieldArray } from 'vee-validate'
+  import * as Yup from 'yup'
+  import { convertUTCDateToLocaleDate, localDateInISOFormat } from '@/components/date'
 
   const props = defineProps( {
     id: {
@@ -12,79 +16,82 @@
 
   const router = useRouter()
 
-  const milestone_data = ref( {
+  const initialValues = ref( {
     title: '',
     description: '',
     deadline: '',
-    tasks: []
+    tasks: [ { description: '' } ]
   } )
 
-  const fetchMilestoneDetails = async ( id ) =>
+  const validationSchema = Yup.object( {
+    title: Yup.string().required( 'Milestone title is required' ),
+    description: Yup.string().required( 'Milestone description is required' ),
+    deadline: Yup.date()
+      .min( new Date(), 'Deadline must be in the future' )
+      .required( 'Deadline is required' ),
+    tasks: Yup.array().of(
+      Yup.object().shape( {
+        description: Yup.string().required( 'Task description is required' )
+      } )
+    ).min( 1, 'At least one task is required' )
+  } )
+
+  const loading = ref( false )
+  const loadingOnMount = ref( true )
+  const formRef = ref( null )
+
+  const handleUpdateButtonClick = ( values ) =>
   {
-    try
-    {
-      const res = await fetchfunct( `api/instructor/milestone/${ id }` )
-      const data = await res.json()
-      if ( res.ok )
-      {
-        milestone_data.value = data
-      } else
-      {
-        console.error( 'Failed to fetch milestone details:', res.status )
-      }
-    } catch ( error )
-    {
-      console.error( 'Error fetching milestone:', error )
-    }
+    new bootstrap.Modal( '#updateConfirmation' ).show()
   }
 
   const updateMilestone = async () =>
   {
-    try
+    bootstrap.Modal.getInstance( document.getElementById( 'updateConfirmation' ) ).hide()
+    const formValues = { ...formRef.value.values };
+    if ( !formValues ) return
+    loading.value = true
+    formValues.deadline = new Date( formValues.deadline ).toUTCString()
+    const res = await fetchfunct( `teacher/milestone_management/${ props.id }`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify( formValues ),
+    } )
+    if ( res.ok )
     {
-      const { title, description, deadline, tasks } = milestone_data.value
-      const res = await fetchfunct( `api/instructor/milestone/${ props.id }`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify( { title, description, deadline, tasks } ),
-      } )
-      if ( res.ok )
-      {
-        router.push( { name: 'milestone_list' } )
-      } else
-      {
-        console.error( 'Failed to update milestone' )
-      }
-    } catch ( error )
-    {
-      console.error( 'Error updating milestone:', error )
-    }
-  }
-
-  const addTask = () =>
-  {
-    if ( !milestone_data.value.tasks )
-    {
-      milestone_data.value.tasks = []
-    }
-    milestone_data.value.tasks.push( { text: '' } )
-  }
-
-  const removeTask = ( index ) =>
-  {
-    milestone_data.value.tasks.splice( index, 1 )
-  }
-
-  onMounted( () =>
-  {
-    if ( props.id )
-    {
-      fetchMilestoneDetails( props.id )
+      router.push( "/teacher/milestone_management" )
+      checksuccess( res )
     } else
     {
-      console.error( 'Milestone ID is undefined' )
+      checkerror( res )
     }
-  } )
+
+    loading.value = false
+  }
+
+  onMounted( async () =>
+  {
+    loadingOnMount.value = true
+    const res = await fetchfunct( `teacher/milestone_management/${ props.id }` )
+    if ( res.ok )
+    {
+      const data = await res.json()
+      initialValues.value = {
+        title: data.title || '',
+        description: data.description || '',
+        deadline: localDateInISOFormat( convertUTCDateToLocaleDate( data.deadline ) ) || '',
+        tasks: data.tasks && data.tasks.length > 0
+          ? data.tasks.map( task => ( { description: task.description || '' } ) )
+          : [ { description: '' } ]
+      }
+    } else
+    {
+      checkerror( res )
+    }
+
+    loadingOnMount.value = false
+  }
+  )
 </script>
 
 <template>
@@ -95,46 +102,87 @@
           ← Back
         </button>
         <h2 class="mb-4 text-center gradient-text">Edit Milestone</h2>
+        <LoadingPlaceholder v-if="loadingOnMount" variant="form" :count="1" />
+        <Form v-else :validation-schema="validationSchema" :initial-values="initialValues" ref="formRef"
+          @submit="handleUpdateButtonClick">
+          <div class="mb-4">
+            <label for="titleInput" class="form-label fw-bold">Title</label>
+            <Field name="title" type="text" id="titleInput" class="form-control form-control-lg custom-input"
+              placeholder="Enter milestone title" />
+            <ErrorMessage name="title" class="form-text" />
+          </div>
 
-        <div class="mb-4">
-          <label for="titleInput" class="form-label fw-bold">Title</label>
-          <input type="text" class="form-control form-control-lg custom-input" id="titleInput"
-            v-model="milestone_data.title" />
-        </div>
+          <div class="mb-4">
+            <label for="descriptionArea" class="form-label fw-bold">Description</label>
+            <Field name="description" as="textarea" id="descriptionArea" class="form-control custom-input" rows="4"
+              placeholder="Enter milestone description" />
+            <ErrorMessage name="description" class="form-text" />
+          </div>
 
-        <div class="mb-4">
-          <label for="descriptionArea" class="form-label fw-bold">Description</label>
-          <textarea class="form-control custom-input" id="descriptionArea" rows="4"
-            v-model="milestone_data.description"></textarea>
-        </div>
+          <div class="mb-4">
+            <label for="deadlineInput" class="form-label fw-bold">Deadline</label>
+            <Field name="deadline" type="datetime-local" id="deadlineInput"
+              class="form-control form-control-lg custom-input" :min="new Date().toISOString().slice(0, 16)" />
+            <ErrorMessage name="deadline" class="form-text" />
+          </div>
 
-        <div class="mb-4">
-          <label for="deadlineInput" class="form-label fw-bold">Deadline</label>
-          <input type="datetime-local" class="form-control form-control-lg custom-input" id="deadlineInput"
-            v-model="milestone_data.deadline" :min="new Date().toISOString().slice(0, 16)" />
-        </div>
+          <div class="task-list mb-4">
+            <label class="form-label fw-bold">Tasks</label>
+            <FieldArray name="tasks" v-slot="{ fields, push, remove }">
+              <div v-for="(field, index) in fields" :key="field.key" class="task-item mb-3">
+                <div class="d-flex align-items-center">
+                  <Field :name="`tasks[${index}].description`" type="text" class="form-control custom-input me-2"
+                    :placeholder="`Enter task ${index + 1}`" />
+                  <button v-if="fields.length > 1" @click="remove(index)" type="button"
+                    class="btn btn-outline-danger rounded-circle delete-btn"
+                    style="width: 25px; height: 23px; padding: 0">
+                    <i class="bi bi-dash-lg"></i>
+                  </button>
+                </div>
+                <ErrorMessage :name="`tasks[${index}].description`" class="form-text" />
+              </div>
+              <div class="text-center mt-3">
+                <button @click="push({ description: '' })" type="button"
+                  class="btn btn-outline-primary rounded-circle add-btn">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </FieldArray>
+            <ErrorMessage name="tasks" class="form-text" />
+          </div>
 
-        <div class="task-list mb-4">
-          <label for="tasksInput" class="form-label fw-bold">Tasks</label>
-          <div v-for="(task, index) in milestone_data.tasks" :key="index" class="mb-4 d-flex align-items-center">
-            <input type="text" class="form-control custom-input me-2" :placeholder="'Enter task ' + (index + 1)"
-              v-model="task.text" />
-            <button @click="removeTask(index)" type="button" class="btn btn-outline-danger rounded-circle delete-btn"
-              style="width: 25px; height: 23px; padding: 0">
-              <i class="bi bi-dash-lg"></i>
+          <div class="text-center">
+            <button type="submit" class="btn btn-gradient btn-lg px-5" :disabled="loading">
+              <span v-if="!loading">
+                <i class="bi bi-arrow-clockwise me-2"></i>Update Milestone
+              </span>
+              <span v-else>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span class="align-middle"> Loading...</span>
+              </span>
             </button>
           </div>
-          <div class="text-center mt-3">
-            <button @click="addTask" type="button" class="btn btn-outline-primary rounded-circle add-btn">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
-        </div>
+        </Form>
+      </div>
+    </div>
+  </div>
 
-        <div class="text-center">
-          <button class="btn btn-gradient btn-lg px-5" @click="updateMilestone()">
-            <i class="bi bi-arrow-clockwise me-2"></i>
-            Update Milestone
+  <div class="modal" tabindex="-1" role="dialog" id="updateConfirmation">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Milestone Update</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to update the milestone?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="button" class="btn nav-color-btn" @click="updateMilestone">
+            Update
           </button>
         </div>
       </div>
@@ -178,7 +226,7 @@
   }
 
   .gradient-text {
-    background: #1a5f7a;
+    background: var(--navbar-bg);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -189,38 +237,33 @@
     border: 2px solid #e0e0e0;
     border-radius: 10px;
     padding: 12px;
+    transition: all 0.3s ease;
   }
 
   .custom-input:focus {
-    border-color: #159957;
     box-shadow: 0 0 0 0.2rem rgba(21, 153, 87, 0.15);
     transform: translateY(-1px);
   }
 
   .btn-gradient {
-    background: #159957;
+    background: var(--navbar-bg);
     border: none;
     color: white;
+    transition: all 0.3s ease;
     font-weight: 500;
     letter-spacing: 0.5px;
     border-radius: 10px;
   }
 
   .btn-gradient:hover {
-    background: #138346;
+    background: rgb(from var(--navbar-bg) r g b / 0.8);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   }
 
   .form-label {
-    color: #2c3e50;
+    color: var(--navbar-bg);
     margin-bottom: 8px;
     font-size: 1.1rem;
-  }
-
-  input::placeholder,
-  textarea::placeholder {
-    color: #999;
-    font-size: 0.95rem;
   }
 </style>

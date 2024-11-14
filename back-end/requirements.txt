@@ -36,3 +36,4 @@ webencodings==0.5.1
 Werkzeug==3.0.6
 WTForms==3.2.1
 zxcvbn==4.4.28
+PyGithub==2.5.0

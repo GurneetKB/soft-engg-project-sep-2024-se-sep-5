@@ -46,11 +46,10 @@ select {
   color: #fff !important;
 }
 
-.nav-color {
-  color: var(--navbar-bg)
+.nav-color-btn:hover {
+  background: rgb(from var(--navbar-bg) r g b / 0.8) !important;
 }
 
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
+.nav-color {
+  color: var(--navbar-bg)
 }

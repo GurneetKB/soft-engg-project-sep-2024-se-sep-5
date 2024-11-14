@@ -1,17 +1,18 @@
 <script setup>
-  import { ref, computed, onMounted } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { fetchfunct } from '@/components/fetch'
+  import { ref, computed, onMounted, watch } from 'vue'
+  import { checkerror, checksuccess, fetchfunct } from '@/components/fetch'
   import { useIdentityStore } from '@/stores/identity'
   import { storeToRefs } from 'pinia'
-
-  const router = useRouter()
+  import { useRoute } from 'vue-router'
+  import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
   const { identity } = storeToRefs( useIdentityStore() )
 
   const milestones = ref( [] )
+  const deleteMilestoneId = ref( null )
   const noOfStudents = ref( 0 )
   const noOfTeams = ref( 0 )
   const error = ref( null )
+  const loading = ref( false )
 
   const milestonesWithStatus = computed( () =>
   {
@@ -32,58 +33,78 @@
     } )
   } )
 
-
-  const getAllMilestones = async () =>
+  const handleDeleteButtonClick = ( milestoneId ) =>
   {
-    const res = await fetchfunct( 'api/instructor/all_milestone' )
+    new bootstrap.Modal( '#deleteConfirmation' ).show()
+    deleteMilestoneId.value = milestoneId
+  }
+
+  const deleteMilestone = async () =>
+  {
+    bootstrap.Modal.getInstance( document.getElementById( 'deleteConfirmation' ) ).hide()
+    const res = await fetchfunct(
+      `teacher/milestone_management/${ deleteMilestoneId.value }`,
+      {
+        method: 'DELETE',
+      } )
 
     if ( res.ok )
     {
-      milestones.value = await res.json()
-      const response = await fetchfunct( 'teacher/milestone_management/numbers' )
-      if ( response.ok )
-      {
-        const data = await response.json()
-        noOfStudents.value = data.no_of_students
-        noOfTeams.value = data.no_of_teams
-      }
+      checksuccess( res )
+      milestones.value = milestones.value.filter(
+        ( milestone ) => milestone.id !== deleteMilestoneId.value
+      );
+
     } else
     {
-      error.value = res.status
+      checkerror( res )
     }
   }
 
-  const deleteMilestone = async ( milestone_id ) =>
+  const fetchMilestones = async () =>
   {
-    if ( confirm( 'Do you really want to delete?' ) )
-    {
-      const res = await fetchfunct(
-        `api/instructor/milestone/${ milestone_id }`,
-        {
-          method: 'DELETE',
-        },
-      )
+    loading.value = true
+    const res = await fetchfunct( 'teacher/milestone_management' )
 
-      if ( res.ok )
-      {
-        router.go( 0 )
-      } else
-      {
-        error.value = res.status
-      }
+    if ( res.ok )
+    {
+      const data = await res.json()
+      milestones.value = data.milestones
+      noOfStudents.value = data.no_of_students
+      noOfTeams.value = data.no_of_teams
+    } else
+    {
+      error.value = "Failed to fetch milestone details"
     }
+    loading.value = false
   }
 
   onMounted( () =>
   {
-    getAllMilestones()
+    fetchMilestones()
   } )
+
+  // Watch for route changes and trigger a fetch
+  const route = useRoute()
+  watch(
+    () => route.fullPath,
+    ( newPath, oldPath ) =>
+    {
+      if ( newPath === '/teacher/milestone_management' )
+      {
+        fetchMilestones()
+      }
+    }
+  )
 </script>
 
 <template>
   <router-view v-if="$route.name !== 'MilestoneManagement'"></router-view>
   <div v-else>
     <section class="py-5">
+      <div v-if="error" class="alert alert-danger mt-4" role="alert">
+        {{ error }}
+      </div>
       <div class="container px-4">
         <div class="row g-4 justify-content-center mx-0">
           <div class="col-sm-5 px-2">
@@ -125,7 +146,31 @@
             </RouterLink>
           </button>
         </div>
+
+        <div class="modal" tabindex="-1" role="dialog" id="deleteConfirmation">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Confirm Milestone Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <p>Are you sure you want to delete the milestone?</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button type="button" class="btn nav-color-btn" @click="deleteMilestone">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="milestone-wrapper">
+          <LoadingPlaceholder v-if="loading" variant="list-item" :count="5" :leadingSize="8" />
           <div v-for="milestone in milestonesWithStatus" :key="milestone.name" class="milestone-item mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="milestone-title mb-0">{{ milestone.title }}</h5>
@@ -135,7 +180,7 @@
                   :to="`/teacher/milestone_management/edit_milestone/${milestone.id}`">
                   <i class="bi bi-pencil-square"></i>
                 </RouterLink>
-                <button class="btn btn-outline-danger btn-sm" @click="deleteMilestone(milestone.id)">
+                <button class="btn btn-outline-danger btn-sm" @click="handleDeleteButtonClick(milestone.id)">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>

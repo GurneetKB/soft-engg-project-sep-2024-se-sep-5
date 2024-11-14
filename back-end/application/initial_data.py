@@ -77,28 +77,28 @@ def seed_database(db):
     teams = [
         Teams(
             name="Team Alpha",
-            github_repo_url="https://github.com/team-alpha/project",
+            github_repo_url="https://github.com/shrasinh/team_alpha",
             instructor=users["instructor"],
             ta=users["ta1"],
             members=[users["student1"], users["student2"], users["student3"]],
         ),
         Teams(
             name="Team Beta",
-            github_repo_url="https://github.com/team-beta/project",
+            github_repo_url="https://github.com/Matrixmang0/team_beta",
             instructor=users["instructor"],
             ta=users["ta1"],
             members=[users["student4"], users["student5"], users["student6"]],
         ),
         Teams(
             name="Team Gamma",
-            github_repo_url="https://github.com/team-gamma/project",
+            github_repo_url="https://github.com/shrasinh/team_gamma",
             instructor=users["instructor"],
             ta=users["ta2"],
             members=[users["student7"], users["student8"], users["student9"]],
         ),
         Teams(
             name="Team Delta",
-            github_repo_url="https://github.com/team-delta/project",
+            github_repo_url="https://github.com/Matrixmang0/team-delta",
             instructor=users["instructor"],
             ta=users["ta2"],
             members=[users["student10"], users["student11"], users["student12"]],

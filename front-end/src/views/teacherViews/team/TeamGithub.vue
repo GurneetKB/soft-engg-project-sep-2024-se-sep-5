@@ -1,51 +1,53 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { fetchfunct } from '@/components/fetch.js'
-import SearchableDropdown from '@/components/SearchableDropdown.vue'
-import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+  import { ref, onMounted } from 'vue'
+  import { fetchfunct } from '@/components/fetch.js'
+  import SearchableDropdown from '@/components/SearchableDropdown.vue'
+  import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
 
-const teams = ref([])
-const selectedTeamId = ref(null)
-const teamDetails = ref([])
-const loadingOnMount = ref(true)
-const loading = ref(false)
-const error = ref(null)
-const milestones = ref([
-  { name: 'Milestone 1' },
-  { name: 'Milestone 2' },
-  { name: 'Milestone 3' },
-  { name: 'Milestone 4' },
-])
-onMounted(async () => {
-  loadingOnMount.value = true
-  const response = await fetchfunct('teacher/team_management/individual')
-  if (response.ok) {
-    const data = await response.json()
-    teams.value = data.teams
-  } else {
-    error.value = 'Failed to fetch teams'
-  }
-  loadingOnMount.value = false
-})
-
-const fetchTeamDetails = async () => {
-  if (selectedTeamId.value !== null) {
-    loading.value = true
-    error.value = null
-    const response = await fetchfunct(
-      `teacher/team_management/individual/github/${selectedTeamId.value}`,
-    )
-    if (response.ok) {
+  const teams = ref( [] )
+  const selectedTeamId = ref( null )
+  const teamDetails = ref( [] )
+  const loadingOnMount = ref( true )
+  const loading = ref( false )
+  const error = ref( null )
+  const milestones = ref( [] )
+  onMounted( async () =>
+  {
+    loadingOnMount.value = true
+    const response = await fetchfunct( 'teacher/team_management/individual' )
+    if ( response.ok )
+    {
       const data = await response.json()
-      teamDetails.value = data
-      milestones.value = data.milestones
-      error.value = null
-    } else {
-      error.value = 'Error fetching team details'
+      teams.value = data.teams
+    } else
+    {
+      error.value = 'Failed to fetch teams'
     }
-    loading.value = false
+    loadingOnMount.value = false
+  } )
+
+  const fetchTeamDetails = async () =>
+  {
+    if ( selectedTeamId.value !== null )
+    {
+      loading.value = true
+      error.value = null
+      const response = await fetchfunct(
+        `teacher/team_management/individual/github/${ selectedTeamId.value }`,
+      )
+      if ( response.ok )
+      {
+        const data = await response.json()
+        teamDetails.value = data
+        milestones.value = data.milestones
+        error.value = null
+      } else
+      {
+        error.value = 'Error fetching team details'
+      }
+      loading.value = false
+    }
   }
-}
 </script>
 
 <template>
@@ -55,21 +57,9 @@ const fetchTeamDetails = async () => {
         <h4 class="m-0">Individual Team Github Details</h4>
       </div>
 
-      <LoadingPlaceholder
-        v-if="loadingOnMount"
-        variant="text"
-        :count="3"
-        :lines="[2]"
-        spacing="p-4"
-        :withBorder="true"
-      />
+      <LoadingPlaceholder v-if="loadingOnMount" variant="list-item" :count="5" />
 
-      <SearchableDropdown
-        v-model="selectedTeamId"
-        @change="fetchTeamDetails"
-        :options="teams"
-        v-else
-      />
+      <SearchableDropdown v-model="selectedTeamId" @change="fetchTeamDetails" :options="teams" v-else />
 
       <div v-if="selectedTeamId" class="mt-4">
         <div v-if="loading" class="d-flex justify-content-center my-5">
@@ -93,20 +83,14 @@ const fetchTeamDetails = async () => {
 
         <!-- New Timeline Style -->
         <div class="timeline">
-          <div
-            v-for="(milestone, index) in milestones"
-            :key="index"
-            class="timeline-item"
-          >
+          <div v-for="(milestone, index) in milestones" :key="index" class="timeline-item">
             <div class="timeline-icon">
               <span class="badge">✓</span>
             </div>
             <div class="timeline-content">
               <div class="card mb-4">
                 <div class="card-header">
-                  <div
-                    class="d-flex justify-content-between align-items-center"
-                  >
+                  <div class="d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">{{ milestone.name }}</h5>
                     <span class="badge bg-primary">Milestone</span>
                   </div>
@@ -126,50 +110,50 @@ const fetchTeamDetails = async () => {
 </template>
 
 <style scoped>
-.timeline {
-  position: relative;
-  padding: 20px 0;
-}
+  .timeline {
+    position: relative;
+    padding: 20px 0;
+  }
 
-.timeline-item {
-  display: flex;
-  position: relative;
-}
+  .timeline-item {
+    display: flex;
+    position: relative;
+  }
 
-.timeline-item::before {
-  background: #dee2e6;
-  content: '';
-  height: 100%;
-  left: 19px;
-  position: absolute;
-  top: 20px;
-  width: 2px;
-  z-index: -1;
-}
+  .timeline-item::before {
+    background: #dee2e6;
+    content: '';
+    height: 100%;
+    left: 19px;
+    position: absolute;
+    top: 20px;
+    width: 2px;
+    z-index: -1;
+  }
 
-.timeline-icon {
-  margin-right: 15px;
-}
+  .timeline-icon {
+    margin-right: 15px;
+  }
 
-.timeline-icon .badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #0d6efd;
-  color: white;
-  margin-top: 20px;
-}
+  .timeline-icon .badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0d6efd;
+    color: white;
+    margin-top: 20px;
+  }
 
-.timeline-content {
-  flex: 1 1 auto;
-  padding: 0 0 0 1rem;
-}
+  .timeline-content {
+    flex: 1 1 auto;
+    padding: 0 0 0 1rem;
+  }
 
-.card {
-  max-height: 300px;
-  overflow-y: auto;
-}
+  .card {
+    max-height: 300px;
+    overflow-y: auto;
+  }
 </style>

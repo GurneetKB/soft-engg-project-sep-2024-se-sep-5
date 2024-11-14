@@ -1,15 +1,7 @@
-from application.setup import app, api
-from controllers.Student import *
-from controllers.Generic import *
-from controllers.Instructor import *
-
-from controllers.api.milestoneAPI import MilestoneAPI, MilestoneAllAPI
-
-# Register the Milestone API route
-api.add_resource(
-    MilestoneAPI, "/instructor/milestone", "/instructor/milestone/<milestone_id>"
-)
-api.add_resource(MilestoneAllAPI, "/instructor/all_milestone")
+from application.setup import app
+from apis.Student import *
+from apis.Generic import *
+from apis.Instructor import *
 
 
 if __name__ == "__main__":

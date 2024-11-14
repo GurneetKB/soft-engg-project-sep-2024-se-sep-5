@@ -4,19 +4,19 @@ from flask_migrate import Migrate
 from flask_security import Security, SQLAlchemyUserDatastore
 from application.models import Users, Roles, db
 from application.initial_data import seed_database
+from github import Github, Auth
 import os
-from flask_restful import Api
 
 
 # instantiate the flask application
 app = Flask("Tracky")
 
-
-# initializing flask-restful API
-api = Api(app, prefix="/api")
-
 ## for flask-sqlalchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///track.sqlite3"
+
+# GitHub configuration
+github_auth = Auth.Token(os.environ.get("GITHUB_ACCESS_TOKEN"))
+github_client = Github(auth=github_auth)
 
 ## for flask-security-too
 app.config["SECRET_KEY"] = os.environ.get(

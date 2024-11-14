@@ -2,7 +2,7 @@
     import { ref, onMounted, computed } from 'vue'
     import { checksuccess, fetchfunct } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-    import { formatDate, convert_date_to_UTC } from '@/components/date';
+    import { formatDate, convertUTCDateToLocaleDate } from '@/components/date';
     import { downloadFile } from '@/components/download';
     import { useAlertStore } from '@/stores/alert';
 
@@ -67,6 +67,8 @@
 
     const submitMilestone = async () =>
     {
+        bootstrap.Modal.getInstance( document.getElementById( 'submitConfirmation' ) ).hide()
+
         if ( selectedMilestoneId.value !== null && Object.keys( selectedFiles.value ).length > 0 )
         {
             const formData = new FormData()
@@ -121,7 +123,7 @@
     {
         if ( milestoneDetails.value && milestoneDetails.value.deadline )
         {
-            return convert_date_to_UTC( milestoneDetails.value.deadline ) < new Date();
+            return convertUTCDateToLocaleDate( milestoneDetails.value.deadline ) < new Date();
         }
         return false;
     } );
@@ -209,6 +211,7 @@
                 <p v-if="isPastDeadline" class="text-danger mt-2">
                     Submission no longer allowed as due date has passed.
                 </p>
+
                 <div class="modal" tabindex="-1" role="dialog" id="submitConfirmation">
                     <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content">

@@ -105,7 +105,7 @@
         left: 0;
         z-index: 1000;
         margin-top: 0.125rem;
-        border: 1px solid rgba(0, 0, 0, 0.15);
+        border: 1px solid var(--navbar-bg);
         border-radius: 0.375rem;
         background-color: white;
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -130,7 +130,7 @@
 
     .dropdown-item:hover,
     .dropdown-item:focus {
-        background-color: #f8f9fa;
+        background: rgb(from var(--navbar-bg) r g b / 0.5);
     }
 
     .dropdown-item.active {

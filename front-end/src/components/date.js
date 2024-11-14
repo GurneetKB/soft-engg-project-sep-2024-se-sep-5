@@ -1,6 +1,6 @@
-export function convert_date_to_UTC ( date )
+export function convertUTCDateToLocaleDate ( date )
 {
-    // Parse the deadline date string to extract the date components
+    // Parse the utc date string to extract the date components
 
     const parsedDate = new Date( date );
     if ( date.includes( " GMT" ) )
@@ -20,9 +20,17 @@ export function convert_date_to_UTC ( date )
     return new Date( Date.UTC( year, month, day, hour, minute, second ) );
 }
 
+export const localDateInISOFormat = ( date ) =>
+{
+    return date.getFullYear() +
+        "-" + String( date.getMonth() + 1 ).padStart( 2, '0' ) +
+        "-" + String( date.getDate() ).padStart( 2, '0' ) +
+        "T" + String( date.getHours() ).padStart( 2, '0' ) +
+        ":" + String( date.getMinutes() ).padStart( 2, '0' )
+}
 export const formatDate = ( timestamp ) =>
 {
-    return convert_date_to_UTC( timestamp ).toLocaleDateString( 'en-US', {
+    return convertUTCDateToLocaleDate( timestamp ).toLocaleDateString( 'en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

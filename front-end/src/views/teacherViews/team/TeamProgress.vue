@@ -3,7 +3,7 @@
     import { fetchfunct, checksuccess } from '@/components/fetch.js'
     import SearchableDropdown from '@/components/SearchableDropdown.vue';
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-    import { convert_date_to_UTC, formatDate } from '@/components/date';
+    import { convertUTCDateToLocaleDate, formatDate } from '@/components/date';
 
     const teams = ref( [] )
     const selectedTeamId = ref( null )
@@ -47,7 +47,7 @@
     // Check if task deadline has passed
     const isDeadlinePassed = ( is_completed, deadline ) =>
     {
-        return convert_date_to_UTC( deadline ) < new Date() && !is_completed
+        return convertUTCDateToLocaleDate( deadline ) < new Date() && !is_completed
     }
 
     // Get task status class and text
@@ -194,8 +194,7 @@
                 <h4 class="m-0">Individual Team Progress</h4>
             </div>
 
-            <LoadingPlaceholder v-if="loadingOnMount" variant="text" :count="3" :lines="[2]" spacing="p-4"
-                :withBorder="true" />
+            <LoadingPlaceholder v-if="loadingOnMount" variant="list-item" :count="5" />
 
             <SearchableDropdown v-model="selectedTeamId" @change="fetchTeamDetails" :options="teams" v-else>
             </SearchableDropdown>

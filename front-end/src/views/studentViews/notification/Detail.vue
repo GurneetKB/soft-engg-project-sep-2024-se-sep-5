@@ -1,21 +1,25 @@
 <script setup>
-    import { useRoute, useRouter } from 'vue-router'
+    import { useRouter } from 'vue-router'
     import { ref, onMounted } from 'vue'
     import { fetchfunct, checkerror } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-    import { convert_date_to_UTC, formatDate } from '@/components/date.js'
+    import { formatDate } from '@/components/date.js'
 
-    const route = useRoute()
     const router = useRouter()
     const notification = ref( null )
     const loading = ref( true )
     const error = ref( null )
+    const props = defineProps( {
+        id: {
+            type: String,
+            required: true
+        }
+    } )
 
     onMounted( async () =>
     {
         loading.value = true
-        const id = route.params.id
-        const response = await fetchfunct( 'student/notifications/' + id )
+        const response = await fetchfunct( 'student/notifications/' + props.id )
         if ( response.ok )
         {
             notification.value = await response.json()

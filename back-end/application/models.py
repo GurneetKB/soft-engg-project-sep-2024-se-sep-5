@@ -134,7 +134,7 @@ class Teams(db.Model):
 class Milestones(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
-    description = db.Column(db.Text)
+    description = db.Column(db.Text, nullable=False)
     deadline = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
@@ -156,7 +156,7 @@ class Tasks(db.Model):
         db.ForeignKey("milestones.id", ondelete="CASCADE"),
         nullable=False,
     )
-    description = db.Column(db.Text)
+    description = db.Column(db.Text, nullable=False)
     milestone = db.relationship(
         "Milestones", back_populates="task_milestones", lazy="subquery", uselist=False
     )
