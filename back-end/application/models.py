@@ -51,6 +51,7 @@ class Users(db.Model, UserMixin):
     current_login_ip = db.Column(db.String)
     login_count = db.Column(db.Integer)
     fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False)
+    github_username = db.Column(db.String)
     roles = db.relationship(
         "Roles", secondary="UsersRoles", back_populates="users", lazy="subquery"
     )

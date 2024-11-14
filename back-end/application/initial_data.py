@@ -21,6 +21,7 @@ def seed_database(db):
         "ta": Roles(name="TA", description="Teaching assistant role"),
         "student": Roles(name="Student", description="Student role"),
     }
+    github_username = ["areebafarooqui0001", "shrasinh", "Matrixmang0"]
     for role in roles.values():
         db.session.add(role)
 
@@ -60,6 +61,7 @@ def seed_database(db):
                 password=hash_password("password123"),
                 active=True,
                 fs_uniquifier=f"student{i}",
+                github_username=github_username[i % 3],
                 roles=[roles["student"]],
             )
             for i in range(1, 13)

@@ -10,8 +10,7 @@ from application.models import (
 from flask import abort, request, send_file
 from datetime import datetime, timezone
 import os
-from sqlalchemy.orm.exc import NoResultFound
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 
@@ -348,6 +347,24 @@ def get_team_details(team_id):
     return {"team": team}, 200
 
 
+@app.route("/teacher/team_management/individual/<int:team_id>/members", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_team_member_details(team_id):
+
+    team = get_single_team_under_user(current_user, team_id)
+    if not team:
+        return abort(404, "Team not found")
+    return {
+        "members": [
+            {
+                "id": member.id,
+                "name": member.username,
+            }
+            for member in team.members
+        ]
+    }, 200
+
+
 @app.route(
     "/teacher/team_management/individual/progress/<int:team_id>", methods=["GET"]
 )
@@ -455,34 +472,50 @@ def provide_feedback(team_id, task_id):
     return {"message": "The feedback is successfully provided."}, 201
 
 
-@app.route("/teacher/team_management/individual/github/<int:team_id>", methods=["GET"])
+@app.route(
+    "/teacher/team_management/individual/github/<int:team_id>",
+    methods=["POST"],
+)
 def get_github_details(team_id):
     try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        github_username = None
         team = get_single_team_under_user(current_user, team_id)
+
         if not team:
-            abort(404, "Team not found")
+            return abort(404, "Team not found")
+
+        if user_id:
+            for member in team.members:
+                if member.id == user_id:
+                    github_username = member.github_username
+            if not github_username:
+                return abort(404, "Team member not found.")
 
         if not team.github_repo_url:
             return abort(404, "No GitHub repository URL found for this team")
 
-        commit_details = fetch_commit_details(team.github_repo_url)
+        # Fetch commit details, passing in the username if provided
+        commit_details = fetch_commit_details(team.github_repo_url, github_username)
+
+        if "status" in commit_details:
+            return abort(int(commit_details["status"]), commit_details["message"])
 
         return {
-            "teamId": team.id,
-            "teamName": team.name,
+            "name": github_username or team.name,
             "githubRepoUrl": team.github_repo_url,
             "totalCommits": commit_details["totalCommits"],
             "linesOfCodeAdded": commit_details["linesOfCodeAdded"],
             "linesOfCodeDeleted": commit_details["linesOfCodeDeleted"],
             "milestones": commit_details["milestones"],
         }
-    except NoResultFound:
-        return abort(404, "Team not found")
-    except Exception as e:
+
+    except ValueError as e:
         return abort(500, str(e))
 
 
-def fetch_commit_details(repo_url):
+def fetch_commit_details(repo_url, username=None):
     # Extract owner and repo name from the URL
     repo_url = repo_url.rstrip("/")  # Remove trailing slash if any
     if repo_url.startswith("https://"):
@@ -502,67 +535,71 @@ def fetch_commit_details(repo_url):
     }
 
     # Get the repository
-    repo = github_client.get_repo(f"{owner}/{repo_name}")
+    try:
+        repo = github_client.get_repo(f"{owner}/{repo_name}")
 
-    # Initialize general statistics
-    since = datetime.now() - timedelta(days=30)
-    commits = repo.get_commits(since=since)
+        # Initialize general statistics
+        commits = repo.get_commits(author=username) if username else repo.get_commits()
 
-    total_commits = 0
-    lines_added = 0
-    lines_deleted = 0
-    milestones_stats = {}
+        total_commits = 0
+        lines_added = 0
+        lines_deleted = 0
+        milestones_stats = {}
 
-    # Process each commit to collect milestone-related stats
-    for commit in commits:
-        total_commits += 1
-        detailed_commit = repo.get_commit(commit.sha)
-        commit_message = commit.commit.message
+        # Process each commit to collect milestone-related stats
+        for commit in commits:
+            total_commits += 1
+            detailed_commit = repo.get_commit(commit.sha)
+            commit_message = commit.commit.message
 
-        # Update general stats
-        lines_added += detailed_commit.stats.additions
-        lines_deleted += detailed_commit.stats.deletions
+            # Update general stats
+            lines_added += detailed_commit.stats.additions
+            lines_deleted += detailed_commit.stats.deletions
 
-        # Check for milestone in commit message in the format "Milestone-<id> <message>"
-        if commit_message.lower().startswith("milestone-"):
-            try:
-                # Extract milestone ID and fetch the corresponding name
-                milestone_id_str = commit_message.split()[0].split("-")[1]
-                milestone_id = int(milestone_id_str)
+            # Check for milestone in commit message in the format "Milestone-<id> <message>"
+            if commit_message.lower().startswith("milestone-"):
+                try:
+                    # Extract milestone ID and fetch the corresponding name
+                    milestone_id_str = commit_message.split()[0].split("-")[1]
+                    milestone_id = int(milestone_id_str)
 
-                # Look up the milestone name in the dictionary
-                milestone_name = milestone_names.get(
-                    milestone_id, f"Milestone {milestone_id}"
-                )
+                    # Look up the milestone name in the dictionary
+                    milestone_name = milestone_names.get(milestone_id)
 
-                # Initialize milestone stats if it doesn't exist
-                if milestone_name not in milestones_stats:
-                    milestones_stats[milestone_name] = {
-                        "name": milestone_name,
-                        "commits": 0,
-                        "linesOfCodeAdded": 0,
-                        "linesOfCodeDeleted": 0,
-                    }
+                    # ignore the milestone whose ids are not present in the database
+                    if not milestone_name:
+                        continue
 
-                # Update milestone-specific stats
-                milestones_stats[milestone_name]["commits"] += 1
-                milestones_stats[milestone_name][
-                    "linesOfCodeAdded"
-                ] += detailed_commit.stats.additions
-                milestones_stats[milestone_name][
-                    "linesOfCodeDeleted"
-                ] += detailed_commit.stats.deletions
+                    # Initialize milestone stats if it doesn't exist
+                    if milestone_name not in milestones_stats:
+                        milestones_stats[milestone_name] = {
+                            "name": milestone_name,
+                            "commits": 0,
+                            "linesOfCodeAdded": 0,
+                            "linesOfCodeDeleted": 0,
+                        }
 
-            except (IndexError, ValueError):
-                # Skip commits that don't follow the milestone format strictly
-                continue
+                    # Update milestone-specific stats
+                    milestones_stats[milestone_name]["commits"] += 1
+                    milestones_stats[milestone_name][
+                        "linesOfCodeAdded"
+                    ] += detailed_commit.stats.additions
+                    milestones_stats[milestone_name][
+                        "linesOfCodeDeleted"
+                    ] += detailed_commit.stats.deletions
 
-    # Prepare final milestone list sorted by milestone ID
-    milestones = list(milestones_stats.values())
+                except (IndexError, ValueError):
+                    # Skip commits that don't follow the milestone format strictly
+                    continue
 
-    return {
-        "totalCommits": total_commits,
-        "linesOfCodeAdded": lines_added,
-        "linesOfCodeDeleted": lines_deleted,
-        "milestones": milestones,
-    }
+        # Prepare final milestone list sorted by milestone ID
+        milestones = list(milestones_stats.values())
+
+        return {
+            "totalCommits": total_commits,
+            "linesOfCodeAdded": lines_added,
+            "linesOfCodeDeleted": lines_deleted,
+            "milestones": milestones,
+        }
+    except Exception as e:
+        return e.data
