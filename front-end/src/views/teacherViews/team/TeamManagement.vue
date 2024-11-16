@@ -91,23 +91,16 @@
   onMounted( async () =>
   {
     loading.value = true
-    try
+
+    const response = await fetchfunct( 'teacher/team_management/overall' )
+    if ( response.ok )
     {
-      const response = await fetchfunct( 'teacher/team_management/overall' )
-      if ( response.ok )
-      {
-        teams.value = await response.json()
-      } else
-      {
-        throw new Error( 'Failed to fetch team data' )
-      }
-    } catch ( err )
+      teams.value = await response.json()
+    } else
     {
       error.value = err.message
-    } finally
-    {
-      loading.value = false
     }
+    loading.value = false
   } )
 </script>
 
