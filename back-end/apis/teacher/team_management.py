@@ -108,7 +108,7 @@ def get_overall_teams_progress():
         team_ai_prompt += f"\nOverall Progress: {team_data['progress']}%\n"
         ai_prompt.append(team_ai_prompt)
         response_data.append(team_data)
-    
+
     try:
         chat_completion = ai_client.chat.completions.create(
             messages=[
@@ -143,7 +143,7 @@ def get_overall_teams_progress():
                                - Mention specific metrics (progress %, commit counts, etc.)
                                - Keep it concise but informative (2-3 sentences)
                             
-                            Important: Ensure the ranking is consistent with the actual progress metrics and status assignments. Two teams with similar metrics should have similar ranks, and significant rank differences should be justified by clear metric differences.""",
+                            Important: Ensure the ranking is consistent with the actual progress metrics and status assignments. Significant rank differences should be justified by clear metric differences.""",
                 },
                 {
                     "role": "user",
@@ -212,12 +212,13 @@ def get_team_details(team_id):
                 "id": member.id,
                 "name": member.username,
                 "email": member.email,
+                "github_username": member.github_username,
             }
             for member in team.members
         ],
         "github_repo_url": team.github_repo_url,
-        "instructor": {"id": team.instructor.id, "username": team.instructor.username},
-        "ta": {"id": team.ta.id, "username": team.ta.username},
+        "instructor": {"id": team.instructor.id, "name": team.instructor.username},
+        "ta": {"id": team.ta.id, "name": team.ta.username},
     }
     return {"team": team}, 200
 

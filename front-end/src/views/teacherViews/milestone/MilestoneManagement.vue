@@ -170,8 +170,8 @@
         </div>
 
         <div class="milestone-wrapper">
-          <LoadingPlaceholder v-if="loading" variant="list-item" :count="5" :leadingSize="8" />
-          <div v-for="milestone in milestonesWithStatus" :key="milestone.name" class="milestone-item mb-4">
+          <LoadingPlaceholder v-if="loading" variant="list-item" :count="5" />
+          <div v-else v-for="milestone in milestonesWithStatus" :key="milestone.name" class="milestone-item mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="milestone-title mb-0">{{ milestone.title }}</h5>
               <span class="progress-text ms-auto me-2">{{ milestone.completion_rate }}%</span>

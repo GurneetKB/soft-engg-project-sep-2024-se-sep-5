@@ -76,18 +76,18 @@
             <!-- Team Information section -->
             <div class="mb-4">
               <p>
-                <strong>GitHub Repository:</strong>
+                <strong>GitHub Repository: </strong>
                 <a :href="teamDetails.team.github_repo_url" target="_blank" class="text-primary">
                   {{ teamDetails.team.github_repo_url }}
                 </a>
               </p>
               <p>
                 <strong>Instructor:</strong>
-                {{ teamDetails.team.instructor.username }}
+                {{ teamDetails.team.instructor.name }}
               </p>
               <p>
                 <strong>Teaching Assistant:</strong>
-                {{ teamDetails.team.ta.username }}
+                {{ teamDetails.team.ta.name }}
               </p>
             </div>
 
@@ -98,14 +98,16 @@
                 <table class="table table-bordered table-hover">
                   <thead class="table-light">
                     <tr>
-                      <th>Username</th>
+                      <th>Name</th>
                       <th>Email</th>
+                      <th>Github Username</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="member in teamDetails.team.members" :key="member.id">
                       <td>{{ member.name }}</td>
                       <td>{{ member.email }}</td>
+                      <td>{{ member.github_username }}</td>
                     </tr>
                   </tbody>
                 </table>

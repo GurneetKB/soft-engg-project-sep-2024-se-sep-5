@@ -19,7 +19,7 @@
         },
         lines: {
             type: Array,
-            default: () => [ 6 ]
+            default: () => [ 12 ]
         },
 
         // Styling props
@@ -99,8 +99,8 @@
                             width: `${leadingSize}px`,
                             height: `${leadingSize}px`
                         }"></span>
-                    <div class="flex-grow-1">
-                        <span class="placeholder mb-2" :class="[`col-${lines[0] || 7}`]"></span>
+                    <div class="flex-grow-1 w-100">
+                        <span class="placeholder mb-2" :class="[`col-${lines[0] || 12}`]"></span>
                         <template v-for="(width, index) in lines.slice(1)" :key="index">
                             <span class="placeholder d-block" :class="[`col-${width}`]" :style="{ 
                                     marginBottom: index < lines.length - 2 ? '0.5rem' : '0'

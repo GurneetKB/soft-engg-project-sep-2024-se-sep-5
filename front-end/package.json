@@ -12,7 +12,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "html2pdf.js": "^0.10.2",
+    "jspdf": "^2.5.2",
     "marked": "^15.0.0",
     "pinia": "^2.2.4",
     "sanitize-html": "^2.13.1",
