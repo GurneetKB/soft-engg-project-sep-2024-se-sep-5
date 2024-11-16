@@ -5,8 +5,6 @@ from application.models import (
     Teams,
     Milestones,
     Tasks,
-    Submissions,
-    Documents,
     Notifications,
     UserNotifications,
 )
@@ -22,6 +20,83 @@ def seed_database(db):
         "student": Roles(name="Student", description="Student role"),
     }
     github_username = ["areebafarooqui0001", "shrasinh", "Matrixmang0"]
+    milestone_data = [
+        {
+            "title": "User Requirements and Stories Submission",
+            "description": """
+            Focus: Identify and document user requirements and write user stories.
+            Deliverables:
+            - Identify primary, secondary, and tertiary users of the application.
+            - Write user stories following SMART guidelines.
+            - Submit a PDF document containing user identifications and user stories.
+        """,
+            "deadline": datetime.now(timezone.utc) + timedelta(days=7),
+            "task_description": "Submit User Requirements and Stories document.",
+        },
+        {
+            "title": "Wireframes and Storyboard Submission",
+            "description": """
+            Focus: Design low-fidelity wireframes and create a storyboard.
+            Deliverables:
+            - A storyboard (PPT or video) embedded in the PDF submission.
+            - Low-fidelity wireframes for user stories applying usability design guidelines.
+            - Submit a PDF document containing the storyboard and wireframes.
+        """,
+            "deadline": datetime.now(timezone.utc) + timedelta(days=14),
+            "task_description": "Submit Wireframes and Storyboard document.",
+        },
+        {
+            "title": "Project Design and Scheduling Submission",
+            "description": """
+            Focus: Define project schedules, design system components, and implement basic UI pages.
+            Deliverables:
+            - Gantt chart and sprint schedule (tools like Trello or Jira can be used).
+            - Basic class diagrams and system component descriptions.
+            - Implementation of most UI pages (HTML/CSS/JavaScript or frameworks like Vue.js).
+            - Submit a PDF document with schedules, designs, and details of UI implementation.
+        """,
+            "deadline": datetime.now(timezone.utc) + timedelta(days=21),
+            "task_description": "Submit Project Design and Scheduling document.",
+        },
+        {
+            "title": "API Documentation and Implementation Submission",
+            "description": """
+            Focus: Develop and document API endpoints.
+            Deliverables:
+            - YAML file listing APIs mapped to user stories and integrations.
+            - Well-commented code for APIs with error handling, validation, and responses.
+            - Submit a PDF document detailing the API endpoints, their usage, and the YAML file.
+        """,
+            "deadline": datetime.now(timezone.utc) + timedelta(days=28),
+            "task_description": "Submit API Documentation and Implementation document.",
+        },
+        {
+            "title": "Testing Suite Submission",
+            "description": """
+            Focus: Create and submit test cases for API endpoints and system functionality.
+            Deliverables:
+            - Test cases in the specified format (API, inputs, expected output, actual output, result).
+            - Basic unit tests using pytest.
+            - Submit a PDF document containing test cases and pytest output.
+        """,
+            "deadline": datetime.now(timezone.utc) + timedelta(days=35),
+            "task_description": "Submit Testing Suite document.",
+        },
+        {
+            "title": "Final Project Report and Submission",
+            "description": """
+            Focus: Finalize and submit the complete project along with the final report.
+            Deliverables:
+            - A detailed report summarizing all milestones (1-5).
+            - Complete implementation of the system.
+            - Instructions to run the application.
+            - Recorded presentation and slides of the working prototype.
+            - Submit a PDF document containing the final report, instructions, and presentation materials.
+        """,
+            "deadline": datetime.now(timezone.utc) + timedelta(days=42),
+            "task_description": "Submit Final Project Report and Presentation document.",
+        },
+    ]
     for role in roles.values():
         db.session.add(role)
 
@@ -109,72 +184,31 @@ def seed_database(db):
     for team in teams:
         db.session.add(team)
 
-    # Create milestones and tasks within milestones
-    milestones = [
-        Milestones(
-            title="Project Proposal Due",
-            description="Submit your project proposal for approval.",
-            deadline=datetime.now(timezone.utc) + timedelta(days=7),
+    # Add milestones and tasks to the database
+    for milestone_info in milestone_data:
+        milestone = Milestones(
+            title=milestone_info["title"],
+            description=milestone_info["description"].strip(),
+            deadline=milestone_info["deadline"],
             created_at=datetime.now(timezone.utc),
-            created_by=users["instructor"].id,
-        ),
-        Milestones(
-            title="First Prototype Submission",
-            description="Submit the first working prototype of your project.",
-            deadline=datetime.now(timezone.utc) + timedelta(days=14),
-            created_at=datetime.now(timezone.utc),
-            created_by=users["instructor"].id,
-        ),
-        Milestones(
-            title="Final Project Presentation",
-            description="Prepare for the final presentation of your project.",
-            deadline=datetime.now(timezone.utc) + timedelta(days=21),
-            created_at=datetime.now(timezone.utc),
-            created_by=users["instructor"].id,
-        ),
-    ]
-    for milestone in milestones:
+            created_by=users["instructor"].id,  # Replace with the actual instructor ID
+        )
         db.session.add(milestone)
 
-        # Add tasks for each milestone
-        tasks = [
-            Tasks(
-                milestone=milestone,
-                description=f"Complete task for {milestone.title}",
-            )
-        ]
-        for task in tasks:
-            db.session.add(task)
-
-    # Create sample submissions with documents
-    for team in teams:
-        for task in tasks:
-            submission = Submissions(
-                team=team,
-                tasks=task,
-                submission_time=datetime.now(timezone.utc),
-                feedback="Good job on initial submission",
-                feedback_by=users["instructor"].id,
-                feedback_time=datetime.now(timezone.utc) + timedelta(days=1),
-            )
-            db.session.add(submission)
-
-            # Add a document to each submission
-            document = Documents(
-                title=f"{task.description} document",
-                file_url="https://example.com/doc.pdf",
-                submission=submission,
-            )
-            db.session.add(document)
+        task = Tasks(
+            milestone=milestone,
+            description=milestone_info["task_description"],
+        )
+        db.session.add(task)
 
     # Create notifications for each student
     for team in teams:
         for student in team.members:
-            for milestone in milestones:
+            for milestone in milestone_data:
                 # Deadline notification
                 deadline_notification = Notifications(
                     title="Deadline Notification",
-                    message=f"The milestone '{milestone.title}' is due on {milestone.deadline.strftime('%Y-%m-%d')}.",
+                    message=f"The milestone {milestone['title']} is due on {milestone['deadline'].strftime('%Y-%m-%d')}.",
                     type="DEADLINE",
                     created_at=datetime.now(timezone.utc),
                 )
@@ -186,7 +220,7 @@ def seed_database(db):
                 # Feedback notification
                 feedback_notification = Notifications(
                     title="Feedback Notification",
-                    message=f"You have received feedback on '{milestone.title}'.",
+                    message=f"You have received feedback on {milestone['title']}.",
                     type="FEEDBACK",
                     created_at=datetime.now(timezone.utc),
                 )
@@ -198,7 +232,7 @@ def seed_database(db):
                 # Milestone update notification
                 milestone_update_notification = Notifications(
                     title="Milestone Update Notification",
-                    message=f"The milestone '{milestone.title}' has been updated.",
+                    message=f"The milestone {milestone['title']} has been updated.",
                     type="MILESTONE_UPDATE",
                     created_at=datetime.now(timezone.utc),
                 )

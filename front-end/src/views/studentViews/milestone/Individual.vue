@@ -141,7 +141,6 @@
                 :withBorder="true" />
 
             <div v-else class="form-group">
-                <label for="milestone-select" class="form-label">Select a Milestone</label>
                 <select id="milestone-select" class="form-select" v-model="selectedMilestoneId"
                     @change="fetchMilestoneDetails">
                     <option :value="null" disabled>Select a Milestone</option>
@@ -186,9 +185,8 @@
                             <input type="checkbox" class="form-check-input me-3" :checked="task.is_completed"
                                 disabled />
                             {{ task.description }}
-                            <div class="mt-4 mb-4">
-                                <button v-if="task.is_completed" @click="download(task.task_id)"
-                                    class="btn btn-outline-primary btn-sm">
+                            <div v-if="task.is_completed" class="mt-4 mb-4">
+                                <button @click="download(task.task_id)" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-download"></i> Download Submission
                                 </button>
                             </div>

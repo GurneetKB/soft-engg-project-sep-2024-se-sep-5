@@ -1,193 +1,220 @@
 <script setup>
-import { marked } from 'marked'
-import { ref, onMounted, computed } from 'vue'
-import { fetchfunct, checksuccess } from '@/components/fetch.js'
-import SearchableDropdown from '@/components/SearchableDropdown.vue'
-import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-import { convertUTCDateToLocaleDate, formatDate } from '@/components/date'
-import { generateCodeFrame } from 'vue/compiler-sfc'
+  import { marked } from 'marked'
+  import { ref, onMounted, computed } from 'vue'
+  import { fetchfunct, checksuccess, checkerror } from '@/components/fetch.js'
+  import SearchableDropdown from '@/components/SearchableDropdown.vue'
+  import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+  import { convertUTCDateToLocaleDate, formatDate } from '@/components/date'
+  import sanitizeHtml from 'sanitize-html'
 
-const teams = ref([])
-const selectedTeamId = ref(null)
-const teamDetails = ref(null)
-const loadingOnMount = ref(true)
-const loading = ref(false)
-const error = ref(null)
+  const teams = ref( [] )
+  const selectedTeamId = ref( null )
+  const teamDetails = ref( null )
+  const loadingOnMount = ref( true )
+  const loading = ref( false )
+  const error = ref( null )
 
-// Modal state
-const selectedTask = ref(null)
-const feedbackText = ref('')
+  // Modal state
+  const selectedTask = ref( null )
+  const feedbackText = ref( '' )
 
-// Pagination
-const currentPage = ref(1)
-const milestonesPerPage = 1
+  // Pagination
+  const currentPage = ref( 1 )
+  const milestonesPerPage = 1
 
-// Calculate total pages
-const totalPages = computed(() => {
-  if (!teamDetails.value) return 0
-  return Math.ceil(teamDetails.value.length / milestonesPerPage)
-})
+  // Calculate total pages
+  const totalPages = computed( () =>
+  {
+    if ( !teamDetails.value ) return 0
+    return Math.ceil( teamDetails.value.length / milestonesPerPage )
+  } )
 
-// Get paginated milestones
-const paginatedMilestones = computed(() => {
-  if (!teamDetails.value) return []
-  const start = (currentPage.value - 1) * milestonesPerPage
-  const end = start + milestonesPerPage
-  return teamDetails.value.slice(start, end)
-})
+  // Get paginated milestones
+  const paginatedMilestones = computed( () =>
+  {
+    if ( !teamDetails.value ) return []
+    const start = ( currentPage.value - 1 ) * milestonesPerPage
+    const end = start + milestonesPerPage
+    return teamDetails.value.slice( start, end )
+  } )
 
-// Calculate completion rate for a milestone
-const calculateCompletionRate = milestone => {
-  if (!milestone.tasks || milestone.tasks.length === 0) return 0
-  const completedTasks = milestone.tasks.filter(
-    task => task.is_completed,
-  ).length
-  return Math.round((completedTasks / milestone.tasks.length) * 100)
-}
-
-// Check if task deadline has passed
-const isDeadlinePassed = (is_completed, deadline) => {
-  return convertUTCDateToLocaleDate(deadline) < new Date() && !is_completed
-}
-
-// Get task status class and text
-const getTaskStatus = (is_completed, deadline) => {
-  if (is_completed) {
-    return {
-      class: 'completed',
-      badge: 'bg-success',
-      text: 'Completed',
-    }
-  } else if (isDeadlinePassed(is_completed, deadline)) {
-    return {
-      class: 'overdue',
-      badge: 'bg-danger',
-      text: 'Overdue',
-    }
-  } else {
-    return {
-      class: 'pending',
-      badge: 'bg-warning',
-      text: 'Pending',
-    }
+  // Calculate completion rate for a milestone
+  const calculateCompletionRate = milestone =>
+  {
+    if ( !milestone.tasks || milestone.tasks.length === 0 ) return 0
+    const completedTasks = milestone.tasks.filter(
+      task => task.is_completed,
+    ).length
+    return Math.round( ( completedTasks / milestone.tasks.length ) * 100 )
   }
-}
 
-// Feedback methods
-const openFeedbackModal = task => {
-  selectedTask.value = task
-  feedbackText.value = task.feedback || ''
-  new bootstrap.Modal('#feedbackModal').show()
-}
+  // Check if task deadline has passed
+  const isDeadlinePassed = ( is_completed, deadline ) =>
+  {
+    return convertUTCDateToLocaleDate( deadline ) < new Date() && !is_completed
+  }
 
-const submitFeedback = async () => {
-  if (!selectedTask.value) return
-
-  loading.value = true
-
-  bootstrap.Modal.getInstance('#feedbackModal').hide()
-
-  const response = await fetchfunct(
-    `teacher/team_management/individual/feedback/${selectedTeamId.value}/${selectedTask.value.task_id}`,
+  // Get task status class and text
+  const getTaskStatus = ( is_completed, deadline ) =>
+  {
+    if ( is_completed )
     {
-      method: 'POST',
-      body: JSON.stringify({ feedback: feedbackText.value }),
-      headers: { 'Content-Type': 'application/json' },
-    },
-  )
-
-  if (response.ok) {
-    checksuccess(response)
-    selectedTask.value.feedback = feedbackText.value
-    selectedTask.value.feedback_time = new Date().toGMTString()
-    error.value = null
-  } else {
-    error.value = 'Failed to submit feedback'
-  }
-
-  loading.value = false
-}
-
-const viewSubmission = async task => {
-  const response = await fetchfunct(
-    `teacher/team_management/individual/submission/${selectedTeamId.value}/${task.task_id}`,
-  )
-  if (response.ok) {
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    window.open(url, '_blank')
-    error.value = null
-  } else {
-    error.value = 'Failed to fetch submission'
-  }
-}
-
-const generateAiAnalysis = async milestone => {
-  milestone.aiAnalysisLoading = true
-  try {
-    const response = await fetchfunct(
-      `/teacher/team_management/individual/ai_analysis/${selectedTeamId.value}/${currentPage.value}`,
-    )
-    if (!response.ok) {
-      throw new Error('Failed to generate AI analysis')
+      return {
+        class: 'completed',
+        badge: 'bg-success',
+        text: 'Completed',
+      }
+    } else if ( isDeadlinePassed( is_completed, deadline ) )
+    {
+      return {
+        class: 'overdue',
+        badge: 'bg-danger',
+        text: 'Overdue',
+      }
+    } else
+    {
+      return {
+        class: 'pending',
+        badge: 'bg-warning',
+        text: 'Pending',
+      }
     }
-    const data = await response.json()
-    milestone.aiAnalysis = marked(data.analysis || '')
-    milestone.aiAnalysisLoading = false
-  } catch (error) {
-    console.error(error)
-    error.value = 'Failed to generate AI analysis. Please try again.'
-    milestone.aiAnalysisLoading = false
   }
-}
 
-// Navigation methods
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
+  // Feedback methods
+  const openFeedbackModal = task =>
+  {
+    selectedTask.value = task
+    feedbackText.value = task.feedback || ''
+    new bootstrap.Modal( '#feedbackModal' ).show()
   }
-}
 
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
+  const submitFeedback = async () =>
+  {
+    if ( !selectedTask.value ) return
 
-const goToPage = page => {
-  currentPage.value = page
-}
-
-onMounted(async () => {
-  loadingOnMount.value = true
-  const response = await fetchfunct('teacher/team_management/individual')
-  if (response.ok) {
-    const data = await response.json()
-    teams.value = data.teams
-    error.value = null
-  } else {
-    error.value = 'Failed to fetch teams'
-  }
-  loadingOnMount.value = false
-})
-
-const fetchTeamDetails = async () => {
-  if (selectedTeamId.value !== null) {
     loading.value = true
-    error.value = null
-    currentPage.value = 1
+
+    bootstrap.Modal.getInstance( '#feedbackModal' ).hide()
+
     const response = await fetchfunct(
-      `teacher/team_management/individual/progress/${selectedTeamId.value}`,
+      `teacher/team_management/individual/feedback/${ selectedTeamId.value }/${ selectedTask.value.task_id }`,
+      {
+        method: 'POST',
+        body: JSON.stringify( { feedback: feedbackText.value } ),
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
-    if (response.ok) {
-      teamDetails.value = await response.json()
+
+    if ( response.ok )
+    {
+      checksuccess( response )
+      selectedTask.value.feedback = feedbackText.value
+      selectedTask.value.feedback_time = new Date().toGMTString()
       error.value = null
-    } else {
-      error.value = 'Error fetching team details'
+    } else
+    {
+      checkerror( response )
     }
+
     loading.value = false
   }
-}
+
+  const viewSubmission = async task =>
+  {
+    const response = await fetchfunct(
+      `teacher/team_management/individual/submission/${ selectedTeamId.value }/${ task.task_id }`,
+    )
+    if ( response.ok )
+    {
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL( blob )
+      window.open( url, '_blank' )
+      error.value = null
+    } else
+    {
+      checkerror( response )
+    }
+  }
+
+  const generateAiAnalysis = async task =>
+  {
+    task.aiAnalysisLoading = true
+    const response = await fetchfunct(
+      `/teacher/team_management/individual/ai_analysis/${ selectedTeamId.value }/${ task.task_id }`,
+    )
+    if ( response.ok )
+    {
+      const data = await response.json()
+      task.aiAnalysis = sanitizeHtml( marked( data.analysis || '' ) )
+      task.aiAnalysisLoading = false
+    }
+    else
+    {
+      checkerror( response )
+    }
+    task.aiAnalysisLoading = false
+  }
+
+  // Navigation methods
+  const nextPage = () =>
+  {
+    if ( currentPage.value < totalPages.value )
+    {
+      currentPage.value++
+    }
+  }
+
+  const prevPage = () =>
+  {
+    if ( currentPage.value > 1 )
+    {
+      currentPage.value--
+    }
+  }
+
+  const goToPage = page =>
+  {
+    currentPage.value = page
+  }
+
+  onMounted( async () =>
+  {
+    loadingOnMount.value = true
+    const response = await fetchfunct( 'teacher/team_management/individual' )
+    if ( response.ok )
+    {
+      const data = await response.json()
+      teams.value = data.teams
+      error.value = null
+    } else
+    {
+      error.value = 'Failed to fetch teams'
+    }
+    loadingOnMount.value = false
+  } )
+
+  const fetchTeamDetails = async () =>
+  {
+    if ( selectedTeamId.value !== null )
+    {
+      loading.value = true
+      error.value = null
+      currentPage.value = 1
+      const response = await fetchfunct(
+        `teacher/team_management/individual/progress/${ selectedTeamId.value }`,
+      )
+      if ( response.ok )
+      {
+        teamDetails.value = await response.json()
+        error.value = null
+      } else
+      {
+        error.value = 'Error fetching team details'
+      }
+      loading.value = false
+    }
+  }
 </script>
 
 <template>
@@ -197,18 +224,9 @@ const fetchTeamDetails = async () => {
         <h4 class="m-0">Individual Team Progress</h4>
       </div>
 
-      <LoadingPlaceholder
-        v-if="loadingOnMount"
-        variant="list-item"
-        :count="5"
-      />
+      <LoadingPlaceholder v-if="loadingOnMount" variant="list-item" :count="5" />
 
-      <SearchableDropdown
-        v-model="selectedTeamId"
-        @change="fetchTeamDetails"
-        :options="teams"
-        v-else
-      >
+      <SearchableDropdown v-model="selectedTeamId" @change="fetchTeamDetails" :options="teams" v-else>
       </SearchableDropdown>
 
       <div v-if="loading" class="d-flex justify-content-center my-5">
@@ -221,37 +239,22 @@ const fetchTeamDetails = async () => {
       </div>
 
       <div v-if="teamDetails" class="mt-4">
-        <div
-          v-for="milestone in paginatedMilestones"
-          :key="milestone.id"
-          class="card mb-4"
-        >
+        <div v-for="milestone in paginatedMilestones" :key="milestone.id" class="card mb-4">
           <div class="card-body">
-            <div
-              class="milestone-header d-flex justify-content-between align-items-center"
-            >
+            <div class="milestone-header d-flex justify-content-between align-items-center">
               <h5 class="card-title">{{ milestone.title }}</h5>
-              <div
-                class="completion-badge"
-                :class="
+              <div class="completion-badge" :class="
                   calculateCompletionRate(milestone) === 100
                     ? 'bg-success'
                     : 'bg-primary'
-                "
-              >
+                ">
                 {{ calculateCompletionRate(milestone) }}% Complete
               </div>
             </div>
 
             <div class="progress mt-2 mb-3">
-              <div
-                class="progress-bar"
-                role="progressbar"
-                :style="{ width: calculateCompletionRate(milestone) + '%' }"
-                :aria-valuenow="calculateCompletionRate(milestone)"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              ></div>
+              <div class="progress-bar" role="progressbar" :style="{ width: calculateCompletionRate(milestone) + '%' }"
+                :aria-valuenow="calculateCompletionRate(milestone)" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
 
             <p class="card-text">{{ milestone.description }}</p>
@@ -282,22 +285,13 @@ const fetchTeamDetails = async () => {
             <div class="tasks-container">
               <h6 class="tasks-header mb-3">Tasks</h6>
               <div class="task-list">
-                <div
-                  v-for="task in milestone.tasks"
-                  :key="task.task_id"
-                  class="task-item p-3 mb-2"
-                  :class="
+                <div v-for="task in milestone.tasks" :key="task.task_id" class="task-item p-3 mb-2" :class="
                     getTaskStatus(task.is_completed, milestone.deadline).class
-                  "
-                >
-                  <div
-                    class="task-header d-flex justify-content-between align-items-center"
-                  >
+                  ">
+                  <div class="task-header d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">{{ task.description }}</h6>
                     <div class="d-flex align-items-center gap-2">
-                      <span
-                        :class="`badge ${getTaskStatus(task.is_completed, milestone.deadline).badge}`"
-                      >
+                      <span :class="`badge ${getTaskStatus(task.is_completed, milestone.deadline).badge}`">
                         {{
                           getTaskStatus(task.is_completed, milestone.deadline)
                             .text
@@ -305,102 +299,71 @@ const fetchTeamDetails = async () => {
                       </span>
                       <!-- Add buttons for completed tasks -->
                       <div v-if="task.is_completed" class="task-actions">
-                        <button
-                          class="btn btn-sm btn-primary me-2 d-flex align-items-center gap-1"
-                          @click="viewSubmission(task)"
-                        >
+                        <button class="btn btn-sm btn-primary me-2 d-flex align-items-center gap-1"
+                          @click="viewSubmission(task)">
                           <i class="bi bi-file-pdf-fill"></i>
                           View PDF
                         </button>
-                        <button
-                          class="btn btn-sm btn-secondary me-2 d-flex align-items-center gap-1"
-                          @click="openFeedbackModal(task)"
-                        >
+                        <button class="btn btn-sm btn-secondary me-2 d-flex align-items-center gap-1"
+                          @click="openFeedbackModal(task)">
                           <i class="bi bi-chat-square-text"></i>
                           {{
                             task.feedback ? 'Edit Feedback' : 'Give Feedback'
                           }}
                         </button>
-                        <button
-                          class="btn btn-sm nav-color-btn d-flex align-items-center gap-1"
-                          @click="generateAiAnalysis(milestone)"
-                        >
+                        <button class="btn btn-sm nav-color-btn d-flex align-items-center gap-1"
+                          @click="generateAiAnalysis(task)">
                           <i class="bi bi-robot"></i>
                           AI analysis
                         </button>
                       </div>
                     </div>
                   </div>
-
-                  <div
-                    v-if="task.feedback || task.feedback_time"
-                    class="task-feedback mt-2"
-                  >
+                  <div v-if="task.submission_time" class="task-feedback mt-2">
+                    <small><strong>Submission Time:</strong>
+                      {{ formatDate(task.submission_time) }}</small>
+                  </div>
+                  <div v-if="task.feedback || task.feedback_time" class="task-feedback mt-2">
                     <p v-if="task.feedback" class="mb-1">
                       <strong>Feedback:</strong> {{ task.feedback }}
                     </p>
                     <p v-if="task.feedback_time" class="mb-0 text-muted">
-                      <small
-                        ><strong>Feedback Time:</strong>
-                        {{ formatDate(task.feedback_time) }}</small
-                      >
+                      <small><strong>Feedback Time:</strong>
+                        {{ formatDate(task.feedback_time) }}</small>
                     </p>
+                  </div>
+                  <!-- Separate AI Analysis Section -->
+                  <div v-if="task.aiAnalysis || task.aiAnalysisLoading"
+                    class="ai-analysis-container mt-3 p-3 border rounded">
+                    <div v-if="task.aiAnalysisLoading" class="d-flex align-items-center gap-2">
+                      <div class="spinner-border spinner-border-sm" role="status"></div>
+                      <span>Analyzing submission...</span>
+                    </div>
+                    <div v-else class="analysis-content">
+                      <h6 class="mb-3">AI Analysis Report</h6>
+                      <div v-html="task.aiAnalysis"></div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Separate AI Analysis Section -->
-              <div
-                v-if="milestone.aiAnalysis || milestone.aiAnalysisLoading"
-                class="ai-analysis-container mt-3 p-3 border rounded"
-              >
-                <div
-                  v-if="milestone.aiAnalysisLoading"
-                  class="d-flex align-items-center gap-2"
-                >
-                  <div
-                    class="spinner-border spinner-border-sm"
-                    role="status"
-                  ></div>
-                  <span>Analyzing submission...</span>
-                </div>
-                <div v-else class="analysis-content">
-                  <h6 class="mb-3">AI Analysis Report</h6>
-                  <div v-html="milestone.aiAnalysis"></div>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
 
         <!-- Pagination -->
-        <div
-          v-if="totalPages > 1"
-          class="pagination-container d-flex justify-content-center align-items-center mt-4"
-        >
-          <button
-            class="btn btn-outline-primary me-2"
-            @click="prevPage"
-            :disabled="currentPage === 1"
-          >
+        <div v-if="totalPages > 1" class="pagination-container d-flex justify-content-center align-items-center mt-4">
+          <button class="btn btn-outline-primary me-2" @click="prevPage" :disabled="currentPage === 1">
             Previous
           </button>
           <div class="pagination-numbers mx-2">
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              class="btn btn-outline-primary mx-1"
-              :class="{ active: currentPage === page }"
-              @click="goToPage(page)"
-            >
+            <button v-for="page in totalPages" :key="page" class="btn btn-outline-primary mx-1"
+              :class="{ active: currentPage === page }" @click="goToPage(page)">
               {{ page }}
             </button>
           </div>
-          <button
-            class="btn btn-outline-primary ms-2"
-            @click="nextPage"
-            :disabled="currentPage === totalPages"
-          >
+          <button class="btn btn-outline-primary ms-2" @click="nextPage" :disabled="currentPage === totalPages">
             Next
           </button>
         </div>
@@ -415,34 +378,17 @@ const fetchTeamDetails = async () => {
             <h5 class="modal-title">
               {{ selectedTask?.feedback ? 'Edit Feedback' : 'Give Feedback' }}
             </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <textarea
-              class="form-control"
-              v-model="feedbackText"
-              rows="4"
-              placeholder="Enter your feedback here..."
-            ></textarea>
+            <textarea class="form-control" v-model="feedbackText" rows="4"
+              placeholder="Enter your feedback here..."></textarea>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               Cancel
             </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              @click="submitFeedback"
-              :disabled="loading"
-            >
+            <button type="button" class="btn btn-primary" @click="submitFeedback" :disabled="loading">
               Submit
             </button>
           </div>
@@ -453,98 +399,98 @@ const fetchTeamDetails = async () => {
 </template>
 
 <style scoped>
-.completion-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
-  color: white;
-  font-weight: bold;
-  font-size: 0.875rem;
-}
+  .completion-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    color: white;
+    font-weight: bold;
+    font-size: 0.875rem;
+  }
 
-.progress {
-  height: 0.5rem;
-  border-radius: 0.25rem;
-  background-color: #e9ecef;
-}
+  .progress {
+    height: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: #e9ecef;
+  }
 
-.progress-bar {
-  background-color: #0d6efd;
-  transition: width 0.6s ease;
-}
+  .progress-bar {
+    background-color: #0d6efd;
+    transition: width 0.6s ease;
+  }
 
-.tasks-container {
-  background-color: #f8f9fa;
-  border-radius: 0.5rem;
-  padding: 1rem;
-}
+  .tasks-container {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
 
-.tasks-header {
-  color: #495057;
-  font-weight: bold;
-}
+  .tasks-header {
+    color: #495057;
+    font-weight: bold;
+  }
 
-.task-item {
-  background-color: white;
-  border-radius: 0.375rem;
-  border: 1px solid #dee2e6;
-  transition: all 0.3s ease;
-}
+  .task-item {
+    background-color: white;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+  }
 
-.task-item:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  .task-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
-.task-item.completed {
-  border-left: 4px solid #198754;
-}
+  .task-item.completed {
+    border-left: 4px solid #198754;
+  }
 
-.task-item.pending {
-  border-left: 4px solid #ffc107;
-}
+  .task-item.pending {
+    border-left: 4px solid #ffc107;
+  }
 
-.task-feedback {
-  background-color: #f8f9fa;
-  padding: 0.75rem;
-  border-radius: 0.25rem;
-  margin-top: 0.5rem;
-}
+  .task-feedback {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+  }
 
-.pagination-container button.active {
-  background-color: #0d6efd;
-  color: white;
-}
+  .pagination-container button.active {
+    background-color: #0d6efd;
+    color: white;
+  }
 
-.milestone-info {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 0.375rem;
-  margin: 1rem 0;
-}
+  .milestone-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin: 1rem 0;
+  }
 
-.task-actions {
-  display: flex;
-  gap: 0.5rem;
-}
+  .task-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
 
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
 
-.task-item.completed {
-  border-left: 4px solid #198754;
-}
+  .task-item.completed {
+    border-left: 4px solid #198754;
+  }
 
-.task-item.pending {
-  border-left: 4px solid #ffc107;
-}
+  .task-item.pending {
+    border-left: 4px solid #ffc107;
+  }
 
-.task-item.overdue {
-  border-left: 4px solid #dc3545;
-  background-color: #fff5f5;
-}
+  .task-item.overdue {
+    border-left: 4px solid #dc3545;
+    background-color: #fff5f5;
+  }
 
-.task-item.overdue .task-header h6 {
-  color: #dc3545;
-}
+  .task-item.overdue .task-header h6 {
+    color: #dc3545;
+  }
 </style>

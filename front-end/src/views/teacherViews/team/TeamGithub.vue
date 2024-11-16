@@ -36,7 +36,6 @@
     if ( selectedTeamId.value !== null )
     {
       loading.value = true
-      error.value = null
       selectedMember.value = null // Reset selected member when changing teams
       members.value = [] // Clear previous members
 
@@ -58,7 +57,6 @@
     if ( selectedTeamId.value !== null )
     {
       loading.value = true
-      error.value = null
       teamDetails.value = null
       milestones.value = []
 
@@ -115,6 +113,10 @@
       <template v-else>
         <SearchableDropdown v-model="selectedTeamId" :options="teams" label="Select Team" />
 
+        <div v-if="error" class="alert alert-danger mt-4" role="alert">
+          {{ error }}
+        </div>
+
         <div v-if="selectedTeamId" class="mt-4">
           <SearchableDropdown v-model="selectedMember" :options="members" label="Select Team Member"
             :disabled="loading || members.length === 0" />
@@ -123,10 +125,6 @@
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
-          </div>
-
-          <div v-if="error" class="alert alert-danger mt-4" role="alert">
-            {{ error }}
           </div>
 
           <div v-if="teamDetails && !loading" class="github-commits card mb-4 mt-4">

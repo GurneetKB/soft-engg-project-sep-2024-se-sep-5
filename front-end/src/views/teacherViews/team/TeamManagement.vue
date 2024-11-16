@@ -2,21 +2,31 @@
   import { ref, computed, onMounted } from 'vue'
   import { fetchfunct } from '@/components/fetch.js'
   import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+  import html2pdf from 'html2pdf.js'
 
   const teams = ref( [] )
   const currentPage = ref( 1 )
   const itemsPerPage = ref( 5 )
   const searchQuery = ref( '' )
+  const sortField = ref( 'rank' )
+  const sortOrder = ref( 'asc' )
   const loading = ref( true )
   const error = ref( null )
+  const showReason = ref( {} )
 
   const filteredTeams = computed( () =>
   {
     return teams.value
       .filter( team =>
-        team.name.toLowerCase().includes( searchQuery.value.toLowerCase() )
+        team.team_name.toLowerCase().includes( searchQuery.value.toLowerCase() )
       )
-      .sort( ( a, b ) => a.name.localeCompare( b.name ) )
+      .sort( ( a, b ) =>
+      {
+        const modifier = sortOrder.value === 'asc' ? 1 : -1
+        if ( a[ sortField.value ] < b[ sortField.value ] ) return -1 * modifier
+        if ( a[ sortField.value ] > b[ sortField.value ] ) return 1 * modifier
+        return 0
+      } )
   } )
 
   const totalPages = computed( () =>
@@ -28,7 +38,7 @@
   {
     const start = ( currentPage.value - 1 ) * itemsPerPage.value
     const end = start + itemsPerPage.value
-    return teamsWithStatus( filteredTeams.value ).slice( start, end )
+    return filteredTeams.value.slice( start, end )
   } )
 
   const pageNumbers = computed( () =>
@@ -36,23 +46,21 @@
     return Array.from( { length: totalPages.value }, ( _, i ) => i + 1 )
   } )
 
-  const teamsWithStatus = ( teams ) =>
+  const toggleSort = ( field ) =>
   {
-    return teams.map( team =>
+    if ( sortField.value === field )
     {
-      let status = 'light'
-      if ( team.progress === 100 )
-      {
-        status = 'success'
-      } else if ( team.progress > 50 )
-      {
-        status = 'warning'
-      } else if ( team.progress > 0 && team.progress <= 50 )
-      {
-        status = 'danger'
-      }
-      return { ...team, status }
-    } )
+      sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+    } else
+    {
+      sortField.value = field
+      sortOrder.value = 'asc'
+    }
+  }
+
+  const toggleReason = ( teamId ) =>
+  {
+    showReason.value[ teamId ] = !showReason.value[ teamId ]
   }
 
   const goToPage = ( page ) =>
@@ -63,30 +71,65 @@
     }
   }
 
+  const getStatusColor = ( status ) =>
+  {
+    switch ( status )
+    {
+      case 'on_track': return 'text-success'
+      case 'behind': return 'text-warning'
+      case 'at_risk': return 'text-danger'
+      default: return 'text-secondary'
+    }
+  }
+
+  const exportToPDF = () =>
+  {
+    const element = document.getElementById( 'team-management-content' )
+    html2pdf( element )
+  }
+
   onMounted( async () =>
   {
     loading.value = true
-    const response = await fetchfunct( 'teacher/team_management/overall' )
-    if ( response.ok )
+    try
     {
-      teams.value = await response.json()
-    } else
+      const response = await fetchfunct( 'teacher/team_management/overall' )
+      if ( response.ok )
+      {
+        teams.value = await response.json()
+      } else
+      {
+        throw new Error( 'Failed to fetch team data' )
+      }
+    } catch ( err )
     {
-      error.value = 'Failed to fetch milestones'
+      error.value = err.message
+    } finally
+    {
+      loading.value = false
     }
-    loading.value = false
   } )
 </script>
 
 <template>
   <section class="py-5">
-    <div class="container hero-section py-5 rounded-lg px-4 shadow-lg">
+    <div id="team-management-content" class="container hero-section py-5 rounded-lg px-4 shadow-lg">
       <div class="text-center mb-5 position-relative">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
           <h2 class="main-title text-center flex-grow-1">Team Management</h2>
-          <div class="search-container" style="max-width: 300px">
+          <div class="search-container mt-2 mt-md-0" style="max-width: 300px">
             <input type="text" v-model.trim="searchQuery" class="search-input" placeholder="Search teams..." />
             <i class="fas fa-search search-icon"></i>
+          </div>
+          <div class="sort-container ms-3 mt-2 mt-md-0">
+            <button class="btn btn-outline-primary me-2" @click="toggleSort('rank')">
+              Sort by Rank <i
+                :class="sortField === 'rank' ? (sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'"></i>
+            </button>
+            <button class="btn btn-outline-primary" @click="toggleSort('team_name')">
+              Sort by Name <i
+                :class="sortField === 'team_name' ? (sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -96,21 +139,36 @@
         <div v-else-if="error" class="alert alert-danger">
           {{ error }}
         </div>
-        <div v-if="paginatedTeams.length === 0 && !loading" class="no-results">
+        <div v-else-if="paginatedTeams.length === 0" class="no-results">
           No teams found matching your search.
         </div>
-        <div v-else v-for="team in paginatedTeams" :key="team.name" class="team-item mb-4">
-          <router-link to="/teacher/team_management/progress" class="text-decoration-none text-dark">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="team-name mb-0">{{ team.name }}</h5>
-              <span class="progress-text">{{ team.progress }}%</span>
-            </div>
+        <div v-else v-for="team in paginatedTeams" :key="team.team_id" class="team-item mb-4 p-3 border rounded">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="team-name mb-0">{{ team.team_name }}</h5>
+            <span class="rank-text">Rank: {{ team.rank }}</span>
+          </div>
 
-            <div class="progress">
-              <div :class="'progress-bar progress-bar-' + team.status" role="progressbar"
-                :style="{ width: team.progress + '%' }"></div>
+          <div class="progress mb-2">
+            <div class="progress-bar" role="progressbar" :style="{ width: team.progress + '%' }" :class="{
+                   'bg-success': team.progress === 100,
+                   'bg-warning': team.progress > 50 && team.progress < 100,
+                   'bg-danger': team.progress <= 50
+                 }">
+              {{ team.progress }}%
             </div>
-          </router-link>
+          </div>
+          <div class="status mt-2">
+            <strong>Status:</strong> <span
+              :class="getStatusColor(team.status)">{{ team.status.replace('_', ' ').toUpperCase() }}</span>
+          </div>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-info" @click="toggleReason(team.team_id)">
+              {{ showReason[team.team_id] ? 'Hide' : 'Show' }} Reason for Ranking
+            </button>
+          </div>
+          <div v-if="showReason[team.team_id]" class="mt-2 p-2 bg-light rounded">
+            <strong>Reason:</strong> {{ team.reason }}
+          </div>
         </div>
         <div class="pagination d-flex justify-content-center mt-5">
           <button class="btn btn-outline-primary mx-2" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
@@ -127,12 +185,40 @@
           </button>
         </div>
       </div>
+      <div class="mt-4 text-center">
+        <button class="btn btn-success" @click="exportToPDF">
+          Export to PDF
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
-
 <style scoped>
+  .search-container {
+    position: relative;
+  }
+
+  .search-input {
+    padding-right: 30px;
+    width: 100%;
+  }
+
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .team-item {
+    transition: all 0.3s ease;
+  }
+
+  .team-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
   .search-container {
     position: relative;
     max-width: 500px;

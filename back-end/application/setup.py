@@ -4,8 +4,9 @@ from flask_migrate import Migrate
 from flask_security import Security, SQLAlchemyUserDatastore
 from application.models import Users, Roles, db
 from application.initial_data import seed_database
-from github import Github, Auth
 import os
+from apis.student.setup import student
+from apis.teacher.setup import teacher
 
 
 # instantiate the flask application
@@ -13,10 +14,6 @@ app = Flask("Tracky")
 
 ## for flask-sqlalchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///track.sqlite3"
-
-# GitHub configuration
-github_auth = Auth.Token(os.environ.get("GITHUB_ACCESS_TOKEN"))
-github_client = Github(auth=github_auth)
 
 ## for flask-security-too
 app.config["SECRET_KEY"] = os.environ.get(
@@ -78,3 +75,7 @@ class CustomResponse(Response):
 
 
 app.response_class = CustomResponse
+
+# register blueprints
+app.register_blueprint(student)
+app.register_blueprint(teacher)

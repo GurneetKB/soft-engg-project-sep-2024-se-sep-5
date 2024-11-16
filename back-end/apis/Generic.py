@@ -2,8 +2,8 @@ from application.setup import (
     app,
     CustomResponse,
 )
-from application.models import db, UsersRoles
-from flask import abort, json, jsonify
+from application.models import db
+from flask import abort, json
 from werkzeug.exceptions import HTTPException
 from string import digits, ascii_letters
 from random import SystemRandom
@@ -11,7 +11,6 @@ from flask_security import (
     current_user,
     logout_user,
 )
-from sqlalchemy import select
 
 
 @app.errorhandler(HTTPException)

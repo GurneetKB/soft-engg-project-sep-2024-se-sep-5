@@ -101,7 +101,7 @@ class Roles(db.Model, RoleMixin):
 
 class Teams(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, nullable=False, unique=True)
     github_repo_url = db.Column(db.String)
     instructor_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="SET NULL")
@@ -163,7 +163,7 @@ class Tasks(db.Model):
     )
     submissions = db.relationship(
         "Submissions",
-        back_populates="tasks",
+        back_populates="task",
         lazy="subquery",
         cascade="all, delete",
     )
@@ -185,7 +185,9 @@ class Submissions(db.Model):
         uselist=False,
     )
     team = db.relationship("Teams", back_populates="submissions", lazy="subquery")
-    tasks = db.relationship("Tasks", back_populates="submissions", lazy="subquery")
+    task = db.relationship(
+        "Tasks", back_populates="submissions", lazy="subquery", uselist=False
+    )
 
 
 class Documents(db.Model):
@@ -201,6 +203,16 @@ class Documents(db.Model):
         lazy="subquery",
         uselist=False,
     )
+
+
+class AIProgressText(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    generated_by = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    text = db.Column(db.JSON, nullable=False)
 
 
 class Notifications(db.Model):
