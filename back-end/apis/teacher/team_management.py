@@ -108,7 +108,7 @@ def get_overall_teams_progress():
         team_ai_prompt += f"\nOverall Progress: {team_data['progress']}%\n"
         ai_prompt.append(team_ai_prompt)
         response_data.append(team_data)
-
+    
     try:
         chat_completion = ai_client.chat.completions.create(
             messages=[
@@ -116,8 +116,34 @@ def get_overall_teams_progress():
                     "role": "system",
                     "content": f"""Analyze the progress of each team and provide a JSON response using the following schema:
                             {json.dumps(AIResponse.model_json_schema(), indent=2)}
-                            The 'status' field should be one of: 'on_track', 'at_risk', or 'off_track'.
-                            The rank of each team should be in the range of 1-{len(teams)}""",
+                            
+                            Ranking Rules:
+                            1. Consider multiple factors for ranking in this priority order:
+                               - Progress percentage (higher is better)
+                               - Task completion relative to deadlines
+                               - GitHub activity (commit frequency and code changes)
+                               - Quality of submissions (based on feedback)
+                            
+                            2. Status Assignment Rules:
+                               - 'on_track': Teams that have completed tasks on time and show consistent progress
+                               - 'at_risk': Teams showing some progress but falling behind schedule
+                               - 'off_track': Teams with minimal progress or significant delays
+                            
+                            3. Rank Assignment Rules:
+                               - The ranks should be assigned from 1 to {len(teams)} consecutively
+                               - No teams should have same ranks assigned
+                               - Lower rank (closer to 1) indicates better performance
+                               - Teams with same status should be ranked based on their relative progress
+                               - Generally, 'on_track' teams should rank better than 'at_risk' teams
+                               - 'at_risk' teams should rank better than 'off_track' teams
+                            
+                            4. Reason Format:
+                               - Start with the primary factor affecting the ranking
+                               - Include both positive and areas of concern
+                               - Mention specific metrics (progress %, commit counts, etc.)
+                               - Keep it concise but informative (2-3 sentences)
+                            
+                            Important: Ensure the ranking is consistent with the actual progress metrics and status assignments. Two teams with similar metrics should have similar ranks, and significant rank differences should be justified by clear metric differences.""",
                 },
                 {
                     "role": "user",
