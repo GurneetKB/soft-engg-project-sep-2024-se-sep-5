@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_security import Security, SQLAlchemyUserDatastore
 from application.models import Users, Roles, db
 from application.initial_data import seed_database
+from werkzeug.datastructures import Headers
 import os
 from apis.student.setup import student
 from apis.teacher.setup import teacher
@@ -61,17 +62,47 @@ app.session_interface = CustomSessionInterface()
 
 ## adding the headers that allow cross-origin requests and jsonifying the response
 class CustomResponse(Response):
-
     default_mimetype = "application/json"
 
-    def __init__(self, response=None, *args, **kwargs):
-        kwargs["headers"] = {
+    def __init__(
+        self,
+        response=None,
+        status=None,
+        headers=None,
+        mimetype=None,
+        content_type=None,
+        direct_passthrough=False,
+    ):
+        # Define default CORS headers
+        default_cors_headers = {
             "Access-Control-Allow-Origin": "http://localhost:5173",
             "Access-Control-Allow-Headers": "Authentication-Token,Content-Type",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Expose-Headers": "Content-Disposition",
         }
-        return super(CustomResponse, self).__init__(response, *args, **kwargs)
+
+        # Initialize headers if None
+        if headers is None:
+            headers = {}
+
+        # Convert headers to Headers object if it's a dict
+        if isinstance(headers, dict):
+            headers = Headers(headers)
+
+        # Update with default CORS headers
+        for key, value in default_cors_headers.items():
+            if key not in headers:
+                headers.add(key, value)
+
+        # Call parent constructor with properly merged headers
+        super().__init__(
+            response=response,
+            status=status,
+            headers=headers,
+            mimetype=mimetype,
+            content_type=content_type,
+            direct_passthrough=direct_passthrough,
+        )
 
 
 app.response_class = CustomResponse

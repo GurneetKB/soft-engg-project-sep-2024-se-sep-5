@@ -158,7 +158,7 @@ def get_overall_teams_progress():
             chat_completion.choices[0].message.content
         )
     except Exception as e:
-        return abort(500, e)
+        return abort(500, str(e))
 
     for team_analysis in ai_response.teams:
         for team in response_data:

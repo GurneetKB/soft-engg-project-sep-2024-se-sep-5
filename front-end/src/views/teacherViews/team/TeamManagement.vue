@@ -137,7 +137,7 @@
       teams.value = await response.json()
     } else
     {
-      error.value = err.message
+      error.value = 'Failed to fetch overall progress details'
     }
     loading.value = false
   } )
@@ -154,7 +154,7 @@
           <i class="bi bi-search search-icon"></i>
         </div>
         <div class="sort-container d-flex align-items-center">
-          <button class="btn nav-color-btn me-2" :disabled="loading" @click="openModal">
+          <button class="btn nav-color-btn me-2" :disabled="loading||error" @click="openModal">
             Ranking Reason
           </button>
           <button title="sort by rank" class="btn btn-outline-primary me-2" @click="toggleSort('rank')">
