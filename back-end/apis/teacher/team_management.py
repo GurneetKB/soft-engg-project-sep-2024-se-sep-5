@@ -11,7 +11,6 @@ from application.models import (
     db,
     Submissions,
     Milestones,
-    Documents,
     AIProgressText,
 )
 from flask import abort, request, send_file
@@ -242,8 +241,8 @@ def get_team_progress(team_id):
             "id": milestone.id,
             "title": milestone.title,
             "description": milestone.description,
-            "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
-            "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "deadline": milestone.deadline,
+            "created_at": milestone.created_at,
             "tasks": [],
         }
         for task in milestone.task_milestones:
@@ -294,7 +293,7 @@ def view_submission(team_id, task_id):
     if not os.path.exists(document.file_url):
         return abort(404, "File not found")
 
-    return send_file(document.file_url)
+    return send_file(document.file_url), 200
 
 
 @teacher.route(
@@ -333,12 +332,15 @@ def provide_feedback(team_id, task_id):
 
 @teacher.route(
     "/team_management/individual/github/<int:team_id>",
-    methods=["POST"],
+    methods=["GET"],
 )
 def get_github_details(team_id):
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
+        user_id = request.args.get("user_id")
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return abort(400, "User id must be integer.")
         github_username = None
         team = get_single_team_under_user(current_user, team_id)
 
@@ -359,7 +361,7 @@ def get_github_details(team_id):
         commit_details = fetch_commit_details(team.github_repo_url, github_username)
 
         if "status" in commit_details:
-            return abort(int(commit_details["status"]), commit_details["message"])
+            return abort(502, commit_details["message"])
 
         return {
             "name": github_username or team.name,
@@ -368,7 +370,7 @@ def get_github_details(team_id):
             "linesOfCodeAdded": commit_details["linesOfCodeAdded"],
             "linesOfCodeDeleted": commit_details["linesOfCodeDeleted"],
             "milestones": commit_details["milestones"],
-        }
+        }, 200
 
     except ValueError as e:
         return abort(500, str(e))
@@ -385,10 +387,14 @@ def get_ai_analysis(team_id, task_id):
 
     submission = Submissions.query.filter_by(team_id=team_id, task_id=task_id).first()
 
-    if not submission:
-        return abort(404, "Document not found.")
+    if not submission or not submission.documents:
+        return abort(404, "Submission or document not found")
 
-    document = Documents.query.filter_by(submission_id=submission.id).first()
+    document = submission.documents
+
+    # Check file existence
+    if not os.path.exists(document.file_url):
+        return abort(404, "File not found")
 
     try:
         with open(document.file_url, "rb") as pdf_file:
@@ -401,17 +407,12 @@ def get_ai_analysis(team_id, task_id):
         return abort(500, f"Error reading document: {str(e)}")
 
     try:
-        prompt_template = """
+        chat_completion = ai_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
         You are an AI expert specializing in analyzing document submissions for quality and clarity.  
-
-        ### Inputs:  
-        1. **Submission Details**:   
-        - Content: {content}  
-        2. **Milestone Description**:  
-           {milestone_description} 
-        3. **Task Description**:  
-           {task_description} 
-        ---
 
         ### Tasks:  
 
@@ -423,16 +424,21 @@ def get_ai_analysis(team_id, task_id):
         2. **Task Requirements Check**:  
         - Cross-verify the content against the listed task which is the part of the milestone.  
         - Indicate which requirements are met and which are missing or incomplete.   
-        """
-
-        prompt = prompt_template.format(
-            content=text,
-            milestone_description=submission.task.description,
-            task_description=submission.task.milestone.description,
-        )
-
-        chat_completion = ai_client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
+        """,
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+        ### Inputs:  
+        1. **Submission Details**:   
+        - Content: {text}  
+        2. **Milestone Description**:  
+           {submission.task.description} 
+        3. **Task Description**:  
+           {submission.task.milestone.description} 
+        """,
+                },
+            ],
             model="llama-3.1-8b-instant",
         )
 

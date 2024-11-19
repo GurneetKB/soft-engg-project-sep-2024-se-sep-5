@@ -2,7 +2,7 @@
     import { ref, onMounted, computed } from 'vue'
     import { checksuccess, fetchfunct } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-    import { formatDate, convertUTCDateToLocaleDate } from '@/components/date';
+    import { formatDate } from '@/components/date';
     import { downloadFile } from '@/components/download';
     import { useAlertStore } from '@/stores/alert';
 
@@ -123,7 +123,7 @@
     {
         if ( milestoneDetails.value && milestoneDetails.value.deadline )
         {
-            return convertUTCDateToLocaleDate( milestoneDetails.value.deadline ) < new Date();
+            return new Date( milestoneDetails.value.deadline ) < new Date();
         }
         return false;
     } );

@@ -5,7 +5,7 @@
   import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
   import { Form, Field, ErrorMessage, FieldArray } from 'vee-validate'
   import * as Yup from 'yup'
-  import { convertUTCDateToLocaleDate, localDateInISOFormat } from '@/components/date'
+  import { localDateInISOFormat } from '@/components/date'
 
   const props = defineProps( {
     id: {
@@ -79,7 +79,7 @@
       initialValues.value = {
         title: data.title || '',
         description: data.description || '',
-        deadline: localDateInISOFormat( convertUTCDateToLocaleDate( data.deadline ) ) || '',
+        deadline: localDateInISOFormat( new Date( data.deadline ) ) || '',
         tasks: data.tasks && data.tasks.length > 0
           ? data.tasks.map( task => ( { description: task.description || '' } ) )
           : [ { description: '' } ]

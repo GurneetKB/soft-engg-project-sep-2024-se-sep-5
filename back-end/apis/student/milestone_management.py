@@ -66,7 +66,6 @@ def get_team_milestones():
     return response_data, 200
 
 
-# Define the endpoint to get details of a specific milestone
 @student.route("/milestone_management/individual", methods=["GET"])
 @roles_required("Student")
 def get_milestones():
@@ -96,8 +95,8 @@ def get_milestone_details(milestone_id):
             "id": milestone.id,
             "title": milestone.title,
             "description": milestone.description,
-            "deadline": milestone.deadline.strftime("%Y-%m-%d %H:%M:%S"),
-            "created_at": milestone.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "deadline": milestone.deadline,
+            "created_at": milestone.created_at,
             "tasks": [],
         }
         for task in milestone.task_milestones:
@@ -157,7 +156,7 @@ def submit_milestone(milestone_id):
         if task_id in milestone_tasks and file.filename.lower().endswith(".pdf"):
 
             # Generate document title and save file
-            document_title = f"{milestone.title}_Task{task_id}_Team{team.name}"
+            document_title = f"Milestone{milestone_id}_Task{task_id}_Team{team.name}"
             file_url = os.path.join(file_dir, document_title + ".pdf")
             file.save(file_url)
             saved_files.append(file_url)
@@ -200,48 +199,6 @@ def submit_milestone(milestone_id):
     return {"message": "Milestone documents submitted successfully"}, 201
 
 
-@student.route(
-    "/milestone_management/individual/feedback/<int:milestone_id>",
-    methods=["GET"],
-)
-@roles_required("Student")
-def get_feedback(milestone_id):
-    team_id = get_team_id(current_user)
-
-    # Fetch all tasks related to the milestone
-    tasks = Tasks.query.filter(milestone_id == int(milestone_id)).all()
-
-    if not tasks:
-        return abort(404, "No tasks found for this milestone")
-
-    feedback_data = []
-
-    for task in tasks:
-        # Find the latest submission with feedback for each task and team
-        submission = (
-            Submissions.query.filter_by(task_id=task.id, team_id=team_id)
-            .order_by(Submissions.feedback_time.desc())
-            .first()
-        )
-
-        # Add feedback details for each task if feedback is available
-        if submission and submission.feedback:
-            feedback_data.append(
-                {
-                    "task_id": task.id,
-                    "feedback": submission.feedback,
-                    "feedback_time": submission.feedback_time,
-                }
-            )
-
-    if not feedback_data:
-        return abort(404, "No feedback found for any task in this milestone")
-
-    return {
-        "feedback_data": feedback_data,
-    }, 200
-
-
 @student.route("/download_submission/<int:task_id>", methods=["GET"])
 @roles_required("Student")
 def download_submission(task_id):
@@ -263,4 +220,4 @@ def download_submission(task_id):
     file_response.headers["Content-Disposition"] = (
         f'attachment; filename="{document.title}.pdf"'
     )
-    return file_response
+    return file_response, 200

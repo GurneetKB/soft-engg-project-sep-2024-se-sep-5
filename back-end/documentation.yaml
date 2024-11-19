@@ -1,71 +1,93 @@
-openapi: 3.0.1
+openapi: 3.0.0
 info:
-  title: Project Tracking  API
-  description: API for managing milestones, notifications, and submissions of projects.
-  version: "1.0.0"
-servers:
-  - url: http://localhost:5000
+  title: Tracky | The Project Tracking System
+  description: |
+    These API are designed to facilitate the management, monitoring, and feedback collection for student projects. Instructors, teaching assistants (TAs), and students can interact with the system to manage milestones, tasks, submissions, and receive feedback on their work. The system also includes integration with GitHub to track commits and uses Generative AI for document and teams' progress analysis.
 
+    **Key Features**:
+    - Milestone and task management with deadlines.
+    - Submission tracking and feedback system.
+    - GitHub integration for tracking commit histories and Git-related data.
+    - AI-driven analysis for teams' progress and document review.
+    - Role-based access control for instructors, TAs, and students.
+    - Real-time feedback delivery for students based on task submissions.
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:5000'
 components:
   securitySchemes:
     authToken:
       type: apiKey
       in: header
       name: Authentication-Token
-  schemas:
-    Notification:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Unique ID of the notification
-        title:
-          type: string
-          description: Title of the notification
-        type:
-          type: string
-          description: Type of the notification
-        created_at:
-          type: string
-          format: date-time
-        read_at:
-          type: string
-          format: date-time
-    NotificationPreferences:
-      type: object
-      properties:
-        email_deadline_notifications:
-          type: boolean
-        in_app_deadline_notifications:
-          type: boolean
-        email_feedback_notifications:
-          type: boolean
-        in_app_feedback_notifications:
-          type: boolean
-    Milestone:
-      type: object
-      properties:
-        id:
-          type: integer
-        title:
-          type: string
-        description:
-          type: string
-        deadline:
-          type: string
-          format: date-time
-        completion_rate:
-          type: number
-          format: float
-
-security:
-  - authToken: []
-
+  responses:
+    ForbiddenError:
+      description: Forbidden. The user does not have the required role.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 403
+              response:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - You do not have permission to view this resource.
+    GenericError:
+      description: Generic error response with customizable examples.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              response:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    x-example: A generic error occurred.
+    InternalServerError:
+      description: Internal Server Error. Indicates an issue on the server side.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              response:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - An unexpected error occurred. Please try again later.
 paths:
   /login:
     post:
-      summary: "User login endpoint"
-      description: "Authenticates the user and returns authentication and CSRF tokens."
+      summary: User login endpoint
+      description: Authenticates the user and returns authentication token.
+      tags:
+        - Generic
+      parameters:
+        - in: query
+          name: include_auth_token
+          required: true
+          schema:
+            type: string
+            description: Include the authentication token in the response if set to true.
       requestBody:
         required: true
         content:
@@ -75,13 +97,16 @@ paths:
               properties:
                 username:
                   type: string
-                  example: "testuser"
+                  description: The username of the user.
                 password:
                   type: string
-                  example: "password123"
+                  description: The password of the user.
+            example:
+              username: user1
+              password: password123
       responses:
-        "200":
-          description: "Login successful"
+        '200':
+          description: Login successful and authentication tokens returned.
           content:
             application/json:
               schema:
@@ -98,47 +123,88 @@ paths:
                     properties:
                       csrf_token:
                         type: string
-                        example: "ImFjMzJjMWM5MDgyYzAxZDhiMzViMTNlNjMzZWI4ZDU0ZjAwODM2YzAi.Zy966w.y0QCezj1Onskkb_MQr2OT4QJWcQ"
+                        example: ImFjNjQwNGZlZTI2Mjg3ZWU0ZjVmOGEyODJhY2Y3ZGExMDkzNTg4N2Ui.ZzvI3g.gV2-tZD8QTrWI3RBgY35DjMqD-s
                       user:
                         type: object
                         properties:
                           authentication_token:
                             type: string
-                            example: "WyJCdGVqTnp6dzlJYlo2VHJDU1VOVzRrNUtHTjlCdnJvZDRwV05UTFN5QWxlN3pGOXRLenM3SzRKN0psbEFDdjJiIl0.Zy966w.kY5TPjTPZrpnoQI_zAhnd0Hk4X0"
-        "401":
-          description: "Unauthorized access"
+                            example: eyJ2ZXIiOiI1IiwidWlkIjoiSkpFa0JuQ242aGdrMXhUMnRRZEFrRHhrQ3NSanNreTIwT3Yxc1djQ0FNRkU1SHJ1UlJqamJja2tJS2lod3NiWCIsImZzX3BhYSI6MTczMTk3MTI5NC42MTMwMTUsImV4cCI6MH0.ZzvI3g.ZzMVJ4XHvuIzFD09FjX0lLblmVg
+        '400':
+          description: 'Bad request, user does not exist or invalid credentials.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  error:
-                    type: string
-                    example: "Invalid username or password"
-
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 400
+                  response:
+                    type: object
+                    properties:
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - Specified user does not exist
+                      field_errors:
+                        type: object
+                        properties:
+                          username:
+                            type: array
+                            items:
+                              type: string
+                            example:
+                              - Specified user does not exist
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /user/role:
     get:
       summary: Retrieve user roles
-      description: Returns the roles associated with the current user.
+      description: Returns the list of roles assigned to the currently authenticated user.
+      tags:
+        - Generic
+      security:
+        - authToken: []
       responses:
         '200':
-          description: A list of user roles.
+          description: Roles retrieved successfully.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: string
+                example:
+                  - Instructor
         '401':
-          description: Unauthorized, user not authenticated.
-
+          description: Unauthorized - User is not logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - 'The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /logout:
     get:
-      summary: Log out the current user
-      description: Invalidate all user authentication tokens and log the user out.
+      summary: Logout a user
+      description: Logs out the currently authenticated user and invalidates all their authentication tokens.
+      tags:
+        - Generic
+      security:
+        - authToken: []
       responses:
         '200':
-          description: Successful logout.
+          description: User logged out successfully.
           content:
             application/json:
               schema:
@@ -146,16 +212,30 @@ paths:
                 properties:
                   message:
                     type: string
+                    example: You have successfully logged out.
         '401':
-          description: Unauthorized, user not authenticated.
-
-  /teacher/milestone_management/numbers:
+          description: Unauthorized - User is not logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - 'The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /teacher/milestone_management:
     get:
-      summary: Get number of teams and students
-      description: Returns the count of teams and students under the current instructor or TA.
+      summary: Get all milestones with statistics
+      description: 'Retrieves all milestones along with the number of teams, students, and milestone completion rates for teams under the instructor or TA.'
+      tags:
+        - Teacher_Milestone_Management
+      security:
+        - authToken: []
       responses:
         '200':
-          description: Team and student counts.
+          description: Successfully retrieved milestones and statistics.
           content:
             application/json:
               schema:
@@ -163,16 +243,304 @@ paths:
                 properties:
                   no_of_teams:
                     type: integer
+                    description: The total number of teams under the instructor or TA.
+                    example: 5
                   no_of_students:
                     type: integer
-
-  /teacher/team_management/overall:
+                    description: The total number of students across all teams.
+                    example: 30
+                  milestones:
+                    type: array
+                    description: List of milestones with details and completion rates.
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: The milestone ID.
+                          example: 1
+                        title:
+                          type: string
+                          description: The title of the milestone.
+                          example: Project Proposal
+                        description:
+                          type: string
+                          description: Description of the milestone.
+                          example: Submit the initial project proposal.
+                        deadline:
+                          type: string
+                          format: date-time
+                          description: The deadline for the milestone.
+                          example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                        completion_rate:
+                          type: number
+                          format: float
+                          description: Completion percentage of the milestone across teams.
+                          example: 80
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new milestone
+      description: Allows instructors to create a new milestone with a set of tasks and a deadline.
+      tags:
+        - Teacher_Milestone_Management
+      security:
+        - authToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - deadline
+              properties:
+                title:
+                  type: string
+                  description: The title of the milestone.
+                  example: Project Proposal
+                description:
+                  type: string
+                  description: A detailed description of the milestone.
+                  example: Submit the initial project proposal.
+                deadline:
+                  type: string
+                  format: date-time
+                  description: The deadline for the milestone in GMT format.
+                  example: 'Wed, 20 Nov 2024 23:59:59 GMT'
+                tasks:
+                  type: array
+                  description: A list of tasks associated with the milestone.
+                  items:
+                    type: object
+                    properties:
+                      description:
+                        type: string
+                        description: The task description.
+                        example: Create a draft proposal document.
+      responses:
+        '201':
+          description: Milestone created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Milestone published successfully.
+        '400':
+          description: Bad request due to validation errors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Title is required and must be a string.
+                    - Deadline must be set to a future date and time.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  '/teacher/milestone_management/{milestone_id}':
     get:
-      summary: Get overall teams progress
-      description: Returns the progress of all teams under the instructor or TA.
+      summary: Get milestone details
+      description: 'Retrieve detailed information about a specific milestone, including its tasks.'
+      tags:
+        - Teacher_Milestone_Management
+      security:
+        - authToken: []
+      parameters:
+        - name: milestone_id
+          in: path
+          required: true
+          description: The ID of the milestone to retrieve.
+          schema:
+            type: integer
+            example: 1
       responses:
         '200':
-          description: A list of team progress data.
+          description: Milestone details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    description: The title of the milestone.
+                    example: Project Proposal
+                  description:
+                    type: string
+                    description: A detailed description of the milestone.
+                    example: Submit the initial project proposal.
+                  deadline:
+                    type: string
+                    format: date-time
+                    description: The deadline for the milestone.
+                    example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                  tasks:
+                    type: array
+                    description: List of tasks associated with the milestone.
+                    items:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          description: The task description.
+                          example: Create a draft proposal document.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Milestone not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Milestone not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update milestone details
+      description: 'Modify the details of a specific milestone, including its title, description, deadline, and tasks.'
+      tags:
+        - Teacher_Milestone_Management
+      security:
+        - authToken: []
+      parameters:
+        - name: milestone_id
+          in: path
+          required: true
+          description: The ID of the milestone to update.
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The updated title of the milestone.
+                  example: Updated Project Proposal
+                description:
+                  type: string
+                  description: The updated description of the milestone.
+                  example: Submit the revised project proposal.
+                deadline:
+                  type: string
+                  format: date-time
+                  description: The updated deadline in GMT format.
+                  example: 'Thu, 21 Nov 2024 12:00:00 GMT'
+                tasks:
+                  type: array
+                  description: The updated list of tasks for the milestone.
+                  items:
+                    type: object
+                    properties:
+                      description:
+                        type: string
+                        description: The task description.
+                        example: Finalize the project proposal.
+      responses:
+        '201':
+          description: Milestone updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Milestone updated successfully.
+        '400':
+          description: Bad request due to validation errors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Title must be a non-empty string.
+                    - Deadline must be set to a future date and time.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Milestone not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Milestone not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a milestone
+      description: Deletes a milestone identified by its ID.
+      tags:
+        - Teacher_Milestone_Management
+      security:
+        - authToken: []
+      parameters:
+        - name: milestone_id
+          in: path
+          required: true
+          description: The ID of the milestone to delete.
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Milestone deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Milestone is deleted
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Milestone not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Milestone not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /teacher/team_management/overall:
+    get:
+      summary: Get overall team progress
+      description: Retrieves the progress of all teams managed by the current user.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
+      responses:
+        '200':
+          description: A list of teams with their progress details and rankings.
           content:
             application/json:
               schema:
@@ -180,18 +548,45 @@ paths:
                 items:
                   type: object
                   properties:
-                    name:
+                    team_name:
                       type: string
+                      description: Name of the team.
+                      example: "Team A"
                     progress:
                       type: integer
-
+                      description: Overall progress percentage.
+                      example: 85
+                    rank:
+                      type: integer
+                      description: Rank based on progress and other metrics.
+                      example: 2
+                    status:
+                      type: string
+                      enum:
+                        - on_track
+                        - at_risk
+                        - off_track
+                      description: Status of the team.
+                      example: "on_track"
+                    reason:
+                      type: string
+                      description: Reason for the assigned rank and status.
+                      example: "Consistently meeting milestones and submitting tasks on time."
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /teacher/team_management/individual:
     get:
-      summary: Retrieve all teams under user
-      description: Returns a list of teams under the current instructor or TA.
+      summary: Get all teams under the user
+      description: Retrieves a list of all teams managed by the current user.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
       responses:
         '200':
-          description: List of teams.
+          description: A list of teams managed by the user.
           content:
             application/json:
               schema:
@@ -204,22 +599,35 @@ paths:
                       properties:
                         id:
                           type: integer
+                          description: Team ID.
+                          example: 1
                         name:
                           type: string
-
+                          description: Team name.
+                          example: "Team Alpha"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /teacher/team_management/individual/detail/{team_id}:
     get:
-      summary: Get details for a specific team
-      description: Retrieves detailed information for a specified team.
+      summary: Get individual team details
+      description: Retrieves detailed information about a specific team by ID.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
       parameters:
         - name: team_id
           in: path
           required: true
+          description: The ID of the team.
           schema:
             type: integer
+            example: 1
       responses:
         '200':
-          description: Team details.
+          description: Detailed information about the team.
           content:
             application/json:
               schema:
@@ -230,8 +638,12 @@ paths:
                     properties:
                       id:
                         type: integer
+                        description: Team ID.
+                        example: 1
                       name:
                         type: string
+                        description: Team name.
+                        example: "Team Alpha"
                       members:
                         type: array
                         items:
@@ -239,42 +651,79 @@ paths:
                           properties:
                             id:
                               type: integer
-                            username:
+                              description: Member ID.
+                              example: 1
+                            name:
                               type: string
+                              description: Member username.
+                              example: "john_doe"
                             email:
                               type: string
+                              description: Member email address.
+                              example: "john_doe@example.com"
+                            github_username:
+                              type: string
+                              description: Member GitHub username.
+                              example: "john_doe_github"
                       github_repo_url:
                         type: string
+                        description: GitHub repository URL of the team.
+                        example: "https://github.com/TeamAlpha/project-repo"
                       instructor:
                         type: object
                         properties:
                           id:
                             type: integer
-                          username:
+                            description: Instructor ID.
+                            example: 1
+                          name:
                             type: string
+                            description: Instructor username.
+                            example: "prof_james"
                       ta:
                         type: object
                         properties:
                           id:
                             type: integer
-                          username:
+                            description: Teaching Assistant ID.
+                            example: 2
+                          name:
                             type: string
+                            description: TA username.
+                            example: "ta_michael"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           description: Team not found.
-
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - "Team not found"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /teacher/team_management/individual/progress/{team_id}:
     get:
-      summary: Get team progress for a specific team
-      description: Returns progress information for each milestone of a specified team.
+      summary: Get progress of a specific team
+      description: Retrieves detailed progress for a specific team across all milestones and tasks.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
       parameters:
         - name: team_id
           in: path
           required: true
+          description: The ID of the team.
           schema:
             type: integer
+            example: 1
       responses:
         '200':
-          description: Milestone progress data for the team.
+          description: Detailed progress of the team across milestones.
           content:
             application/json:
               schema:
@@ -284,16 +733,26 @@ paths:
                   properties:
                     id:
                       type: integer
+                      description: Milestone ID.
+                      example: 101
                     title:
                       type: string
+                      description: Title of the milestone.
+                      example: "Milestone 1: Initial Setup"
                     description:
                       type: string
+                      description: Description of the milestone.
+                      example: "Complete the initial project setup and environment configuration."
                     deadline:
                       type: string
                       format: date-time
+                      description: Deadline of the milestone.
+                      example: "Sat, 23 Nov 2024 11:46:13 GMT"
                     created_at:
                       type: string
                       format: date-time
+                      description: Creation time of the milestone.
+                      example: "Sat, 23 Nov 2024 10:00:00 GMT"
                     tasks:
                       type: array
                       items:
@@ -301,60 +760,130 @@ paths:
                         properties:
                           task_id:
                             type: integer
+                            description: Task ID.
+                            example: 201
                           description:
                             type: string
+                            description: Task description.
+                            example: "Set up project repository"
                           is_completed:
                             type: boolean
+                            description: Whether the task is completed.
+                            example: true
+                          submission_time:
+                            type: string
+                            format: date-time
+                            nullable: true
+                            description: Time the task was submitted.
+                            example: "Sat, 23 Nov 2024 11:00:00 GMT"
                           feedback:
                             type: string
+                            nullable: true
+                            description: Feedback provided for the task.
+                            example: "Good work, but need to finalize the README."
                           feedback_time:
                             type: string
                             format: date-time
+                            nullable: true
+                            description: Time the feedback was provided.
+                            example: "Sat, 23 Nov 2024 12:00:00 GMT"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           description: Team not found.
-
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Team not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /teacher/team_management/individual/submission/{team_id}/{task_id}:
     get:
-      summary: View submission document for a task
-      description: Provides the submission document file for a specified team and task.
+      summary: View submission for a specific task and team
+      description: Retrieves the document submitted for a specific task by a specific team. Returns the document file if it exists.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
       parameters:
         - name: team_id
           in: path
           required: true
+          description: The ID of the team.
           schema:
             type: integer
+            example: 1
         - name: task_id
           in: path
           required: true
+          description: The ID of the task.
           schema:
             type: integer
+            example: 1
       responses:
         '200':
-          description: Submission document file.
+          description: Successfully retrieved the submission document.
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
-          description: Submission or document not found.
+          description: 'Submission, document, or file not found.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                team_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Team not found.
+                submission_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Submission or document not found.
+                file_not_found:
+                  value:
+                    response:
+                      errors:
+                        - File not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /teacher/team_management/individual/feedback/{team_id}/{task_id}:
     post:
-      summary: Provide feedback for a task
-      description: Submits feedback for a specific task completed by a team.
+      summary: Provide feedback for a specific task submission
+      description: Allows an instructor or TA to provide feedback on a submission for a specific task by a specific team.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
       parameters:
         - name: team_id
           in: path
           required: true
+          description: The ID of the team.
           schema:
             type: integer
+            example: 1
         - name: task_id
           in: path
           required: true
+          description: The ID of the task.
           schema:
             type: integer
+            example: 1
       requestBody:
+        description: Feedback content for the submission.
         required: true
         content:
           application/json:
@@ -363,216 +892,270 @@ paths:
               properties:
                 feedback:
                   type: string
-                rating:
-                  type: integer
+                  description: The feedback content for the task submission.
+              required:
+                - feedback
+              example:
+                feedback: Great work! Please revise section 2 for clarity.
       responses:
-        '200':
-          description: Feedback submitted successfully.
-        '400':
-          description: Bad request, invalid feedback or rating.
-
-
-  /teacher/team_management/individual/github/{team_id}:
-    get:
-      summary: Get GitHub details for a specific team
-      description: Retrieves GitHub commit and code changes data for a specified team.
-      parameters:
-        - name: team_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: GitHub details for the team.
+        '201':
+          description: Feedback successfully provided.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  teamId:
+                  message:
                     type: string
+                    description: Confirmation message.
+              example:
+                message: The feedback is successfully provided.
+        '400':
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                feedback_missing:
+                  value:
+                    response:
+                      errors:
+                        - Feedback data is required.
+                feedback_invalid:
+                  value:
+                    response:
+                      errors:
+                        - Feedback must be a non-empty string.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Team or submission not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                team_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Team not found.
+                submission_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Submission not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /teacher/team_management/individual/github/{team_id}:
+    get:
+      summary: Retrieve GitHub commit details for a specific team or team member
+      description: Fetches GitHub commit details for a team's repository, optionally filtered by a specific team member's GitHub username.
+      tags:
+        - Teacher_Team_Management
+      security:
+        - authToken: []
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: The ID of the team.
+          schema:
+            type: integer
+            example: 1
+        - name: user_id
+          in: query
+          required: false
+          description: The ID of the team member to filter GitHub commit details by.
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: GitHub commit details successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The name of the team or the GitHub username of the specific team member.
+                  githubRepoUrl:
+                    type: string
+                    description: The GitHub repository URL for the team.
                   totalCommits:
                     type: integer
+                    description: Total number of commits made to the repository.
                   linesOfCodeAdded:
                     type: integer
+                    description: Total lines of code added.
                   linesOfCodeDeleted:
                     type: integer
+                    description: Total lines of code deleted.
                   milestones:
                     type: array
+                    description: Milestone-specific GitHub activity details.
                     items:
                       type: object
                       properties:
                         name:
                           type: string
+                          description: Name of the milestone.
                         commits:
                           type: integer
+                          description: Number of commits for the milestone.
                         linesOfCodeAdded:
                           type: integer
+                          description: Lines of code added for the milestone.
                         linesOfCodeDeleted:
                           type: integer
+                          description: Lines of code deleted for the milestone.
+              example:
+                name: john_doe
+                githubRepoUrl: 'https://github.com/example/repo'
+                totalCommits: 150
+                linesOfCodeAdded: 1200
+                linesOfCodeDeleted: 300
+                milestones:
+                  - name: Milestone 1
+                    commits: 45
+                    linesOfCodeAdded: 600
+                    linesOfCodeDeleted: 100
+                  - name: Milestone 2
+                    commits: 105
+                    linesOfCodeAdded: 600
+                    linesOfCodeDeleted: 200
+        '400':
+          description: Non-integer user id sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - User id must be integer.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
-          description: Team not found.
-
-/api/instructor/milestone:
-    post:
-      summary: Create a new milestone
-      description: "Allows an instructor to create a new milestone for the course."
-      security:
-        - authToken: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Final Project Submission"
-                description:
-                  type: string
-                  example: "Complete the final project and submit the documentation."
-                deadline:
-                  type: string
-                  format: date-time
-                  example: "2024-12-15T23:59:59"
-      responses:
-        "200":
-          description: "Milestone successfully created."
+          description: Team, member, or repository not found.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Milestone published successfully."
-        "401":
-          description: "Unauthorized, only instructors are allowed to create milestones."
-        "500":
-          description: "Internal server error occurred while creating the milestone."
-
-    put:
-      summary: Update an existing milestone
-      description: "Allows an instructor to update the details of an existing milestone."
-      security:
-        - authToken: []
-      parameters:
-        - name: milestone_id
-          in: path
-          required: true
-          description: "ID of the milestone to be updated."
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Updated Final Project Submission"
-                description:
-                  type: string
-                  example: "Updated description for final project submission."
-      responses:
-        "200":
-          description: "Milestone successfully updated."
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                team_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Team not found.
+                member_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Team member not found.
+                repo_not_found:
+                  value:
+                    response:
+                      errors:
+                        - No GitHub repository URL found for this team.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          description: Bad gateway. Failed to fetch from Github.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Milestone updated successfully."
-        "400":
-          description: "Bad request, missing required fields or invalid data."
-        "404":
-          description: "Milestone not found."
-        "500":
-          description: "Internal server error occurred while updating the milestone."
-
-    delete:
-      summary: Delete a milestone
-      description: "Allows an instructor to delete a milestone."
-      security:
-        - authToken: []
-      parameters:
-        - name: milestone_id
-          in: path
-          required: true
-          description: "ID of the milestone to be deleted."
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: "Milestone successfully deleted."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "deleted"
-                  message:
-                    type: string
-                    example: "Milestone is deleted."
-        "404":
-          description: "Milestone not found."
-        "500":
-          description: "Internal server error occurred while deleting the milestone."
-
-  /api/instructor/all_milestone:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Empty git respository.
+  /teacher/team_management/individual/ai_analysis/{team_id}/{task_id}:
     get:
-      summary: Get all milestones for the instructor or TA
-      description: "Retrieve a list of all milestones in the system. Includes completion rates based on task submissions by teams."
+      summary: Perform AI analysis on a team's task submission.
+      description: |
+        Retrieves a submission document, extracts its content, and performs AI-based analysis to check compliance with task requirements.
+      tags:
+        - Teacher_Team_Management
       security:
         - authToken: []
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: ID of the team.
+          schema:
+            type: integer
+            example: 1
+        - name: task_id
+          in: path
+          required: true
+          description: ID of the task.
+          schema:
+            type: integer
+            example: 1
       responses:
-        "200":
-          description: "A list of all milestones."
+        '200':
+          description: AI analysis successfully completed.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 1
-                    title:
-                      type: string
-                      example: "Midterm Project"
-                    description:
-                      type: string
-                      example: "The midterm project submission for the course."
-                    deadline:
-                      type: string
-                      format: date-time
-                      example: "2024-10-15T23:59:59"
-                    completion_rate:
-                      type: number
-                      format: float
-                      example: 75.0
-        "401":
-          description: "Unauthorized, only instructors or TAs are allowed to access milestones."
-        "500":
-          description: "Internal server error occurred while fetching milestones."
+                type: object
+                properties:
+                  analysis:
+                    type: string
+                    description: AI-generated feedback and analysis of the document.
+              example:
+                analysis: |
+                  **Content Review**:
+                  - Grammar: The document is grammatically sound but has occasional awkward phrasing.
+                  - Structure: Missing a conclusion section to summarize key points.
+                  - Clarity: Some sections are overly technical without sufficient explanation.
 
+                  **Task Requirements Check**:
+                  - Met: Introduction and methodology align with the task requirements.
+                  - Missing: Analysis section is incomplete. Provide further elaboration on results.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Team, submission or file not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                team_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Team not found.
+                'submission_not_found:':
+                  value:
+                    response:
+                      errors:
+                        - Submission or document not found.
+                file_not_found:
+                  value:
+                    response:
+                      errors:
+                        - File not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/notifications:
     get:
-      summary: Get notifications for the current student
+      summary: Retrieve notifications for the current student
+      description: 'Returns a list of notifications for the current student, including their title, type, and timestamps.'
+      tags:
+        - Student_Notifications
       security:
         - authToken: []
       responses:
         '200':
-          description: A list of notifications
+          description: Successful response with a list of notifications.
           content:
             application/json:
               schema:
@@ -581,36 +1164,109 @@ paths:
                   notifications:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Notification'
-
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: The ID of the notification.
+                          example: 1
+                        title:
+                          type: string
+                          description: Title of the notification.
+                          example: New Milestone Assigned
+                        type:
+                          type: string
+                          description: 'The type of the notification (e.g., ''Milestone'', ''Reminder'').'
+                          example: Milestone
+                        created_at:
+                          type: string
+                          format: date-time
+                          description: The timestamp when the notification was created.
+                          example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                        read_at:
+                          type: string
+                          format: date-time
+                          description: The timestamp when the notification was read (nullable).
+                          example: "Sat, 23 Nov 2024 11:46:13 GMT"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/notifications/{notification_id}:
     get:
-      summary: Get details of a specific notification
+      summary: Retrieve details of a specific notification for the current student
+      description: Returns the details of a specific notification and marks it as read for the current student.
+      tags:
+        - Student_Notifications
       security:
         - authToken: []
       parameters:
-        - in: path
-          name: notification_id
+        - name: notification_id
+          in: path
+          required: true
+          description: The ID of the notification to retrieve.
           schema:
             type: integer
-          required: true
-          description: ID of the notification
+            example: 1
       responses:
         '200':
-          description: Notification details
+          description: Successful response with the notification details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Notification'
-
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the notification.
+                    example: 1
+                  title:
+                    type: string
+                    description: The title of the notification.
+                    example: New Milestone Assigned
+                  message:
+                    type: string
+                    description: Detailed message of the notification.
+                    example: You have been assigned a new milestone.
+                  type:
+                    type: string
+                    description: 'The type of the notification (e.g., ''Milestone'', ''Reminder'').'
+                    example: Milestone
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the notification was created.
+                    example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                  read_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the notification was read (nullable).
+                    example: "Sat, 23 Nov 2024 11:46:13 GMT"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: The requested notification is not found or access is denied, if it is any other user's notification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Notification not found or access denied.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/notifications/mark_all_as_read:
     get:
-      summary: Mark all notifications as read
+      summary: Mark all unread notifications as read for the current student
+      description: Marks all unread notifications for the current student as read.
+      tags:
+        - Student_Notifications
       security:
         - authToken: []
       responses:
         '200':
-          description: All notifications marked as read
+          description: Successful response indicating that all notifications have been marked as read.
           content:
             application/json:
               schema:
@@ -618,33 +1274,94 @@ paths:
                 properties:
                   message:
                     type: string
-
+                    example: All notifications marked as read.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/notifications/preferences:
     get:
-      summary: Get the current user's notification preferences
+      summary: Retrieve notification preferences for the current student
+      description: 'Returns the current notification preferences for the student, such as email and in-app notification settings for deadlines and feedback.'
+      tags:
+        - Student_Notifications
       security:
         - authToken: []
       responses:
         '200':
-          description: Notification preferences
+          description: Successful response with the current notification preferences.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationPreferences'
-
+                type: object
+                properties:
+                  email_deadline_notifications:
+                    type: boolean
+                    description: Whether the student wants to receive email notifications for deadlines.
+                    example: true
+                  in_app_deadline_notifications:
+                    type: boolean
+                    description: Whether the student wants to receive in-app notifications for deadlines.
+                    example: false
+                  email_feedback_notifications:
+                    type: boolean
+                    description: Whether the student wants to receive email notifications for feedback.
+                    example: true
+                  in_app_feedback_notifications:
+                    type: boolean
+                    description: Whether the student wants to receive in-app notifications for feedback.
+                    example: true
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Notification preferences not found for the current student.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Notification preferences not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
-      summary: Update the current user's notification preferences
+      summary: Update notification preferences for the current student
+      description: Updates the student's notification preferences for deadlines and feedback via email or in-app notifications.
+      tags:
+        - Student_Notifications
       security:
         - authToken: []
       requestBody:
+        description: The notification preferences to update for the student.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NotificationPreferences'
+              type: object
+              properties:
+                email_deadline_notifications:
+                  type: boolean
+                  description: Whether the student wants to receive email notifications for deadlines.
+                in_app_deadline_notifications:
+                  type: boolean
+                  description: Whether the student wants to receive in-app notifications for deadlines.
+                email_feedback_notifications:
+                  type: boolean
+                  description: Whether the student wants to receive email notifications for feedback.
+                in_app_feedback_notifications:
+                  type: boolean
+                  description: Whether the student wants to receive in-app notifications for feedback.
+            examples:
+              example1:
+                value:
+                  email_deadline_notifications: true
+                  in_app_deadline_notifications: false
+                  email_feedback_notifications: true
+                  in_app_feedback_notifications: true
       responses:
         '201':
-          description: Notification preferences updated successfully
+          description: Successful response indicating that notification preferences have been updated.
           content:
             application/json:
               schema:
@@ -652,15 +1369,42 @@ paths:
                 properties:
                   message:
                     type: string
-
+                    example: Notification preferences updated successfully.
+        '400':
+          description: 'Invalid request data, where boolean values were expected for preferences.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - email_deadline_notifications must be a boolean value.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Notification preferences not found for the current student.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Notification preferences not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/milestone_management/overall:
     get:
-      summary: Get milestones for the student's team
+      summary: Retrieve overall milestones and completion status for the current student's team
+      description: Returns the milestones for the student's team along with their completion percentages based on task submissions.
       security:
         - authToken: []
+      tags:
+        - Student_Milestone_Info
       responses:
         '200':
-          description: Team milestones
+          description: Successful response with the team's milestones and their completion percentages.
           content:
             application/json:
               schema:
@@ -668,19 +1412,51 @@ paths:
                 properties:
                   team_name:
                     type: string
+                    description: The name of the team.
+                    example: Team Alpha
                   milestones:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Milestone'
-
+                      type: object
+                      properties:
+                        milestone_id:
+                          type: integer
+                          description: ID of the milestone.
+                          example: 1
+                        title:
+                          type: string
+                          description: Title of the milestone.
+                          example: Milestone 1
+                        completion_percentage:
+                          type: number
+                          format: float
+                          description: Completion percentage of the milestone based on task submissions.
+                          example: 80
+        '400':
+          description: No team is assigned to the current student.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - No team is assigned to you yet.
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/milestone_management/individual:
     get:
-      summary: Get list of all milestones
+      summary: Retrieve individual milestones for the current student
+      description: Returns a list of all milestones with their titles for the current student.
+      tags:
+        - Student_Milestone_Info
       security:
         - authToken: []
       responses:
         '200':
-          description: List of milestones
+          description: Successful response with a list of milestones for the student.
           content:
             application/json:
               schema:
@@ -689,53 +1465,137 @@ paths:
                   milestones:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Milestone'
-
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: ID of the milestone.
+                          example: 1
+                        title:
+                          type: string
+                          description: Title of the milestone.
+                          example: Milestone 1
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /student/milestone_management/individual/{milestone_id}:
     get:
-      summary: Get details of a specific milestone
+      summary: Retrieve detailed information about a specific milestone for the student's team
+      description: 'Returns detailed information about a milestone, including tasks, completion status, feedback, and timestamps.'
       security:
         - authToken: []
+      tags:
+        - Student_Milestone_Info
       parameters:
         - in: path
           name: milestone_id
+          required: true
+          description: The ID of the milestone to retrieve details for.
           schema:
             type: integer
-          required: true
-          description: ID of the milestone
+            example: 1
       responses:
         '200':
-          description: Milestone details
+          description: 'Successful response with the milestone details, including tasks and submission statuses.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Milestone'
-
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the milestone.
+                    example: 1
+                  title:
+                    type: string
+                    description: The title of the milestone.
+                    example: Milestone 1
+                  description:
+                    type: string
+                    description: A detailed description of the milestone.
+                    example: This is the first milestone.
+                  deadline:
+                    type: string
+                    format: date-time
+                    description: 'The deadline for the milestone in the format YYYY-MM-DD HH:MM:SS.'
+                    example: '2024-12-01 23:59:59'
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the milestone was created.
+                    example: '2024-11-01 10:00:00'
+                  tasks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        task_id:
+                          type: integer
+                          description: The ID of the task.
+                          example: 1
+                        description:
+                          type: string
+                          description: The task description.
+                          example: Task 1 description
+                        is_completed:
+                          type: boolean
+                          description: Indicates whether the task has been completed.
+                          example: true
+                        feedback:
+                          type: string
+                          description: Feedback provided for the task (if any).
+                          example: Great work!
+                        feedback_time:
+                          type: string
+                          format: date-time
+                          description: The time the feedback was provided (if any).
+                          example: '2024-11-10 14:30:00'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Milestone or team not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Milestone/team not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
-      summary: Submit a milestone
+      summary: Submit milestone documents for a specific milestone
+      description: Allows a student to upload and submit PDF files for tasks under a specific milestone on behalf of their team. Each file corresponds to a task.
       security:
         - authToken: []
+      tags:
+        - Student_Milestone_Info
       parameters:
         - in: path
           name: milestone_id
+          required: true
+          description: The ID of the milestone to submit documents for.
           schema:
             type: integer
-          required: true
-          description: ID of the milestone
+            example: 1
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: PDF file to upload
+              additionalProperties:
+                type: string
+                format: binary
+                description: File upload field where property name is a numeric identifier
+            example:
+                "10": "Milestone 4 Report_API Development and Integration.pdf"
+                "11": "Milestone 5 Report_final_Testing.pdf"
       responses:
         '201':
-          description: Milestone submitted successfully
+          description: Documents for the milestone were successfully submitted.
           content:
             application/json:
               schema:
@@ -743,26 +1603,80 @@ paths:
                 properties:
                   message:
                     type: string
-
-  /student/download_submission/{task_id}:
+                    example: Milestone documents submitted successfully
+        '400':
+          description: 'Bad request. Issues with file type, task validity, or milestone deadline.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                task_or_pdf_invalid:
+                  value:
+                    response:
+                      errors:
+                        - Task 1 is not valid for this milestone or the file is not a PDF
+                deadline_passed:
+                  value:
+                    response:
+                      errors:
+                        - Cannot submit after the milestone deadline
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Milestone or team not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              example:
+                response:
+                  errors:
+                    - Milestone or team not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  '/student/download_submission/{task_id}':
     get:
-      summary: Download submission for a task
+      summary: Download submission document for a task
+      description: Allows a student to download their team's submitted document for a specific task.
       security:
         - authToken: []
+      tags:
+        - Student_Milestone_Info
       parameters:
         - in: path
           name: task_id
+          required: true
+          description: The ID of the task to download the submission for.
           schema:
             type: integer
-          required: true
-          description: ID of the task
+            example: 5
       responses:
         '200':
-          description: File downloaded
+          description: File successfully downloaded.
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
-
-  
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Submission or file not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                submission_or_doc_not_found:
+                  value:
+                    response:
+                      errors:
+                        - Submission or document not found
+                file_not_found:
+                  value:
+                    response:
+                      errors:
+                        - File not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'

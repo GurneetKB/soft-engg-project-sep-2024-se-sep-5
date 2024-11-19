@@ -22,6 +22,7 @@
         const response = await fetchfunct( 'student/notifications/' + props.id )
         if ( response.ok )
         {
+            const id = props.id
             notification.value = await response.json()
             // Mark as read when viewing details
             if ( notification.value && !notification.value.read_at )

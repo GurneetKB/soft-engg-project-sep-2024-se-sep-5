@@ -59,7 +59,7 @@ def get_all_milestones():
             }
         )
 
-    return response_data
+    return response_data, 200
 
 
 @teacher.route("/milestone_management", methods=["POST"])
@@ -140,14 +140,14 @@ def get_milestone(milestone_id):
     milestone_data = {
         "title": milestone_object.title,
         "description": milestone_object.description,
-        "deadline": milestone_object.deadline.strftime("%Y-%m-%dT%H:%M"),
+        "deadline": milestone_object.deadline,
         "tasks": [
             {"description": task.description}
             for task in milestone_object.task_milestones
         ],
     }
 
-    return milestone_data
+    return milestone_data, 200
 
 
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["PUT"])

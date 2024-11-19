@@ -4,7 +4,7 @@
   import { fetchfunct, checksuccess, checkerror } from '@/components/fetch.js'
   import SearchableDropdown from '@/components/SearchableDropdown.vue'
   import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
-  import { convertUTCDateToLocaleDate, formatDate } from '@/components/date'
+  import { formatDate } from '@/components/date'
   import sanitizeHtml from 'sanitize-html'
 
   const teams = ref( [] )
@@ -51,7 +51,7 @@
   // Check if task deadline has passed
   const isDeadlinePassed = ( is_completed, deadline ) =>
   {
-    return convertUTCDateToLocaleDate( deadline ) < new Date() && !is_completed
+    return new Date( deadline ) < new Date() && !is_completed
   }
 
   // Get task status class and text

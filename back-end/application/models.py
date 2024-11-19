@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin
 from sqlalchemy import MetaData
 from enum import Enum
+import os
 
 
 # Define naming convention for constraints
@@ -203,6 +204,26 @@ class Documents(db.Model):
         lazy="subquery",
         uselist=False,
     )
+
+    def delete_file(self):
+        """
+        Delete the associated file from filesystem if it exists
+        """
+        if self.file_url and os.path.exists(self.file_url):
+            try:
+                os.remove(self.file_url)
+                return True
+            except (OSError, IOError) as e:
+                return False
+        return False
+
+
+@db.event.listens_for(Documents, "before_delete")
+def delete_file_on_delete(mapper, connection, target):
+    """
+    Event listener that deletes the file when the Document record is deleted
+    """
+    target.delete_file()
 
 
 class AIProgressText(db.Model):

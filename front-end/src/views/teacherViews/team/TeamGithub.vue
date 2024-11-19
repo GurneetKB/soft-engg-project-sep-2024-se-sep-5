@@ -59,14 +59,9 @@
       loading.value = true
       teamDetails.value = null
       milestones.value = []
-
+      const filter_by_user = selectedMember.value ? `?user_id=${ selectedMember.value }` : ""
       const response = await fetchfunct(
-        `teacher/team_management/individual/github/${ selectedTeamId.value }`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify( { user_id: selectedMember.value } )
-        }
+        `teacher/team_management/individual/github/${ selectedTeamId.value }` + filter_by_user
       )
       if ( response.ok )
       {
