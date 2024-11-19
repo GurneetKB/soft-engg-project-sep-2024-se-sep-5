@@ -12,15 +12,48 @@ from apis.student.setup import student
 from apis.teacher.setup import teacher
 
 
-def create_app(database_uri, testing=False):
-    app = Flask("Tracky")
+class CustomSessionInterface(SecureCookieSessionInterface):
+    def should_set_cookie(self, app: Flask, session: SessionMixin) -> bool:
+        return False
 
-    configure_app(app, database_uri, testing)
-    init_extensions(app)
-    register_blueprints(app)
-    setup_error_handlers(app)
 
-    return app
+class CustomResponse(Response):
+    default_mimetype = "application/json"
+
+    def __init__(
+        self,
+        response=None,
+        status=None,
+        headers=None,
+        mimetype=None,
+        content_type=None,
+        direct_passthrough=False,
+    ):
+        default_cors_headers = {
+            "Access-Control-Allow-Origin": "http://localhost:5173",
+            "Access-Control-Allow-Headers": "Authentication-Token,Content-Type",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        }
+
+        if headers is None:
+            headers = {}
+
+        if isinstance(headers, dict):
+            headers = Headers(headers)
+
+        for key, value in default_cors_headers.items():
+            if key not in headers:
+                headers.add(key, value)
+
+        super().__init__(
+            response=response,
+            status=status,
+            headers=headers,
+            mimetype=mimetype,
+            content_type=content_type,
+            direct_passthrough=direct_passthrough,
+        )
 
 
 def configure_app(app, database_uri, testing):
@@ -89,48 +122,15 @@ def setup_error_handlers(app):
         return app.response_class(response=json.dumps(response_data), status=500)
 
 
-class CustomSessionInterface(SecureCookieSessionInterface):
-    def should_set_cookie(self, app: Flask, session: SessionMixin) -> bool:
-        return False
+def create_app(database_uri, testing=False):
+    app = Flask("Tracky")
 
+    configure_app(app, database_uri, testing)
+    init_extensions(app)
+    register_blueprints(app)
+    setup_error_handlers(app)
 
-class CustomResponse(Response):
-    default_mimetype = "application/json"
-
-    def __init__(
-        self,
-        response=None,
-        status=None,
-        headers=None,
-        mimetype=None,
-        content_type=None,
-        direct_passthrough=False,
-    ):
-        default_cors_headers = {
-            "Access-Control-Allow-Origin": "http://localhost:5173",
-            "Access-Control-Allow-Headers": "Authentication-Token,Content-Type",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Expose-Headers": "Content-Disposition",
-        }
-
-        if headers is None:
-            headers = {}
-
-        if isinstance(headers, dict):
-            headers = Headers(headers)
-
-        for key, value in default_cors_headers.items():
-            if key not in headers:
-                headers.add(key, value)
-
-        super().__init__(
-            response=response,
-            status=status,
-            headers=headers,
-            mimetype=mimetype,
-            content_type=content_type,
-            direct_passthrough=direct_passthrough,
-        )
+    return app
 
 
 app = create_app("sqlite:///track.sqlite3")

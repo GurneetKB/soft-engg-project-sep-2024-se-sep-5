@@ -16,10 +16,6 @@ def valid_file():
 @pytest.fixture
 def client(scope="session"):
     app = create_app("sqlite:///testing.sqlite3", testing=True)
-    with app.app_context():
-        db.create_all()
-        if not Users.query.first():
-            seed_database(db)
     with app.test_client() as client:
         yield client
 
