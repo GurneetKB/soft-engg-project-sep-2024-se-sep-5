@@ -116,7 +116,7 @@ def get_milestone_details(milestone_id):
             )
         return milestone_data, 200
     else:
-        return abort(404, "Milestone/team not found.")
+        return abort(404, "Milestone or team not found.")
 
 
 @student.route("/milestone_management/individual/<int:milestone_id>", methods=["POST"])

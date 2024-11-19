@@ -57,7 +57,7 @@ components:
                     type: array
                     items:
                       type: string
-                    x-example: A generic error occurred.
+                    example: A generic error occurred.
     InternalServerError:
       description: Internal Server Error. Indicates an issue on the server side.
       content:
@@ -74,7 +74,9 @@ components:
                       type: string
                     example:
                       - An unexpected error occurred. Please try again later.
+
 paths:
+
   /login:
     post:
       summary: User login endpoint
@@ -131,7 +133,7 @@ paths:
                             type: string
                             example: eyJ2ZXIiOiI1IiwidWlkIjoiSkpFa0JuQ242aGdrMXhUMnRRZEFrRHhrQ3NSanNreTIwT3Yxc1djQ0FNRkU1SHJ1UlJqamJja2tJS2lod3NiWCIsImZzX3BhYSI6MTczMTk3MTI5NC42MTMwMTUsImV4cCI6MH0.ZzvI3g.ZzMVJ4XHvuIzFD09FjX0lLblmVg
         '400':
-          description: 'Bad request, user does not exist or invalid credentials.'
+          description: Bad request, user does not exist or invalid credentials.
           content:
             application/json:
               schema:
@@ -163,6 +165,7 @@ paths:
                               - Specified user does not exist
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /user/role:
     get:
       summary: Retrieve user roles
@@ -191,9 +194,10 @@ paths:
               example:
                 response:
                   errors:
-                    - 'The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.'
+                    - The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /logout:
     get:
       summary: Logout a user
@@ -222,13 +226,14 @@ paths:
               example:
                 response:
                   errors:
-                    - 'The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.'
+                    - The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required.
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /teacher/milestone_management:
     get:
       summary: Get all milestones with statistics
-      description: 'Retrieves all milestones along with the number of teams, students, and milestone completion rates for teams under the instructor or TA.'
+      description: Fetches all milestones along with the count of teams, students, and the milestone completion rates for teams supervised by the instructors or TA.
       tags:
         - Teacher_Milestone_Management
       security:
@@ -271,7 +276,7 @@ paths:
                           type: string
                           format: date-time
                           description: The deadline for the milestone.
-                          example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                          example: Sat, 23 Nov 2024 11:46:13 GMT
                         completion_rate:
                           type: number
                           format: float
@@ -311,7 +316,7 @@ paths:
                   type: string
                   format: date-time
                   description: The deadline for the milestone in GMT format.
-                  example: 'Wed, 20 Nov 2024 23:59:59 GMT'
+                  example: Wed, 20 Nov 2024 23:59:59 GMT
                 tasks:
                   type: array
                   description: A list of tasks associated with the milestone.
@@ -348,10 +353,12 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  '/teacher/milestone_management/{milestone_id}':
+
+  
+  /teacher/milestone_management/{milestone_id}:
     get:
       summary: Get milestone details
-      description: 'Retrieve detailed information about a specific milestone, including its tasks.'
+      description: Retrieve detailed information about a specific milestone, including its tasks.
       tags:
         - Teacher_Milestone_Management
       security:
@@ -384,7 +391,7 @@ paths:
                     type: string
                     format: date-time
                     description: The deadline for the milestone.
-                    example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                    example: Sat, 23 Nov 2024 11:46:13 GMT
                   tasks:
                     type: array
                     description: List of tasks associated with the milestone.
@@ -411,7 +418,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update milestone details
-      description: 'Modify the details of a specific milestone, including its title, description, deadline, and tasks.'
+      description: Modify the details of a specific milestone, including its title, description, deadline, and tasks.
       tags:
         - Teacher_Milestone_Management
       security:
@@ -443,7 +450,7 @@ paths:
                   type: string
                   format: date-time
                   description: The updated deadline in GMT format.
-                  example: 'Thu, 21 Nov 2024 12:00:00 GMT'
+                  example: Thu, 21 Nov 2024 12:00:00 GMT
                 tasks:
                   type: array
                   description: The updated list of tasks for the milestone.
@@ -530,6 +537,7 @@ paths:
                     - Milestone not found.
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/overall:
     get:
       summary: Get overall team progress
@@ -551,7 +559,7 @@ paths:
                     team_name:
                       type: string
                       description: Name of the team.
-                      example: "Team A"
+                      example: Team A
                     progress:
                       type: integer
                       description: Overall progress percentage.
@@ -567,15 +575,16 @@ paths:
                         - at_risk
                         - off_track
                       description: Status of the team.
-                      example: "on_track"
+                      example: on_track
                     reason:
                       type: string
                       description: Reason for the assigned rank and status.
-                      example: "Consistently meeting milestones and submitting tasks on time."
+                      example: Consistently meeting milestones and submitting tasks on time.
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual:
     get:
       summary: Get all teams under the user
@@ -604,15 +613,16 @@ paths:
                         name:
                           type: string
                           description: Team name.
-                          example: "Team Alpha"
+                          example: Team Alpha
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual/detail/{team_id}:
     get:
       summary: Get individual team details
-      description: Retrieves detailed information about a specific team by ID.
+      description: Retrieves detailed information about a specific team fetched by ID.
       tags:
         - Teacher_Team_Management
       security:
@@ -643,7 +653,7 @@ paths:
                       name:
                         type: string
                         description: Team name.
-                        example: "Team Alpha"
+                        example: Team Alpha
                       members:
                         type: array
                         items:
@@ -656,19 +666,19 @@ paths:
                             name:
                               type: string
                               description: Member username.
-                              example: "john_doe"
+                              example: john_doe
                             email:
                               type: string
                               description: Member email address.
-                              example: "john_doe@example.com"
+                              example: john_doe@example.com
                             github_username:
                               type: string
                               description: Member GitHub username.
-                              example: "john_doe_github"
+                              example: john_doe_github
                       github_repo_url:
                         type: string
                         description: GitHub repository URL of the team.
-                        example: "https://github.com/TeamAlpha/project-repo"
+                        example: https://github.com/TeamAlpha/project-repo
                       instructor:
                         type: object
                         properties:
@@ -679,7 +689,7 @@ paths:
                           name:
                             type: string
                             description: Instructor username.
-                            example: "prof_james"
+                            example: prof_james
                       ta:
                         type: object
                         properties:
@@ -690,7 +700,7 @@ paths:
                           name:
                             type: string
                             description: TA username.
-                            example: "ta_michael"
+                            example: ta_michael
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '404':
@@ -702,9 +712,10 @@ paths:
               example:
                 response:
                   errors:
-                    - "Team not found"
+                    - Team not found
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual/progress/{team_id}:
     get:
       summary: Get progress of a specific team
@@ -738,21 +749,21 @@ paths:
                     title:
                       type: string
                       description: Title of the milestone.
-                      example: "Milestone 1: Initial Setup"
+                      example: Milestone 1 - Initial Setup
                     description:
                       type: string
                       description: Description of the milestone.
-                      example: "Complete the initial project setup and environment configuration."
+                      example: Complete the initial project setup and environment configuration.
                     deadline:
                       type: string
                       format: date-time
                       description: Deadline of the milestone.
-                      example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                      example: Sat, 23 Nov 2024 11:46:13 GMT
                     created_at:
                       type: string
                       format: date-time
                       description: Creation time of the milestone.
-                      example: "Sat, 23 Nov 2024 10:00:00 GMT"
+                      example: Sat, 23 Nov 2024 10:00:00 GMT
                     tasks:
                       type: array
                       items:
@@ -765,7 +776,7 @@ paths:
                           description:
                             type: string
                             description: Task description.
-                            example: "Set up project repository"
+                            example: Set up project repository
                           is_completed:
                             type: boolean
                             description: Whether the task is completed.
@@ -775,18 +786,18 @@ paths:
                             format: date-time
                             nullable: true
                             description: Time the task was submitted.
-                            example: "Sat, 23 Nov 2024 11:00:00 GMT"
+                            example: Sat, 23 Nov 2024 11:00:00 GMT
                           feedback:
                             type: string
                             nullable: true
                             description: Feedback provided for the task.
-                            example: "Good work, but need to finalize the README."
+                            example: Good work, but need to finalize the README.
                           feedback_time:
                             type: string
                             format: date-time
                             nullable: true
                             description: Time the feedback was provided.
-                            example: "Sat, 23 Nov 2024 12:00:00 GMT"
+                            example: Sat, 23 Nov 2024 12:00:00 GMT
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '404':
@@ -801,6 +812,7 @@ paths:
                     - Team not found
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual/submission/{team_id}/{task_id}:
     get:
       summary: View submission for a specific task and team
@@ -828,14 +840,14 @@ paths:
         '200':
           description: Successfully retrieved the submission document.
           content:
-            application/octet-stream:
+            application/pdf:
               schema:
                 type: string
                 format: binary
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '404':
-          description: 'Submission, document, or file not found.'
+          description: Submission, document, or file not found.
           content:
             application/json:
               schema:
@@ -983,16 +995,16 @@ paths:
                   name:
                     type: string
                     description: The name of the team or the GitHub username of the specific team member.
-                  githubRepoUrl:
+                  github_repo_url:
                     type: string
                     description: The GitHub repository URL for the team.
-                  totalCommits:
+                  total_commits:
                     type: integer
                     description: Total number of commits made to the repository.
-                  linesOfCodeAdded:
+                  lines_of_code_added:
                     type: integer
                     description: Total lines of code added.
-                  linesOfCodeDeleted:
+                  lines_of_code_deleted:
                     type: integer
                     description: Total lines of code deleted.
                   milestones:
@@ -1001,33 +1013,38 @@ paths:
                     items:
                       type: object
                       properties:
+                        milestone_id: 
+                          type: integer
+                          description: Id of the milestone.
                         name:
                           type: string
                           description: Name of the milestone.
                         commits:
                           type: integer
                           description: Number of commits for the milestone.
-                        linesOfCodeAdded:
+                        lines_of_code_added:
                           type: integer
                           description: Lines of code added for the milestone.
-                        linesOfCodeDeleted:
+                        lines_of_code_deleted:
                           type: integer
                           description: Lines of code deleted for the milestone.
               example:
                 name: john_doe
-                githubRepoUrl: 'https://github.com/example/repo'
-                totalCommits: 150
-                linesOfCodeAdded: 1200
-                linesOfCodeDeleted: 300
+                github_repo_url: 'https://github.com/example/repo'
+                total_commits: 150
+                lines_of_code_added: 1200
+                lines_of_code_deleted: 300
                 milestones:
-                  - name: Milestone 1
+                  - milestone_id: 1
+                    name: Milestone 1
                     commits: 45
-                    linesOfCodeAdded: 600
-                    linesOfCodeDeleted: 100
-                  - name: Milestone 2
+                    lines_of_code_added: 600
+                    lines_of_code_deleted: 100
+                  - milestone_id: 2
+                    name: Milestone 2
                     commits: 105
-                    linesOfCodeAdded: 600
-                    linesOfCodeDeleted: 200
+                    lines_of_code_added: 600
+                    lines_of_code_deleted: 200
         '400':
           description: Non-integer user id sent.
           content:
@@ -1074,11 +1091,11 @@ paths:
                 response:
                   errors:
                     - Empty git respository.
+  
   /teacher/team_management/individual/ai_analysis/{team_id}/{task_id}:
     get:
       summary: Perform AI analysis on a team's task submission.
-      description: |
-        Retrieves a submission document, extracts its content, and performs AI-based analysis to check compliance with task requirements.
+      description: Retrieves a submission document, extracts its content, and performs AI-based analysis to check compliance with task requirements.
       tags:
         - Teacher_Team_Management
       security:
@@ -1145,10 +1162,11 @@ paths:
                         - File not found.
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications:
     get:
       summary: Retrieve notifications for the current student
-      description: 'Returns a list of notifications for the current student, including their title, type, and timestamps.'
+      description: Returns a list of notifications for the current student, including their title, type, and timestamps.
       tags:
         - Student_Notifications
       security:
@@ -1176,22 +1194,23 @@ paths:
                           example: New Milestone Assigned
                         type:
                           type: string
-                          description: 'The type of the notification (e.g., ''Milestone'', ''Reminder'').'
+                          description: The type of the notification (e.g., ''Milestone'', ''Reminder'').
                           example: Milestone
                         created_at:
                           type: string
                           format: date-time
                           description: The timestamp when the notification was created.
-                          example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                          example: Sat, 23 Nov 2024 11:46:13 GMT
                         read_at:
                           type: string
                           format: date-time
                           description: The timestamp when the notification was read (nullable).
-                          example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                          example: Sat, 23 Nov 2024 11:46:13 GMT
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications/{notification_id}:
     get:
       summary: Retrieve details of a specific notification for the current student
@@ -1230,18 +1249,18 @@ paths:
                     example: You have been assigned a new milestone.
                   type:
                     type: string
-                    description: 'The type of the notification (e.g., ''Milestone'', ''Reminder'').'
+                    description: The type of the notification (e.g., ''Milestone'', ''Reminder'').
                     example: Milestone
                   created_at:
                     type: string
                     format: date-time
                     description: The timestamp when the notification was created.
-                    example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                    example: Sat, 23 Nov 2024 11:46:13 GMT
                   read_at:
                     type: string
                     format: date-time
                     description: The timestamp when the notification was read (nullable).
-                    example: "Sat, 23 Nov 2024 11:46:13 GMT"
+                    example: Sat, 23 Nov 2024 11:46:13 GMT
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '404':
@@ -1256,6 +1275,7 @@ paths:
                     - Notification not found or access denied.
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications/mark_all_as_read:
     get:
       summary: Mark all unread notifications as read for the current student
@@ -1279,10 +1299,11 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications/preferences:
     get:
       summary: Retrieve notification preferences for the current student
-      description: 'Returns the current notification preferences for the student, such as email and in-app notification settings for deadlines and feedback.'
+      description: Returns the current notification preferences for the student, such as email and in-app notification settings for deadlines and feedback.
       tags:
         - Student_Notifications
       security:
@@ -1371,7 +1392,7 @@ paths:
                     type: string
                     example: Notification preferences updated successfully.
         '400':
-          description: 'Invalid request data, where boolean values were expected for preferences.'
+          description: Invalid request data, where boolean values were expected for preferences.
           content:
             application/json:
               schema:
@@ -1394,6 +1415,7 @@ paths:
                     - Notification preferences not found.
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/milestone_management/overall:
     get:
       summary: Retrieve overall milestones and completion status for the current student's team
@@ -1446,6 +1468,7 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/milestone_management/individual:
     get:
       summary: Retrieve individual milestones for the current student
@@ -1479,10 +1502,11 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
   /student/milestone_management/individual/{milestone_id}:
     get:
       summary: Retrieve detailed information about a specific milestone for the student's team
-      description: 'Returns detailed information about a milestone, including tasks, completion status, feedback, and timestamps.'
+      description: Returns detailed information about a milestone, including tasks, completion status, feedback, and timestamps.
       security:
         - authToken: []
       tags:
@@ -1497,7 +1521,7 @@ paths:
             example: 1
       responses:
         '200':
-          description: 'Successful response with the milestone details, including tasks and submission statuses.'
+          description: Successful response with the milestone details, including tasks and submission statuses.
           content:
             application/json:
               schema:
@@ -1518,13 +1542,13 @@ paths:
                   deadline:
                     type: string
                     format: date-time
-                    description: 'The deadline for the milestone in the format YYYY-MM-DD HH:MM:SS.'
-                    example: '2024-12-01 23:59:59'
+                    description: The deadline for the milestone in GMT format.
+                    example: Tue, 19 Nov 2024 16:23:17 GMT
                   created_at:
                     type: string
                     format: date-time
                     description: The timestamp when the milestone was created.
-                    example: '2024-11-01 10:00:00'
+                    example: Tue, 19 Nov 2024 16:23:17 GMT
                   tasks:
                     type: array
                     items:
@@ -1550,7 +1574,7 @@ paths:
                           type: string
                           format: date-time
                           description: The time the feedback was provided (if any).
-                          example: '2024-11-10 14:30:00'
+                          example: Tue, 19 Nov 2024 16:23:17 GMT
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '404':
@@ -1562,7 +1586,7 @@ paths:
               example:
                 response:
                   errors:
-                    - Milestone/team not found.
+                    - Milestone or team not found.
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -1591,8 +1615,8 @@ paths:
                 format: binary
                 description: File upload field where property name is a numeric identifier
             example:
-                "10": "Milestone 4 Report_API Development and Integration.pdf"
-                "11": "Milestone 5 Report_final_Testing.pdf"
+                10 : Milestone 4 Report_API Development and Integration.pdf
+                11 : Milestone 5 Report_final_Testing.pdf
       responses:
         '201':
           description: Documents for the milestone were successfully submitted.
@@ -1605,7 +1629,7 @@ paths:
                     type: string
                     example: Milestone documents submitted successfully
         '400':
-          description: 'Bad request. Issues with file type, task validity, or milestone deadline.'
+          description: Bad request. Issues with file type, task validity, or milestone deadline.
           content:
             application/json:
               schema:
@@ -1635,7 +1659,8 @@ paths:
                     - Milestone or team not found
         '500':
           $ref: '#/components/responses/InternalServerError'
-  '/student/download_submission/{task_id}':
+  
+  /student/download_submission/{task_id}:
     get:
       summary: Download submission document for a task
       description: Allows a student to download their team's submitted document for a specific task.
@@ -1655,7 +1680,7 @@ paths:
         '200':
           description: File successfully downloaded.
           content:
-            application/octet-stream:
+            application/pdf:
               schema:
                 type: string
                 format: binary

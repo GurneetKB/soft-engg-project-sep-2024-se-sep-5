@@ -125,9 +125,9 @@
           <div v-if="teamDetails && !loading" class="github-commits card mb-4 mt-4">
             <div class="card-body text-center">
               <h3>GitHub Activities</h3>
-              <h5>GitHub Commits: {{ teamDetails.totalCommits }}</h5>
-              <h5>Lines added: {{ teamDetails.linesOfCodeAdded }}</h5>
-              <h5>Lines deleted: {{ teamDetails.linesOfCodeDeleted }}</h5>
+              <h5>GitHub Commits: {{ teamDetails.total_commits }}</h5>
+              <h5>Lines added: {{ teamDetails.lines_of_code_added }}</h5>
+              <h5>Lines deleted: {{ teamDetails.lines_of_code_deleted }}</h5>
             </div>
           </div>
 
@@ -146,8 +146,8 @@
                   </div>
                   <div class="card-body">
                     <p>Commits: {{ milestone.commits }}</p>
-                    <p>Lines Added: {{ milestone.linesOfCodeAdded }}</p>
-                    <p>Lines Deleted: {{ milestone.linesOfCodeDeleted }}</p>
+                    <p>Lines Added: {{ milestone.lines_of_code_added }}</p>
+                    <p>Lines Deleted: {{ milestone.lines_of_code_deleted }}</p>
                   </div>
                 </div>
               </div>

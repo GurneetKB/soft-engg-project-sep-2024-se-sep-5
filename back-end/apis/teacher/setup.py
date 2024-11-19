@@ -94,17 +94,17 @@ def fetch_commit_details(repo_url, username=None):
                             "milestone_id": milestone_id,
                             "name": milestone_name,
                             "commits": 0,
-                            "linesOfCodeAdded": 0,
-                            "linesOfCodeDeleted": 0,
+                            "lines_of_code_added": 0,
+                            "lines_of_code_deleted": 0,
                         }
 
                     # Update milestone-specific stats
                     milestones_stats[milestone_id]["commits"] += 1
                     milestones_stats[milestone_id][
-                        "linesOfCodeAdded"
+                        "lines_of_code_added"
                     ] += detailed_commit.stats.additions
                     milestones_stats[milestone_id][
-                        "linesOfCodeDeleted"
+                        "lines_of_code_deleted"
                     ] += detailed_commit.stats.deletions
 
                 except (IndexError, ValueError):
@@ -114,9 +114,9 @@ def fetch_commit_details(repo_url, username=None):
         # Prepare final milestone list sorted by milestone ID
         milestones = sorted(milestones_stats.values(), key=lambda m: m["milestone_id"])
         return {
-            "totalCommits": total_commits,
-            "linesOfCodeAdded": lines_added,
-            "linesOfCodeDeleted": lines_deleted,
+            "total_commits": total_commits,
+            "lines_of_code_added": lines_added,
+            "lines_of_code_deleted": lines_deleted,
             "milestones": milestones,
         }
     except Exception as e:

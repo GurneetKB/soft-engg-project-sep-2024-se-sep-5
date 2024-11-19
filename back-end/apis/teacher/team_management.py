@@ -90,18 +90,20 @@ def get_overall_teams_progress():
         if team.github_repo_url:
             github_stats = fetch_commit_details(team.github_repo_url)
             team_ai_prompt += f"\nGitHub Stats:\n"
-            team_ai_prompt += f"Total Commits: {github_stats['totalCommits']}\n"
-            team_ai_prompt += f"Lines Added: {github_stats['linesOfCodeAdded']}\n"
-            team_ai_prompt += f"Lines Deleted: {github_stats['linesOfCodeDeleted']}\n"
+            team_ai_prompt += f"Total Commits: {github_stats['total_commits']}\n"
+            team_ai_prompt += f"Lines Added: {github_stats['lines_of_code_added']}\n"
+            team_ai_prompt += (
+                f"Lines Deleted: {github_stats['lines_of_code_deleted']}\n"
+            )
 
             for milestone_stat in github_stats["milestones"]:
                 team_ai_prompt += f"Milestone: {milestone_stat['name']}\n"
                 team_ai_prompt += f"Commits: {milestone_stat['commits']}\n"
                 team_ai_prompt += (
-                    f"    Lines Added: {milestone_stat['linesOfCodeAdded']}\n"
+                    f"    Lines Added: {milestone_stat['lines_of_code_added']}\n"
                 )
                 team_ai_prompt += (
-                    f"    Lines Deleted: {milestone_stat['linesOfCodeDeleted']}\n"
+                    f"    Lines Deleted: {milestone_stat['lines_of_code_deleted']}\n"
                 )
 
         team_ai_prompt += f"\nOverall Progress: {team_data['progress']}%\n"
@@ -337,10 +339,13 @@ def provide_feedback(team_id, task_id):
 def get_github_details(team_id):
     try:
         user_id = request.args.get("user_id")
-        try:
-            user_id = int(user_id)
-        except ValueError:
-            return abort(400, "User id must be integer.")
+
+        if user_id:
+            try:
+                user_id = int(user_id)
+            except ValueError:
+                return abort(400, "User id must be integer.")
+
         github_username = None
         team = get_single_team_under_user(current_user, team_id)
 
@@ -365,10 +370,10 @@ def get_github_details(team_id):
 
         return {
             "name": github_username or team.name,
-            "githubRepoUrl": team.github_repo_url,
-            "totalCommits": commit_details["totalCommits"],
-            "linesOfCodeAdded": commit_details["linesOfCodeAdded"],
-            "linesOfCodeDeleted": commit_details["linesOfCodeDeleted"],
+            "github_repo_url": team.github_repo_url,
+            "total_commits": commit_details["total_commits"],
+            "lines_of_code_added": commit_details["lines_of_code_added"],
+            "lines_of_code_deleted": commit_details["lines_of_code_deleted"],
             "milestones": commit_details["milestones"],
         }, 200
 
