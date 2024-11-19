@@ -58,3 +58,4 @@ Werkzeug==3.0.6
 wrapt==1.16.0
 WTForms==3.2.1
 zxcvbn==4.4.28
+pytest==8.3.3

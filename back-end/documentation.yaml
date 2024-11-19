@@ -50,6 +50,11 @@ components:
           schema:
             type: object
             properties:
+              meta:
+                type: object
+                properties:
+                  code:
+                    type: integer
               response:
                 type: object
                 properties:
@@ -57,7 +62,6 @@ components:
                     type: array
                     items:
                       type: string
-                    example: A generic error occurred.
     InternalServerError:
       description: Internal Server Error. Indicates an issue on the server side.
       content:
@@ -65,6 +69,12 @@ components:
           schema:
             type: object
             properties:
+              meta:
+                type: object
+                properties:
+                  code: 
+                    type: integer
+                    example: 500
               response:
                 type: object
                 properties:
@@ -192,6 +202,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 401
                 response:
                   errors:
                     - The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.
@@ -224,6 +236,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 401
                 response:
                   errors:
                     - The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required.
@@ -345,6 +359,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 400
                 response:
                   errors:
                     - Title is required and must be a string.
@@ -411,6 +427,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Milestone not found.
@@ -479,6 +497,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 400
                 response:
                   errors:
                     - Title must be a non-empty string.
@@ -492,6 +512,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Milestone not found.
@@ -532,6 +554,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Milestone not found.
@@ -710,6 +734,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Team not found
@@ -807,6 +833,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Team not found
@@ -855,16 +883,22 @@ paths:
               examples:
                 team_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Team not found.
                 submission_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Submission or document not found.
                 file_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - File not found.
@@ -931,11 +965,15 @@ paths:
               examples:
                 feedback_missing:
                   value:
+                    meta:
+                      code: 400
                     response:
                       errors:
                         - Feedback data is required.
                 feedback_invalid:
                   value:
+                    meta:
+                      code: 400
                     response:
                       errors:
                         - Feedback must be a non-empty string.
@@ -950,11 +988,15 @@ paths:
               examples:
                 team_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Team not found.
                 submission_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Submission not found.
@@ -1052,6 +1094,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 400
                 response:
                   errors:
                     - User id must be integer.
@@ -1066,16 +1110,22 @@ paths:
               examples:
                 team_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Team not found.
                 member_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Team member not found.
                 repo_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - No GitHub repository URL found for this team.
@@ -1088,6 +1138,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 502
                 response:
                   errors:
                     - Empty git respository.
@@ -1147,16 +1199,22 @@ paths:
               examples:
                 team_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Team not found.
                 'submission_not_found:':
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Submission or document not found.
                 file_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - File not found.
@@ -1270,6 +1328,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Notification not found or access denied.
@@ -1341,6 +1401,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Notification preferences not found.
@@ -1398,6 +1460,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 400
                 response:
                   errors:
                     - email_deadline_notifications must be a boolean value.
@@ -1410,6 +1474,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Notification preferences not found.
@@ -1461,6 +1527,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 400
                 response:
                   errors:
                     - No team is assigned to you yet.
@@ -1584,6 +1652,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Milestone or team not found.
@@ -1637,11 +1707,15 @@ paths:
               examples:
                 task_or_pdf_invalid:
                   value:
+                    meta:
+                      code: 400
                     response:
                       errors:
                         - Task 1 is not valid for this milestone or the file is not a PDF
                 deadline_passed:
                   value:
+                    meta:
+                      code: 400
                     response:
                       errors:
                         - Cannot submit after the milestone deadline
@@ -1654,6 +1728,8 @@ paths:
               schema:
                 $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
+                meta:
+                  code: 404
                 response:
                   errors:
                     - Milestone or team not found
@@ -1695,11 +1771,15 @@ paths:
               examples:
                 submission_or_doc_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - Submission or document not found
                 file_not_found:
                   value:
+                    meta:
+                      code: 404
                     response:
                       errors:
                         - File not found
