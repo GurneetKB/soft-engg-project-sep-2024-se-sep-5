@@ -13,7 +13,7 @@ info:
     - Real-time feedback delivery for students based on task submissions.
   version: 1.0.0
 servers:
-  - url: "http://localhost:5000"
+  - url: 'http://localhost:5000'
 components:
   securitySchemes:
     authToken:
@@ -72,7 +72,7 @@ components:
               meta:
                 type: object
                 properties:
-                  code:
+                  code: 
                     type: integer
                     example: 500
               response:
@@ -86,6 +86,7 @@ components:
                       - An unexpected error occurred. Please try again later.
 
 paths:
+
   /login:
     post:
       summary: User login endpoint
@@ -116,7 +117,7 @@ paths:
               username: user1
               password: password123
       responses:
-        "200":
+        '200':
           description: Login successful and authentication tokens returned.
           content:
             application/json:
@@ -141,7 +142,7 @@ paths:
                           authentication_token:
                             type: string
                             example: eyJ2ZXIiOiI1IiwidWlkIjoiSkpFa0JuQ242aGdrMXhUMnRRZEFrRHhrQ3NSanNreTIwT3Yxc1djQ0FNRkU1SHJ1UlJqamJja2tJS2lod3NiWCIsImZzX3BhYSI6MTczMTk3MTI5NC42MTMwMTUsImV4cCI6MH0.ZzvI3g.ZzMVJ4XHvuIzFD09FjX0lLblmVg
-        "400":
+        '400':
           description: Bad request, user does not exist or invalid credentials.
           content:
             application/json:
@@ -172,9 +173,9 @@ paths:
                               type: string
                             example:
                               - Specified user does not exist
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /user/role:
     get:
       summary: Retrieve user roles
@@ -184,7 +185,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: Roles retrieved successfully.
           content:
             application/json:
@@ -194,21 +195,21 @@ paths:
                   type: string
                 example:
                   - Instructor
-        "401":
+        '401':
           description: Unauthorized - User is not logged in.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 401
                 response:
                   errors:
                     - The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn''t understand how to supply the credentials required.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /logout:
     get:
       summary: Logout a user
@@ -218,7 +219,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: User logged out successfully.
           content:
             application/json:
@@ -228,21 +229,21 @@ paths:
                   message:
                     type: string
                     example: You have successfully logged out.
-        "401":
+        '401':
           description: Unauthorized - User is not logged in.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 401
                 response:
                   errors:
                     - The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /teacher/milestone_management:
     get:
       summary: Get all milestones with statistics
@@ -252,7 +253,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: Successfully retrieved milestones and statistics.
           content:
             application/json:
@@ -295,10 +296,10 @@ paths:
                           format: float
                           description: Completion percentage of the milestone across teams.
                           example: 80
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Create a new milestone
       description: Allows instructors to create a new milestone with a set of tasks and a deadline.
@@ -341,7 +342,7 @@ paths:
                         description: The task description.
                         example: Create a draft proposal document.
       responses:
-        "201":
+        '201':
           description: Milestone created successfully.
           content:
             application/json:
@@ -351,12 +352,12 @@ paths:
                   message:
                     type: string
                     example: Milestone published successfully.
-        "400":
+        '400':
           description: Bad request due to validation errors.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 400
@@ -364,11 +365,12 @@ paths:
                   errors:
                     - Title is required and must be a string.
                     - Deadline must be set to a future date and time.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
+  
   /teacher/milestone_management/{milestone_id}:
     get:
       summary: Get milestone details
@@ -386,7 +388,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Milestone details retrieved successfully.
           content:
             application/json:
@@ -416,22 +418,22 @@ paths:
                           type: string
                           description: The task description.
                           example: Create a draft proposal document.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Milestone not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Milestone not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update milestone details
       description: Modify the details of a specific milestone, including its title, description, deadline, and tasks.
@@ -478,7 +480,7 @@ paths:
                         description: The task description.
                         example: Finalize the project proposal.
       responses:
-        "201":
+        '201':
           description: Milestone updated successfully.
           content:
             application/json:
@@ -488,12 +490,12 @@ paths:
                   message:
                     type: string
                     example: Milestone updated successfully.
-        "400":
+        '400':
           description: Bad request due to validation errors.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 400
@@ -501,22 +503,22 @@ paths:
                   errors:
                     - Title must be a non-empty string.
                     - Deadline must be set to a future date and time.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Milestone not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Milestone not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       summary: Delete a milestone
       description: Deletes a milestone identified by its ID.
@@ -533,7 +535,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Milestone deleted successfully.
           content:
             application/json:
@@ -543,33 +545,33 @@ paths:
                   message:
                     type: string
                     example: Milestone is deleted
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Milestone not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Milestone not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/overall:
     get:
       summary: Get overall team progress
-      description: Retrieves the progress of all teams managed by the current user.
+      description: Retrieves the progress of all teams managed by the current user with AI-driven analysis of their progress.
       tags:
         - Teacher_Team_Management
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: A list of teams with their progress details and rankings.
           content:
             application/json:
@@ -602,11 +604,11 @@ paths:
                       type: string
                       description: Reason for the assigned rank and status.
                       example: Consistently meeting milestones and submitting tasks on time.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual:
     get:
       summary: Get all teams under the user
@@ -616,7 +618,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: A list of teams managed by the user.
           content:
             application/json:
@@ -636,11 +638,11 @@ paths:
                           type: string
                           description: Team name.
                           example: Team Alpha
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual/detail/{team_id}:
     get:
       summary: Get individual team details
@@ -658,7 +660,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Detailed information about the team.
           content:
             application/json:
@@ -723,23 +725,23 @@ paths:
                             type: string
                             description: TA username.
                             example: ta_michael
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Team not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Team not found
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual/progress/{team_id}:
     get:
       summary: Get progress of a specific team
@@ -757,7 +759,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Detailed progress of the team across milestones.
           content:
             application/json:
@@ -822,23 +824,23 @@ paths:
                             nullable: true
                             description: Time the feedback was provided.
                             example: Sat, 23 Nov 2024 12:00:00 GMT
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Team not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Team not found
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /teacher/team_management/individual/submission/{team_id}/{task_id}:
     get:
       summary: View submission for a specific task and team
@@ -863,21 +865,21 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Successfully retrieved the submission document.
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Submission, document, or file not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 team_not_found:
                   value:
@@ -900,8 +902,8 @@ paths:
                     response:
                       errors:
                         - File not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /teacher/team_management/individual/feedback/{team_id}/{task_id}:
     post:
@@ -942,7 +944,7 @@ paths:
               example:
                 feedback: Great work! Please revise section 2 for clarity.
       responses:
-        "201":
+        '201':
           description: Feedback successfully provided.
           content:
             application/json:
@@ -954,12 +956,12 @@ paths:
                     description: Confirmation message.
               example:
                 message: The feedback is successfully provided.
-        "400":
+        '400':
           description: Invalid request data.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 feedback_missing:
                   value:
@@ -975,14 +977,14 @@ paths:
                     response:
                       errors:
                         - Feedback must be a non-empty string.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Team or submission not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 team_not_found:
                   value:
@@ -998,8 +1000,8 @@ paths:
                     response:
                       errors:
                         - Submission not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /teacher/team_management/individual/github/{team_id}:
     get:
@@ -1025,7 +1027,7 @@ paths:
             type: integer
             example: 123
       responses:
-        "200":
+        '200':
           description: GitHub commit details successfully retrieved.
           content:
             application/json:
@@ -1053,7 +1055,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        milestone_id:
+                        milestone_id: 
                           type: integer
                           description: Id of the milestone.
                         name:
@@ -1070,7 +1072,7 @@ paths:
                           description: Lines of code deleted for the milestone.
               example:
                 name: john_doe
-                github_repo_url: "https://github.com/example/repo"
+                github_repo_url: 'https://github.com/example/repo'
                 total_commits: 150
                 lines_of_code_added: 1200
                 lines_of_code_deleted: 300
@@ -1085,26 +1087,26 @@ paths:
                     commits: 105
                     lines_of_code_added: 600
                     lines_of_code_deleted: 200
-        "400":
+        '400':
           description: Non-integer user id sent.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 400
                 response:
                   errors:
                     - User id must be integer.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Team, member, or repository not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 team_not_found:
                   value:
@@ -1127,21 +1129,21 @@ paths:
                     response:
                       errors:
                         - No GitHub repository URL found for this team.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-        "502":
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
           description: Bad gateway. Failed to fetch from Github.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 502
                 response:
                   errors:
                     - Empty git respository.
-
+  
   /teacher/team_management/individual/ai_analysis/{team_id}/{task_id}:
     get:
       summary: Perform AI analysis on a team's task submission.
@@ -1166,7 +1168,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: AI analysis successfully completed.
           content:
             application/json:
@@ -1186,14 +1188,14 @@ paths:
                   **Task Requirements Check**:
                   - Met: Introduction and methodology align with the task requirements.
                   - Missing: Analysis section is incomplete. Provide further elaboration on results.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Team, submission or file not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 team_not_found:
                   value:
@@ -1202,7 +1204,7 @@ paths:
                     response:
                       errors:
                         - Team not found.
-                "submission_not_found:":
+                'submission_not_found:':
                   value:
                     meta:
                       code: 404
@@ -1216,9 +1218,9 @@ paths:
                     response:
                       errors:
                         - File not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications:
     get:
       summary: Retrieve notifications for the current student
@@ -1228,7 +1230,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: Successful response with a list of notifications.
           content:
             application/json:
@@ -1262,11 +1264,11 @@ paths:
                           format: date-time
                           description: The timestamp when the notification was read (nullable).
                           example: Sat, 23 Nov 2024 11:46:13 GMT
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications/{notification_id}:
     get:
       summary: Retrieve details of a specific notification for the current student
@@ -1284,7 +1286,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Successful response with the notification details.
           content:
             application/json:
@@ -1317,23 +1319,23 @@ paths:
                     format: date-time
                     description: The timestamp when the notification was read (nullable).
                     example: Sat, 23 Nov 2024 11:46:13 GMT
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: The requested notification is not found or access is denied, if it is any other user's notification.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Notification not found or access denied.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications/mark_all_as_read:
     get:
       summary: Mark all unread notifications as read for the current student
@@ -1343,7 +1345,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: Successful response indicating that all notifications have been marked as read.
           content:
             application/json:
@@ -1353,11 +1355,11 @@ paths:
                   message:
                     type: string
                     example: All notifications marked as read.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/notifications/preferences:
     get:
       summary: Retrieve notification preferences for the current student
@@ -1367,7 +1369,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: Successful response with the current notification preferences.
           content:
             application/json:
@@ -1390,22 +1392,22 @@ paths:
                     type: boolean
                     description: Whether the student wants to receive in-app notifications for feedback.
                     example: true
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Notification preferences not found for the current student.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Notification preferences not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update notification preferences for the current student
       description: Updates the student's notification preferences for deadlines and feedback via email or in-app notifications.
@@ -1441,7 +1443,7 @@ paths:
                   email_feedback_notifications: true
                   in_app_feedback_notifications: true
       responses:
-        "201":
+        '201':
           description: Successful response indicating that notification preferences have been updated.
           content:
             application/json:
@@ -1451,35 +1453,35 @@ paths:
                   message:
                     type: string
                     example: Notification preferences updated successfully.
-        "400":
+        '400':
           description: Invalid request data, where boolean values were expected for preferences.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 400
                 response:
                   errors:
                     - email_deadline_notifications must be a boolean value.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Notification preferences not found for the current student.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Notification preferences not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/milestone_management/overall:
     get:
       summary: Retrieve overall milestones and completion status for the current student's team
@@ -1489,7 +1491,7 @@ paths:
       tags:
         - Student_Milestone_Info
       responses:
-        "200":
+        '200':
           description: Successful response with the team's milestones and their completion percentages.
           content:
             application/json:
@@ -1518,23 +1520,23 @@ paths:
                           format: float
                           description: Completion percentage of the milestone based on task submissions.
                           example: 80
-        "400":
+        '400':
           description: No team is assigned to the current student.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 400
                 response:
                   errors:
                     - No team is assigned to you yet.
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/milestone_management/individual:
     get:
       summary: Retrieve individual milestones for the current student
@@ -1544,7 +1546,7 @@ paths:
       security:
         - authToken: []
       responses:
-        "200":
+        '200':
           description: Successful response with a list of milestones for the student.
           content:
             application/json:
@@ -1564,11 +1566,11 @@ paths:
                           type: string
                           description: Title of the milestone.
                           example: Milestone 1
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/milestone_management/individual/{milestone_id}:
     get:
       summary: Retrieve detailed information about a specific milestone for the student's team
@@ -1586,7 +1588,7 @@ paths:
             type: integer
             example: 1
       responses:
-        "200":
+        '200':
           description: Successful response with the milestone details, including tasks and submission statuses.
           content:
             application/json:
@@ -1641,22 +1643,22 @@ paths:
                           format: date-time
                           description: The time the feedback was provided (if any).
                           example: Tue, 19 Nov 2024 16:23:17 GMT
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Milestone or team not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Milestone or team not found.
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Submit milestone documents for a specific milestone
       description: Allows a student to upload and submit PDF files for tasks under a specific milestone on behalf of their team. Each file corresponds to a task.
@@ -1683,10 +1685,10 @@ paths:
                 format: binary
                 description: File upload field where property name is a numeric identifier
             example:
-              10: Milestone 4 Report_API Development and Integration.pdf
-              11: Milestone 5 Report_final_Testing.pdf
+                10 : Milestone 4 Report_API Development and Integration.pdf
+                11 : Milestone 5 Report_final_Testing.pdf
       responses:
-        "201":
+        '201':
           description: Documents for the milestone were successfully submitted.
           content:
             application/json:
@@ -1696,12 +1698,12 @@ paths:
                   message:
                     type: string
                     example: Milestone documents submitted successfully
-        "400":
+        '400':
           description: Bad request. Issues with file type, task validity, or milestone deadline.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 task_or_pdf_invalid:
                   value:
@@ -1717,23 +1719,23 @@ paths:
                     response:
                       errors:
                         - Cannot submit after the milestone deadline
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Milestone or team not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               example:
                 meta:
                   code: 404
                 response:
                   errors:
                     - Milestone or team not found
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  
   /student/download_submission/{task_id}:
     get:
       summary: Download submission document for a task
@@ -1751,21 +1753,21 @@ paths:
             type: integer
             example: 5
       responses:
-        "200":
+        '200':
           description: File successfully downloaded.
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "404":
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
           description: Submission or file not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/responses/GenericError/content/application~1json/schema"
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
               examples:
                 submission_or_doc_not_found:
                   value:
@@ -1781,5 +1783,5 @@ paths:
                     response:
                       errors:
                         - File not found
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'

@@ -25,11 +25,11 @@ Roles Required:
 
 Endpoints:
 ----------
-1. GET /milestone_management
-2. POST /milestone_management
-3. GET /milestone_management/<int:milestone_id>
-4. PUT /milestone_management/<int:milestone_id>
-5. DELETE /milestone_management/<int:milestone_id>
+1. GET /teacher/milestone_management
+2. POST /teacher/milestone_management
+3. GET /teacher/milestone_management/<int:milestone_id>
+4. PUT /teacher/milestone_management/<int:milestone_id>
+5. DELETE /teacher/milestone_management/<int:milestone_id>
 """
 
 
@@ -55,6 +55,8 @@ Response:
 Behavior:
 - Calculates completion rates by analyzing submissions against the tasks in each milestone.
 """
+
+
 @teacher.route("/milestone_management", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_all_milestones():
@@ -134,6 +136,8 @@ Behavior:
 - Validates input data and ensures the deadline is in the future.
 - Creates tasks and associates them with the milestone.
 """
+
+
 @teacher.route("/milestone_management", methods=["POST"])
 @roles_required("Instructor")
 def create_milestone():
@@ -225,6 +229,8 @@ Response:
 Behavior:
 - Returns milestone details along with its associated tasks.
 """
+
+
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["GET"])
 @roles_required("Instructor")
 def get_milestone(milestone_id):
@@ -274,6 +280,8 @@ Behavior:
 - Replaces existing tasks with the new task list if provided.
 - Validates all updated fields before committing changes.
 """
+
+
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["PUT"])
 @roles_required("Instructor")
 def update_milestone(milestone_id):
@@ -368,6 +376,8 @@ Response:
 Behavior:
 - Removes the milestone and all its associated tasks from the database.
 """
+
+
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["DELETE"])
 @roles_required("Instructor")
 def delete_milestone(milestone_id):

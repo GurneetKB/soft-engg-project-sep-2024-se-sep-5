@@ -47,14 +47,14 @@ Roles Accepted:
 
 Endpoints:
 ----------
-1. GET /team_management/overall
-2. GET /team_management/individual
-3. GET /team_management/individual/detail/<int:team_id>
-4. GET /team_management/individual/progress/<int:team_id>
-5. GET /team_management/individual/submission/<int:team_id>/<int:task_id>
-6. POST /team_management/individual/feedback/<int:team_id>/<int:task_id>
-7. GET /team_management/individual/github/<int:team_id>
-8. GET /team_management/individual/ai_analysis/<int:team_id>/<int:task_id>
+1. GET /teacher/team_management/overall
+2. GET /teacher/team_management/individual
+3. GET /teacher/team_management/individual/detail/<int:team_id>
+4. GET /teacher/team_management/individual/progress/<int:team_id>
+5. GET /teacher/team_management/individual/submission/<int:team_id>/<int:task_id>
+6. POST /teacher/team_management/individual/feedback/<int:team_id>/<int:task_id>
+7. GET /teacher/team_management/individual/github/<int:team_id>
+8. GET /teacher/team_management/individual/ai_analysis/<int:team_id>/<int:task_id>
 """
 
 
@@ -89,6 +89,8 @@ Behavior:
 - Uses AI to generate a detailed ranking and analysis based on task completion, GitHub activity, and feedback.
 - Stores the AI-generated analysis in the database.
 """
+
+
 @teacher.route("/team_management/overall", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_overall_teams_progress():
@@ -252,6 +254,8 @@ Response:
     - ID
     - Name
 """
+
+
 @teacher.route("/team_management/individual", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_teams():
@@ -288,6 +292,8 @@ Response:
     - Instructor and TA details.
 - 404: If the team is not found.
 """
+
+
 @teacher.route("/team_management/individual/detail/<int:team_id>", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_details(team_id):
@@ -340,6 +346,8 @@ Response:
         - Feedback and feedback time.
 - 404: If the team is not found.
 """
+
+
 @teacher.route("/team_management/individual/progress/<int:team_id>", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_progress(team_id):
@@ -404,6 +412,8 @@ Response:
 - 200: File download of the submission.
 - 404: If the team, submission, or document is not found.
 """
+
+
 @teacher.route(
     "/team_management/individual/submission/<int:team_id>/<int:task_id>",
     methods=["GET"],
@@ -453,6 +463,8 @@ Response:
 - 400: If feedback data is missing or invalid.
 - 404: If the team or submission is not found.
 """
+
+
 @teacher.route(
     "/team_management/individual/feedback/<int:team_id>/<int:task_id>",
     methods=["POST"],
@@ -510,6 +522,8 @@ Response:
     - Milestone-specific GitHub stats.
 - 404: If the team, GitHub repository, or team member is not found.
 """
+
+
 @teacher.route(
     "/team_management/individual/github/<int:team_id>",
     methods=["GET"],
@@ -579,6 +593,8 @@ Response:
 - 404: If the team, submission, or document is not found.
 - 500: If the document cannot be read or the AI analysis fails.
 """
+
+
 @teacher.route(
     "/team_management/individual/ai_analysis/<int:team_id>/<int:task_id>",
     methods=["GET"],

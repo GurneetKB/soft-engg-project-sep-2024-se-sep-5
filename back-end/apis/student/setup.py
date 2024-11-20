@@ -48,6 +48,8 @@ Returns:
 Database Interaction:
 - Queries the `team_students` table for the `team_id` corresponding to the `student_id` of the given user.
 """
+
+
 def get_team_id(user):
     return (
         db.session.query(team_students.c.team_id)

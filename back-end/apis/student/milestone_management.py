@@ -28,11 +28,11 @@ Roles Required:
 
 Endpoints:
 ----------
-1. GET /milestone_management/overall
-2. GET /milestone_management/individual
-3. GET /milestone_management/individual/<int:milestone_id>
-4. POST /milestone_management/individual/<int:milestone_id>
-5. GET /download_submission/<int:task_id>
+1. GET /student/milestone_management/overall
+2. GET /student/milestone_management/individual
+3. GET /student/milestone_management/individual/<int:milestone_id>
+4. POST /student/milestone_management/individual/<int:milestone_id>
+5. GET /student/download_submission/<int:task_id>
 """
 
 
@@ -51,6 +51,8 @@ Response:
 Exceptions:
 - Abort with 400 if no team is assigned to the user.
 """
+
+
 @student.route("/milestone_management/overall", methods=["GET"])
 @roles_required("Student")
 def get_team_milestones():
@@ -115,6 +117,8 @@ Role Required:
 Response:
 - 200: JSON array of milestone objects (ID, title).
 """
+
+
 @student.route("/milestone_management/individual", methods=["GET"])
 @roles_required("Student")
 def get_milestones():
@@ -148,6 +152,8 @@ Response:
 Exceptions:
 - Abort with 404 if the milestone or team is not found.
 """
+
+
 @student.route("/milestone_management/individual/<int:milestone_id>", methods=["GET"])
 @roles_required("Student")
 def get_milestone_details(milestone_id):
@@ -209,6 +215,8 @@ Exceptions:
 - Abort with 400 for invalid data or file type.
 - Abort with 404 for missing milestone or team.
 """
+
+
 @student.route("/milestone_management/individual/<int:milestone_id>", methods=["POST"])
 @roles_required("Student")
 def submit_milestone(milestone_id):
@@ -307,6 +315,8 @@ Response:
 Exceptions:
 - Abort with 404 for missing submission or file.
 """
+
+
 @student.route("/download_submission/<int:task_id>", methods=["GET"])
 @roles_required("Student")
 def download_submission(task_id):

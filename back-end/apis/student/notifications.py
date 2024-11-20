@@ -24,11 +24,11 @@ Roles Required:
 
 Endpoints:
 ----------
-1. GET /notifications
-2. GET /notifications/<int:notification_id>
-3. GET /notifications/mark_all_as_read
-4. GET /notifications/preferences
-5. PUT /notifications/preferences
+1. GET /student/notifications
+2. GET /student/notifications/<int:notification_id>
+3. GET /student/notifications/mark_all_as_read
+4. GET /student/notifications/preferences
+5. PUT /student/notifications/preferences
 """
 
 
@@ -48,6 +48,8 @@ Response:
     - Created at
     - Read at
 """
+
+
 @student.route("/notifications", methods=["GET"])
 @roles_required("Student")
 def get_notifications():
@@ -93,6 +95,8 @@ Response:
 Exceptions:
 - Marks the notification as read upon successful retrieval.
 """
+
+
 @student.route("/notifications/<int:notification_id>", methods=["GET"])
 @roles_required("Student")
 def get_notification_detail(notification_id):
@@ -133,6 +137,8 @@ Role Required:
 Response:
 - 200: JSON message confirming that all notifications have been marked as read.
 """
+
+
 @student.route("/notifications/mark_all_as_read", methods=["GET"])
 @roles_required("Student")
 def mark_all_notifications_as_read():
@@ -167,6 +173,8 @@ Response:
     - in_app_feedback_notifications
 - 404: If no notification preferences are found for the current user.
 """
+
+
 @student.route("/notifications/preferences", methods=["GET"])
 @roles_required("Student")
 def get_notification_preferences():
@@ -210,6 +218,8 @@ Response:
 Behavior:
 - Only updates fields that are provided and valid in the request.
 """
+
+
 @student.route("/notifications/preferences", methods=["PUT"])
 @roles_required("Student")
 def set_notification_preferences():

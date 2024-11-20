@@ -3,7 +3,6 @@ import os
 from io import BytesIO
 from datetime import datetime, timezone
 from application.setup import create_app
-from application.initial_data import seed_database
 from application.models import *
 
 

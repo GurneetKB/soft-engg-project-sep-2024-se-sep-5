@@ -62,6 +62,8 @@ Parameters:
 Returns:
 - List of `Teams` objects associated with the user.
 """
+
+
 def get_teams_under_user(user):
     if user.has_role("Instructor"):
         teams = Teams.query.filter(Teams.instructor_id == user.id).all()
@@ -85,6 +87,8 @@ Returns:
 - A `Teams` object representing the team if found.
 - None if the team does not exist or is not managed by the user.
 """
+
+
 def get_single_team_under_user(user, team_id):
     if user.has_role("Instructor"):
         team = Teams.query.filter(
@@ -127,6 +131,8 @@ Behavior:
 - Processes commit messages to identify milestone-related statistics.
 - Summarizes and sorts milestone data.
 """
+
+
 def fetch_commit_details(repo_url, username=None):
     # Extract owner and repo name from the URL
     repo_url = repo_url.rstrip("/")  # Remove trailing slash if any
