@@ -8,7 +8,46 @@ from application.models import (
 from flask import abort, request
 from datetime import datetime, timezone
 
+"""
+Module: Notification Management APIs
+-------------------------------------
+This module provides APIs for managing notifications for students. It supports functionalities such as 
+retrieving notifications, marking them as read, and managing notification preferences.
 
+Dependencies:
+- Flask, Flask-Security: For routing and authentication.
+- SQLAlchemy ORM: For database operations.
+- datetime, timezone: For handling date and time operations.
+
+Roles Required:
+- Student: All endpoints require the current user to have the "Student" role.
+
+Endpoints:
+----------
+1. GET /notifications
+2. GET /notifications/<int:notification_id>
+3. GET /notifications/mark_all_as_read
+4. GET /notifications/preferences
+5. PUT /notifications/preferences
+"""
+
+
+"""
+API: Get Notifications
+-----------------------
+Retrieves a list of all notifications for the current user, including their title, type, creation time, and read status.
+
+Role Required:
+- Student
+
+Response:
+- 200: JSON object containing a list of notifications. Each notification includes:
+    - ID
+    - Title
+    - Type
+    - Created at
+    - Read at
+"""
 @student.route("/notifications", methods=["GET"])
 @roles_required("Student")
 def get_notifications():
@@ -30,6 +69,30 @@ def get_notifications():
     return {"notifications": notification_list}, 200
 
 
+"""
+API: Get Notification Details
+------------------------------
+Fetches detailed information about a specific notification and marks it as read.
+
+Role Required:
+- Student
+
+Path Parameters:
+- notification_id: The ID of the notification to fetch details for.
+
+Response:
+- 200: JSON object with notification details, including:
+    - ID
+    - Title
+    - Message
+    - Type
+    - Created at
+    - Read at
+- 404: If the notification does not exist or is inaccessible by the current user.
+
+Exceptions:
+- Marks the notification as read upon successful retrieval.
+"""
 @student.route("/notifications/<int:notification_id>", methods=["GET"])
 @roles_required("Student")
 def get_notification_detail(notification_id):
@@ -59,6 +122,17 @@ def get_notification_detail(notification_id):
     return data, 200
 
 
+"""
+API: Mark All Notifications as Read
+------------------------------------
+Marks all unread notifications for the current user as read.
+
+Role Required:
+- Student
+
+Response:
+- 200: JSON message confirming that all notifications have been marked as read.
+"""
 @student.route("/notifications/mark_all_as_read", methods=["GET"])
 @roles_required("Student")
 def mark_all_notifications_as_read():
@@ -77,6 +151,22 @@ def mark_all_notifications_as_read():
     return {"message": "All notifications marked as read."}, 200
 
 
+"""
+API: Get Notification Preferences
+----------------------------------
+Fetches the current user's notification preferences, such as whether email or in-app notifications are enabled.
+
+Role Required:
+- Student
+
+Response:
+- 200: JSON object containing the current notification preferences:
+    - email_deadline_notifications
+    - in_app_deadline_notifications
+    - email_feedback_notifications
+    - in_app_feedback_notifications
+- 404: If no notification preferences are found for the current user.
+"""
 @student.route("/notifications/preferences", methods=["GET"])
 @roles_required("Student")
 def get_notification_preferences():
@@ -97,6 +187,29 @@ def get_notification_preferences():
     }, 200
 
 
+"""
+API: Set Notification Preferences
+----------------------------------
+Updates the current user's notification preferences based on the provided input.
+
+Role Required:
+- Student
+
+Request:
+- JSON object with the following optional boolean fields:
+    - email_deadline_notifications
+    - in_app_deadline_notifications
+    - email_feedback_notifications
+    - in_app_feedback_notifications
+
+Response:
+- 201: JSON message confirming that the preferences were updated successfully.
+- 400: If any of the provided fields are not boolean values.
+- 404: If no notification preferences are found for the current user.
+
+Behavior:
+- Only updates fields that are provided and valid in the request.
+"""
 @student.route("/notifications/preferences", methods=["PUT"])
 @roles_required("Student")
 def set_notification_preferences():

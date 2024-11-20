@@ -12,7 +12,45 @@ from flask import abort, make_response, request, send_file, current_app
 from datetime import datetime, timezone
 import os
 
+"""
+Module: Student Milestone Management APIs
+------------------------------------------
+This module provides APIs for managing milestones and tasks for students in a team-based project system.
+It supports functionalities like retrieving milestone data, submitting milestone documents, and downloading submissions.
 
+Dependencies:
+- Flask, Flask-Security: For routing and authentication.
+- SQLAlchemy ORM: For database operations.
+- os, datetime: For file handling and date-time processing.
+
+Roles Required:
+- Student: All endpoints require the current user to have the "Student" role.
+
+Endpoints:
+----------
+1. GET /milestone_management/overall
+2. GET /milestone_management/individual
+3. GET /milestone_management/individual/<int:milestone_id>
+4. POST /milestone_management/individual/<int:milestone_id>
+5. GET /download_submission/<int:task_id>
+"""
+
+
+"""
+API: Get Team Milestones Overview
+----------------------------------
+Retrieves an overview of milestones for the current student's team, including task completion percentages.
+
+Role Required:
+- Student
+
+Response:
+- 200: JSON object with team name and milestone details (ID, title, completion percentage).
+- 400: If the student does not belong to a team.
+
+Exceptions:
+- Abort with 400 if no team is assigned to the user.
+"""
 @student.route("/milestone_management/overall", methods=["GET"])
 @roles_required("Student")
 def get_team_milestones():
@@ -66,6 +104,17 @@ def get_team_milestones():
     return response_data, 200
 
 
+"""
+API: Get All Milestones
+------------------------
+Fetches a list of all available milestones with their IDs and titles.
+
+Role Required:
+- Student
+
+Response:
+- 200: JSON array of milestone objects (ID, title).
+"""
 @student.route("/milestone_management/individual", methods=["GET"])
 @roles_required("Student")
 def get_milestones():
@@ -81,6 +130,24 @@ def get_milestones():
     return {"milestones": milestone_list}, 200
 
 
+"""
+API: Get Milestone Details
+---------------------------
+Retrieves detailed information about a specific milestone for the student's team, including tasks and submission status.
+
+Role Required:
+- Student
+
+Path Parameters:
+- milestone_id: The ID of the milestone to fetch details for.
+
+Response:
+- 200: JSON object with milestone details (ID, title, description, tasks, etc.).
+- 404: If the milestone or team does not exist.
+
+Exceptions:
+- Abort with 404 if the milestone or team is not found.
+"""
 @student.route("/milestone_management/individual/<int:milestone_id>", methods=["GET"])
 @roles_required("Student")
 def get_milestone_details(milestone_id):
@@ -119,6 +186,29 @@ def get_milestone_details(milestone_id):
         return abort(404, "Milestone or team not found.")
 
 
+"""
+API: Submit Milestone Documents
+--------------------------------
+Allows students to submit task documents for a specific milestone, validating the deadline and task association.
+
+Role Required:
+- Student
+
+Path Parameters:
+- milestone_id: The ID of the milestone for which the submission is being made.
+
+Request:
+- Form data with file attachments, where keys are task IDs and files are PDF documents.
+
+Response:
+- 201: JSON message confirming successful submission.
+- 400: If the milestone deadline has passed, task ID is invalid, or file is not a PDF.
+- 404: If the milestone or team does not exist.
+
+Exceptions:
+- Abort with 400 for invalid data or file type.
+- Abort with 404 for missing milestone or team.
+"""
 @student.route("/milestone_management/individual/<int:milestone_id>", methods=["POST"])
 @roles_required("Student")
 def submit_milestone(milestone_id):
@@ -199,6 +289,24 @@ def submit_milestone(milestone_id):
     return {"message": "Milestone documents submitted successfully"}, 201
 
 
+"""
+API: Download Submission File
+------------------------------
+Allows students to download the submitted document for a specific task under their team.
+
+Role Required:
+- Student
+
+Path Parameters:
+- task_id: The ID of the task for which the document is being downloaded.
+
+Response:
+- 200: File attachment response containing the PDF document.
+- 404: If the submission or document does not exist, or the file is not found on the server.
+
+Exceptions:
+- Abort with 404 for missing submission or file.
+"""
 @student.route("/download_submission/<int:task_id>", methods=["GET"])
 @roles_required("Student")
 def download_submission(task_id):

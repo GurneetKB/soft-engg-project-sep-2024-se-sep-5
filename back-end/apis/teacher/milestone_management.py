@@ -7,7 +7,54 @@ from application.models import Tasks, db, Submissions, Milestones
 from flask import abort, request
 from datetime import datetime, timezone
 
+"""
+Module: Teacher Milestone Management APIs
+------------------------------------------
+This module provides APIs for instructors and teaching assistants to manage milestones and tasks for student teams.
+It allows for creating, reading, updating, and deleting milestones, as well as tracking milestone progress.
 
+Dependencies:
+- Flask: For routing and handling HTTP requests.
+- Flask-Security: For role-based access control.
+- SQLAlchemy ORM: For database operations.
+- datetime, timezone: For date and time operations.
+
+Roles Required:
+- Instructor: Full access to all endpoints.
+- TA (Teaching Assistant): Limited access to read-only endpoints.
+
+Endpoints:
+----------
+1. GET /milestone_management
+2. POST /milestone_management
+3. GET /milestone_management/<int:milestone_id>
+4. PUT /milestone_management/<int:milestone_id>
+5. DELETE /milestone_management/<int:milestone_id>
+"""
+
+
+"""
+API: Get All Milestones and Progress Overview
+----------------------------------------------
+Retrieves a list of all milestones, including their details and completion rates for the teams under the current user.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Response:
+- 200: JSON object containing:
+    - Total number of teams and students under the user.
+    - List of milestones, each with:
+        - ID
+        - Title
+        - Description
+        - Deadline
+        - Completion rate (percentage of teams that have completed the milestone).
+
+Behavior:
+- Calculates completion rates by analyzing submissions against the tasks in each milestone.
+"""
 @teacher.route("/milestone_management", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_all_milestones():
@@ -62,6 +109,31 @@ def get_all_milestones():
     return response_data, 200
 
 
+"""
+API: Create a New Milestone
+---------------------------
+Allows instructors to create a new milestone with tasks and a deadline.
+
+Role Required:
+- Instructor
+
+Request:
+- JSON object containing:
+    - title (string): Title of the milestone.
+    - description (string): Description of the milestone.
+    - deadline (string): Deadline in GMT datetime format.
+    - tasks (list of objects): Each object contains a "description" field for the task.
+
+Response:
+- 201: JSON message confirming successful creation of the milestone.
+- 400: If validation errors occur, such as:
+    - Missing or invalid title, description, or deadline.
+    - Invalid task structure.
+
+Behavior:
+- Validates input data and ensures the deadline is in the future.
+- Creates tasks and associates them with the milestone.
+"""
 @teacher.route("/milestone_management", methods=["POST"])
 @roles_required("Instructor")
 def create_milestone():
@@ -130,6 +202,29 @@ def create_milestone():
     return {"message": "Milestone published successfully."}, 201
 
 
+"""
+API: Get Milestone Details
+---------------------------
+Fetches detailed information about a specific milestone, including its tasks.
+
+Role Required:
+- Instructor
+
+Path Parameters:
+- milestone_id (int): ID of the milestone to fetch.
+
+Response:
+- 200: JSON object containing:
+    - Title
+    - Description
+    - Deadline
+    - List of tasks, each with:
+        - Description.
+- 404: If the milestone is not found.
+
+Behavior:
+- Returns milestone details along with its associated tasks.
+"""
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["GET"])
 @roles_required("Instructor")
 def get_milestone(milestone_id):
@@ -150,6 +245,35 @@ def get_milestone(milestone_id):
     return milestone_data, 200
 
 
+"""
+API: Update an Existing Milestone
+----------------------------------
+Allows instructors to update the title, description, deadline, and tasks of a milestone.
+
+Role Required:
+- Instructor
+
+Path Parameters:
+- milestone_id (int): ID of the milestone to update.
+
+Request:
+- JSON object containing any of the following optional fields:
+    - title (string): Updated title.
+    - description (string): Updated description.
+    - deadline (string): Updated deadline in GMT datetime format.
+    - tasks (list of objects): Each object contains a "description" field for the task.
+
+Response:
+- 201: JSON message confirming successful update of the milestone.
+- 400: If validation errors occur, such as:
+    - Invalid or missing fields.
+    - Deadline not in the future.
+- 404: If the milestone is not found.
+
+Behavior:
+- Replaces existing tasks with the new task list if provided.
+- Validates all updated fields before committing changes.
+"""
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["PUT"])
 @roles_required("Instructor")
 def update_milestone(milestone_id):
@@ -226,6 +350,24 @@ def update_milestone(milestone_id):
     return {"message": "Milestone updated successfully."}, 201
 
 
+"""
+API: Delete a Milestone
+------------------------
+Deletes a milestone along with its associated tasks.
+
+Role Required:
+- Instructor
+
+Path Parameters:
+- milestone_id (int): ID of the milestone to delete.
+
+Response:
+- 200: JSON message confirming the deletion of the milestone.
+- 404: If the milestone is not found.
+
+Behavior:
+- Removes the milestone and all its associated tasks from the database.
+"""
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["DELETE"])
 @roles_required("Instructor")
 def delete_milestone(milestone_id):

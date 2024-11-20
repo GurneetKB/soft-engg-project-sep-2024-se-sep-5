@@ -22,6 +22,41 @@ from pydantic import BaseModel
 import json
 from datetime import datetime
 
+"""
+Module: Teacher Team Management and Analysis APIs
+--------------------------------------------------
+This module provides APIs for instructors and teaching assistants to manage team-related operations. It includes 
+functionality to fetch team progress, view submissions, provide feedback, analyze submissions using AI, 
+and retrieve GitHub commit details.
+
+Dependencies:
+-------------
+- Flask: For creating API routes and handling requests.
+- Flask-Security: For role-based access control.
+- SQLAlchemy ORM: For database operations.
+- PyPDF2: For extracting text from PDF submissions.
+- Pydantic: For defining and validating data models.
+- PyGithub: For interacting with the GitHub API.
+- Groq: For AI tool integration.
+- os, datetime, typing: For general utilities.
+
+Roles Accepted:
+---------------
+- Instructor: Full access to all endpoints.
+- TA (Teaching Assistant): Access to specific endpoints for monitoring and analysis.
+
+Endpoints:
+----------
+1. GET /team_management/overall
+2. GET /team_management/individual
+3. GET /team_management/individual/detail/<int:team_id>
+4. GET /team_management/individual/progress/<int:team_id>
+5. GET /team_management/individual/submission/<int:team_id>/<int:task_id>
+6. POST /team_management/individual/feedback/<int:team_id>/<int:task_id>
+7. GET /team_management/individual/github/<int:team_id>
+8. GET /team_management/individual/ai_analysis/<int:team_id>/<int:task_id>
+"""
+
 
 class TeamAnalysis(BaseModel):
     team_name: str
@@ -34,6 +69,26 @@ class AIResponse(BaseModel):
     teams: List[TeamAnalysis]
 
 
+"""
+API: Get Overall Team Progress
+-------------------------------
+Analyzes and retrieves the progress of all teams under the current user. Progress is calculated based on 
+milestones, tasks, and GitHub activity.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Response:
+- 200: JSON array of team progress, including:
+    - Team name
+    - Progress percentage
+    - AI-generated analysis including ranks, statuses, and reasons for progress.
+
+Behavior:
+- Uses AI to generate a detailed ranking and analysis based on task completion, GitHub activity, and feedback.
+- Stores the AI-generated analysis in the database.
+"""
 @teacher.route("/team_management/overall", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_overall_teams_progress():
@@ -183,6 +238,20 @@ def get_overall_teams_progress():
     return response_data, 200
 
 
+"""
+API: Get All Teams
+-------------------
+Fetches a list of all teams managed by the current user.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Response:
+- 200: JSON array of teams, each with:
+    - ID
+    - Name
+"""
 @teacher.route("/team_management/individual", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_teams():
@@ -198,6 +267,27 @@ def get_teams():
     return {"teams": team_list}, 200
 
 
+"""
+API: Get Team Details
+----------------------
+Retrieves detailed information about a specific team, including team members, GitHub repository, and assigned roles.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Path Parameters:
+- team_id (int): ID of the team to fetch details for.
+
+Response:
+- 200: JSON object containing:
+    - Team ID
+    - Team name
+    - Members with their details
+    - GitHub repository URL
+    - Instructor and TA details.
+- 404: If the team is not found.
+"""
 @teacher.route("/team_management/individual/detail/<int:team_id>", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_details(team_id):
@@ -224,6 +314,32 @@ def get_team_details(team_id):
     return {"team": team}, 200
 
 
+"""
+API: Get Team Progress
+-----------------------
+Retrieves milestone-wise progress for a specific team, including task-level details.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Path Parameters:
+- team_id (int): ID of the team to fetch progress for.
+
+Response:
+- 200: JSON array of milestones, each with:
+    - ID
+    - Title
+    - Description
+    - Deadline
+    - List of tasks, each with:
+        - Task ID
+        - Description
+        - Completion status
+        - Submission time
+        - Feedback and feedback time.
+- 404: If the team is not found.
+"""
 @teacher.route("/team_management/individual/progress/<int:team_id>", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_progress(team_id):
@@ -271,6 +387,23 @@ def get_team_progress(team_id):
     return milestones_data, 200
 
 
+"""
+API: View Submission
+---------------------
+Retrieves the submission file for a specific task by a specific team.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Path Parameters:
+- team_id (int): ID of the team.
+- task_id (int): ID of the task.
+
+Response:
+- 200: File download of the submission.
+- 404: If the team, submission, or document is not found.
+"""
 @teacher.route(
     "/team_management/individual/submission/<int:team_id>/<int:task_id>",
     methods=["GET"],
@@ -298,6 +431,28 @@ def view_submission(team_id, task_id):
     return send_file(document.file_url), 200
 
 
+"""
+API: Provide Feedback
+----------------------
+Allows the instructor or TA to provide feedback on a specific submission.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Path Parameters:
+- team_id (int): ID of the team.
+- task_id (int): ID of the task.
+
+Request:
+- JSON object with:
+    - feedback (string): The feedback content.
+
+Response:
+- 201: Confirmation message of successful feedback submission.
+- 400: If feedback data is missing or invalid.
+- 404: If the team or submission is not found.
+"""
 @teacher.route(
     "/team_management/individual/feedback/<int:team_id>/<int:task_id>",
     methods=["POST"],
@@ -332,6 +487,29 @@ def provide_feedback(team_id, task_id):
     return {"message": "The feedback is successfully provided."}, 201
 
 
+"""
+API: Get GitHub Details
+------------------------
+Fetches GitHub activity details for a team's repository, including commit statistics and milestone-specific details.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Path Parameters:
+- team_id (int): ID of the team.
+
+Query Parameters:
+- user_id (int, optional): ID of a specific team member to filter GitHub activity.
+
+Response:
+- 200: JSON object containing:
+    - Repository details
+    - Total commits
+    - Lines of code added/deleted
+    - Milestone-specific GitHub stats.
+- 404: If the team, GitHub repository, or team member is not found.
+"""
 @teacher.route(
     "/team_management/individual/github/<int:team_id>",
     methods=["GET"],
@@ -381,6 +559,26 @@ def get_github_details(team_id):
         return abort(500, str(e))
 
 
+"""
+API: Get AI Analysis
+---------------------
+Uses AI to analyze the quality and completeness of a team's submission for a specific task.
+
+Roles Accepted:
+- Instructor
+- TA
+
+Path Parameters:
+- team_id (int): ID of the team.
+- task_id (int): ID of the task.
+
+Response:
+- 200: JSON object containing the AI-generated analysis, including:
+    - Content review
+    - Task requirement checks.
+- 404: If the team, submission, or document is not found.
+- 500: If the document cannot be read or the AI analysis fails.
+"""
 @teacher.route(
     "/team_management/individual/ai_analysis/<int:team_id>/<int:task_id>",
     methods=["GET"],

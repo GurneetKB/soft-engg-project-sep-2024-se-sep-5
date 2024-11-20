@@ -4,6 +4,40 @@ from sqlalchemy import MetaData
 from enum import Enum
 import os
 
+"""
+Module: Database Models
+-------------------------
+This module defines the database models for the application, including users, roles, teams, milestones, 
+tasks, submissions, documents, notifications, and more. The models are based on SQLAlchemy ORM and Flask-Security 
+for user authentication and role management.
+
+Dependencies:
+-------------
+- SQLAlchemy: For defining and interacting with the database models.
+- Flask-Security: For user authentication and role management.
+- werkzeug: For handling utilities such as headers and exceptions.
+- os: For interacting with the file system.
+- enum: For defining enumerations such as notification types.
+
+Classes:
+--------
+1. Users
+2. Roles
+3. Teams
+4. Milestones
+5. Tasks
+6. Submissions
+7. Documents
+8. AIProgressText
+9. Notifications
+10. UserNotifications
+11. NotificationPreferences
+
+Relationships:
+-------------
+- Many-to-many relationships between Users and Roles, Users and Teams.
+- One-to-many relationships between Teams and Submissions, Milestones and Tasks, etc.
+"""
 
 # Define naming convention for constraints
 convention = {
@@ -38,6 +72,12 @@ UsersRoles = db.Table(
     db.Column("user_id", db.Integer, db.ForeignKey("users.id")),
     db.Column("role_id", db.Integer, db.ForeignKey("roles.id")),
 )
+
+
+"""
+Represents users in the system (Instructor, TA, Student).
+Contains user info (username, email, password) and relationships with roles, teams, and notifications.
+"""
 
 
 class Users(db.Model, UserMixin):
@@ -91,6 +131,12 @@ class Users(db.Model, UserMixin):
     )
 
 
+"""
+Represents roles (Instructor, TA, Student) assigned to users.
+Each role has a name and description.
+"""
+
+
 class Roles(db.Model, RoleMixin):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     name = db.Column(db.String, unique=True)
@@ -98,6 +144,12 @@ class Roles(db.Model, RoleMixin):
     users = db.relationship(
         "Users", secondary="UsersRoles", back_populates="roles", lazy="subquery"
     )
+
+
+"""
+Represents teams in the system, including instructor, TA, and student members.
+Tracks the team's GitHub repo and associated submissions.
+"""
 
 
 class Teams(db.Model):
@@ -133,6 +185,11 @@ class Teams(db.Model):
     )
 
 
+"""
+Represents milestones in the project, including title, description, deadline, and tasks.
+"""
+
+
 class Milestones(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
@@ -149,6 +206,11 @@ class Milestones(db.Model):
         lazy="subquery",
         cascade="all, delete",
     )
+
+
+"""
+Represents tasks within a milestone, including descriptions and associated submissions.
+"""
 
 
 class Tasks(db.Model):
@@ -170,6 +232,11 @@ class Tasks(db.Model):
     )
 
 
+"""
+Represents student submissions for tasks, including feedback, submission time, and associated documents.
+"""
+
+
 class Submissions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="CASCADE"))
@@ -189,6 +256,11 @@ class Submissions(db.Model):
     task = db.relationship(
         "Tasks", back_populates="submissions", lazy="subquery", uselist=False
     )
+
+
+"""
+Represents documents submitted for tasks, with methods to delete files from the filesystem.
+"""
 
 
 class Documents(db.Model):
@@ -226,6 +298,11 @@ def delete_file_on_delete(mapper, connection, target):
     target.delete_file()
 
 
+"""
+Stores AI-generated progress analysis as JSON data.
+"""
+
+
 class AIProgressText(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     generated_by = db.Column(
@@ -234,6 +311,11 @@ class AIProgressText(db.Model):
         nullable=False,
     )
     text = db.Column(db.JSON, nullable=False)
+
+
+"""
+Represents notifications sent to users, including types like DEADLINE, FEEDBACK, etc.
+"""
 
 
 class Notifications(db.Model):
@@ -248,6 +330,11 @@ class Notifications(db.Model):
         lazy="subquery",
         uselist=False,
     )
+
+
+"""
+Represents the relationship between users and notifications, tracking read statuses.
+"""
 
 
 class UserNotifications(db.Model):
@@ -270,6 +357,11 @@ class UserNotifications(db.Model):
         lazy="subquery",
         uselist=False,
     )
+
+
+"""
+Stores notification preferences for users, including email and in-app notification settings.
+"""
 
 
 class NotificationPreferences(db.Model):

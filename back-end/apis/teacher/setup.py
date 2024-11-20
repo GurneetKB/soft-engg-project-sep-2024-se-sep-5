@@ -4,6 +4,41 @@ from github import Github, Auth
 from groq import Groq
 import os
 
+"""
+Module: Teacher Blueprint Setup with GitHub and AI Integration
+---------------------------------------------------------------
+This module sets up the Flask Blueprint for teacher-related functionalities and includes helper functions 
+for managing teams, fetching GitHub commit statistics, and integrating with AI tools.
+
+Dependencies:
+-------------
+- Flask: For creating a Blueprint.
+- SQLAlchemy ORM: For database operations.
+- PyGithub: For interacting with the GitHub API.
+- Groq: For AI tool integration.
+- os: For environment variable access.
+
+Blueprint:
+----------
+- Name: teacher
+- URL Prefix: /teacher
+
+Submodules:
+-----------
+1. milestone_management: Handles milestone-related functionalities.
+2. team_management: Manages team-related operations.
+
+Global Variables:
+-----------------
+1. `github_client`: Configured GitHub client using an access token.
+2. `ai_client`: Configured AI client using an API key.
+
+Functions:
+----------
+1. `get_teams_under_user(user)`
+2. `get_single_team_under_user(user, team_id)`
+3. `fetch_commit_details(repo_url, username=None)`
+"""
 
 teacher = Blueprint("teacher", __name__, url_prefix="/teacher")
 
@@ -14,7 +49,19 @@ github_client = Github(auth=github_auth)
 # AI configuration
 ai_client = Groq(api_key=os.environ.get("AI_ACCESS_TOKEN"))
 
+"""
+Function: Get Teams Under User
+-------------------------------
+Retrieves all teams managed by the given user. The user's role determines the scope of the query:
+- If the user is an Instructor, fetches teams where the user is the assigned instructor.
+- If the user is a Teaching Assistant (TA), fetches teams where the user is the assigned TA.
 
+Parameters:
+- user: The current user object.
+
+Returns:
+- List of `Teams` objects associated with the user.
+"""
 def get_teams_under_user(user):
     if user.has_role("Instructor"):
         teams = Teams.query.filter(Teams.instructor_id == user.id).all()
@@ -23,6 +70,21 @@ def get_teams_under_user(user):
     return teams
 
 
+"""
+Function: Get Single Team Under User
+-------------------------------------
+Fetches a specific team managed by the given user, based on the team ID. The user's role determines the scope:
+- If the user is an Instructor, the team must belong to their assigned teams.
+- If the user is a TA, the team must belong to their assigned teams.
+
+Parameters:
+- user: The current user object.
+- team_id (int): The ID of the team to retrieve.
+
+Returns:
+- A `Teams` object representing the team if found.
+- None if the team does not exist or is not managed by the user.
+"""
 def get_single_team_under_user(user, team_id):
     if user.has_role("Instructor"):
         team = Teams.query.filter(
@@ -33,6 +95,38 @@ def get_single_team_under_user(user, team_id):
     return team
 
 
+"""
+Function: Fetch Commit Details from GitHub Repository
+------------------------------------------------------
+Analyzes commit statistics for a given GitHub repository. Optionally filters commits by a specific username. 
+Also gathers milestone-specific statistics based on commit messages.
+
+Parameters:
+- repo_url (str): URL of the GitHub repository (HTTPS or SSH format).
+- username (str, optional): GitHub username to filter commits by. Defaults to None (fetches all commits).
+
+Returns:
+- dict: A dictionary containing:
+    - `total_commits` (int): Total number of commits in the repository.
+    - `lines_of_code_added` (int): Total lines of code added across all commits.
+    - `lines_of_code_deleted` (int): Total lines of code deleted across all commits.
+    - `milestones` (list): List of dictionaries for each milestone, each containing:
+        - `milestone_id` (int): Milestone ID from the commit message.
+        - `name` (str): Milestone name.
+        - `commits` (int): Number of commits related to the milestone.
+        - `lines_of_code_added` (int): Lines of code added for the milestone.
+        - `lines_of_code_deleted` (int): Lines of code deleted for the milestone.
+
+Raises:
+- ValueError: If the repository URL format is invalid.
+- Exception: If any error occurs while interacting with the GitHub API.
+
+Behavior:
+- Parses the repository URL to extract owner and repo name.
+- Fetches all commits or those by the specified user.
+- Processes commit messages to identify milestone-related statistics.
+- Summarizes and sorts milestone data.
+"""
 def fetch_commit_details(repo_url, username=None):
     # Extract owner and repo name from the URL
     repo_url = repo_url.rstrip("/")  # Remove trailing slash if any
