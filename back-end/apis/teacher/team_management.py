@@ -146,6 +146,13 @@ def get_overall_teams_progress():
 
         if team.github_repo_url:
             github_stats = fetch_commit_details(team.github_repo_url)
+            if "status" in github_stats:
+                github_stats = {
+                    "total_commits": 0,
+                    "lines_of_code_added": 0,
+                    "lines_of_code_deleted": 0,
+                    "milestones": [],
+                }
             team_ai_prompt += f"\nGitHub Stats:\n"
             team_ai_prompt += f"Total Commits: {github_stats['total_commits']}\n"
             team_ai_prompt += f"Lines Added: {github_stats['lines_of_code_added']}\n"
