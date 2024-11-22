@@ -1,12 +1,3 @@
-from apis.teacher.setup import (
-    teacher,
-    get_teams_under_user,
-)
-from flask_security import current_user, roles_accepted, roles_required
-from application.models import Tasks, db, Submissions, Milestones
-from flask import abort, request
-from datetime import datetime, timezone
-
 """
 Module: Teacher Milestone Management APIs
 ------------------------------------------
@@ -32,36 +23,43 @@ Endpoints:
 5. DELETE /teacher/milestone_management/<int:milestone_id>
 """
 
-
-"""
-API: Get All Milestones and Progress Overview
-----------------------------------------------
-Retrieves a list of all milestones, including their details and completion rates for the teams under the current user.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Response:
-- 200: JSON object containing:
-    - Total number of teams and students under the user.
-    - List of milestones, each with:
-        - ID
-        - Title
-        - Description
-        - Deadline
-        - Completion rate (percentage of teams that have completed the milestone).
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-
-Behavior:
-- Calculates completion rates by analyzing submissions against the tasks in each milestone.
-"""
+from apis.teacher.setup import (
+    teacher,
+    get_teams_under_user,
+)
+from flask_security import current_user, roles_accepted, roles_required
+from application.models import Tasks, db, Submissions, Milestones
+from flask import abort, request
+from datetime import datetime, timezone
 
 
 @teacher.route("/milestone_management", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_all_milestones():
+    """
+    API: Get All Milestones and Progress Overview
+    ----------------------------------------------
+    Retrieves a list of all milestones, including their details and completion rates for the teams under the current user.
+
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Response:
+    - 200: JSON object containing:
+        - Total number of teams and students under the user.
+        - List of milestones, each with:
+            - ID
+            - Title
+            - Description
+            - Deadline
+            - Completion rate (percentage of teams that have completed the milestone).
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+
+    Behavior:
+    - Calculates completion rates by analyzing submissions against the tasks in each milestone.
+    """
 
     milestone_objects = Milestones.query.all()
 
@@ -113,38 +111,36 @@ def get_all_milestones():
     return response_data, 200
 
 
-"""
-API: Create a New Milestone
----------------------------
-Allows instructors to create a new milestone with tasks and a deadline.
-
-Role Required:
-- Instructor
-
-Request:
-- JSON object containing:
-    - title (string): Title of the milestone.
-    - description (string): Description of the milestone.
-    - deadline (string): Deadline in GMT datetime format.
-    - tasks (list of objects): Each object contains a "description" field for the task.
-
-Response:
-- 201: JSON message confirming successful creation of the milestone.
-- 400: If validation errors occur, such as:
-    - Missing or invalid title, description, or deadline.
-    - Invalid task structure.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-
-Behavior:
-- Validates input data and ensures the deadline is in the future.
-- Creates tasks and associates them with the milestone.
-"""
-
-
 @teacher.route("/milestone_management", methods=["POST"])
 @roles_required("Instructor")
 def create_milestone():
+    """
+    API: Create a New Milestone
+    ---------------------------
+    Allows instructors to create a new milestone with tasks and a deadline.
+
+    Role Required:
+    - Instructor
+
+    Request:
+    - JSON object containing:
+        - title (string): Title of the milestone.
+        - description (string): Description of the milestone.
+        - deadline (string): Deadline in GMT datetime format.
+        - tasks (list of objects): Each object contains a "description" field for the task.
+
+    Response:
+    - 201: JSON message confirming successful creation of the milestone.
+    - 400: If validation errors occur, such as:
+        - Missing or invalid title, description, or deadline.
+        - Invalid task structure.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+
+    Behavior:
+    - Validates input data and ensures the deadline is in the future.
+    - Creates tasks and associates them with the milestone.
+    """
     data = request.get_json()
 
     # Extract fields
@@ -210,36 +206,34 @@ def create_milestone():
     return {"message": "Milestone published successfully."}, 201
 
 
-"""
-API: Get Milestone Details
----------------------------
-Fetches detailed information about a specific milestone, including its tasks.
-
-Role Required:
-- Instructor
-
-Path Parameters:
-- milestone_id (int): ID of the milestone to fetch.
-
-Response:
-- 200: JSON object containing:
-    - Title
-    - Description
-    - Deadline
-    - List of tasks, each with:
-        - Description.
-- 404: If the milestone is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-
-Behavior:
-- Returns milestone details along with its associated tasks.
-"""
-
-
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["GET"])
 @roles_required("Instructor")
 def get_milestone(milestone_id):
+    """
+    API: Get Milestone Details
+    ---------------------------
+    Fetches detailed information about a specific milestone, including its tasks.
+
+    Role Required:
+    - Instructor
+
+    Path Parameters:
+    - milestone_id (int): ID of the milestone to fetch.
+
+    Response:
+    - 200: JSON object containing:
+        - Title
+        - Description
+        - Deadline
+        - List of tasks, each with:
+            - Description.
+    - 404: If the milestone is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+
+    Behavior:
+    - Returns milestone details along with its associated tasks.
+    """
     milestone_object = Milestones.query.filter_by(id=milestone_id).first()
     if not milestone_object:
         return abort(404, "Milestone not found.")
@@ -257,42 +251,40 @@ def get_milestone(milestone_id):
     return milestone_data, 200
 
 
-"""
-API: Update an Existing Milestone
-----------------------------------
-Allows instructors to update the title, description, deadline, and tasks of a milestone.
-
-Role Required:
-- Instructor
-
-Path Parameters:
-- milestone_id (int): ID of the milestone to update.
-
-Request:
-- JSON object containing any of the following optional fields:
-    - title (string): Updated title.
-    - description (string): Updated description.
-    - deadline (string): Updated deadline in GMT datetime format.
-    - tasks (list of objects): Each object contains a "description" field for the task.
-
-Response:
-- 201: JSON message confirming successful update of the milestone.
-- 400: If validation errors occur, such as:
-    - Invalid or missing fields.
-    - Deadline not in the future.
-- 404: If the milestone is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-
-Behavior:
-- Replaces existing tasks with the new task list if provided.
-- Validates all updated fields before committing changes.
-"""
-
-
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["PUT"])
 @roles_required("Instructor")
 def update_milestone(milestone_id):
+    """
+    API: Update an Existing Milestone
+    ----------------------------------
+    Allows instructors to update the title, description, deadline, and tasks of a milestone.
+
+    Role Required:
+    - Instructor
+
+    Path Parameters:
+    - milestone_id (int): ID of the milestone to update.
+
+    Request:
+    - JSON object containing any of the following optional fields:
+        - title (string): Updated title.
+        - description (string): Updated description.
+        - deadline (string): Updated deadline in GMT datetime format.
+        - tasks (list of objects): Each object contains a "description" field for the task.
+
+    Response:
+    - 201: JSON message confirming successful update of the milestone.
+    - 400: If validation errors occur, such as:
+        - Invalid or missing fields.
+        - Deadline not in the future.
+    - 404: If the milestone is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+
+    Behavior:
+    - Replaces existing tasks with the new task list if provided.
+    - Validates all updated fields before committing changes.
+    """
     # Fetch milestone
     milestone_object = Milestones.query.filter_by(id=milestone_id).first()
     if not milestone_object:
@@ -366,31 +358,29 @@ def update_milestone(milestone_id):
     return {"message": "Milestone updated successfully."}, 201
 
 
-"""
-API: Delete a Milestone
-------------------------
-Deletes a milestone along with its associated tasks.
-
-Role Required:
-- Instructor
-
-Path Parameters:
-- milestone_id (int): ID of the milestone to delete.
-
-Response:
-- 200: JSON message confirming the deletion of the milestone.
-- 404: If the milestone is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-
-Behavior:
-- Removes the milestone and all its associated tasks from the database.
-"""
-
-
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["DELETE"])
 @roles_required("Instructor")
 def delete_milestone(milestone_id):
+    """
+    API: Delete a Milestone
+    ------------------------
+    Deletes a milestone along with its associated tasks.
+
+    Role Required:
+    - Instructor
+
+    Path Parameters:
+    - milestone_id (int): ID of the milestone to delete.
+
+    Response:
+    - 200: JSON message confirming the deletion of the milestone.
+    - 404: If the milestone is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+
+    Behavior:
+    - Removes the milestone and all its associated tasks from the database.
+    """
     delete_object = Milestones.query.filter_by(id=milestone_id).first()
     if not delete_object:
         return abort(404, "Milestone not found.")

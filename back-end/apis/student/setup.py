@@ -1,10 +1,3 @@
-from application.models import (
-    team_students,
-    db,
-)
-from flask import Blueprint
-from application.models import db
-
 """
 Module: Student Blueprint Setup
 --------------------------------
@@ -31,26 +24,33 @@ Functions:
 1. get_team_id(user)
 """
 
+from application.models import (
+    team_students,
+    db,
+)
+from flask import Blueprint
+from application.models import db
+
+
 student = Blueprint("student", __name__, url_prefix="/student")
-
-"""
-Function: Get Team ID
-----------------------
-Fetches the team ID for a given user by querying the association table `team_students`.
-
-Parameters:
-- user: The current user object whose team ID needs to be retrieved.
-
-Returns:
-- team_id (int): The ID of the team associated with the user.
-- None: If the user is not associated with any team.
-
-Database Interaction:
-- Queries the `team_students` table for the `team_id` corresponding to the `student_id` of the given user.
-"""
 
 
 def get_team_id(user):
+    """
+    Function: Get Team ID
+    ----------------------
+    Fetches the team ID for a given user by querying the association table `team_students`.
+
+    Parameters:
+    - user: The current user object whose team ID needs to be retrieved.
+
+    Returns:
+    - team_id (int): The ID of the team associated with the user.
+    - None: If the user is not associated with any team.
+
+    Database Interaction:
+    - Queries the `team_students` table for the `team_id` corresponding to the `student_id` of the given user.
+    """
     return (
         db.session.query(team_students.c.team_id)
         .filter(team_students.c.student_id == user.id)

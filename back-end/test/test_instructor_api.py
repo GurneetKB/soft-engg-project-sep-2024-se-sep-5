@@ -2,7 +2,6 @@ import pytest
 from datetime import datetime, timezone
 from application.setup import create_app
 from application.models import *
-import random
 
 
 @pytest.fixture
@@ -59,17 +58,3 @@ def test_get_overall_teams_progress(client, instructor_token):
         assert "team_name" in team_data, "Team name is missing in the response"
         assert "progress" in team_data, "Progress is missing in the response"
         assert isinstance(team_data["progress"], int), "Progress should be an integer"
-
-
-# Mocked function to create a team with a unique name
-def create_mock_team():
-    # Generate a random team name to ensure uniqueness
-    team_name = f"Team Alpha {random.randint(1000, 9999)}"
-    team = Teams(
-        name=team_name,
-        github_repo_url="https://github.com/example/repo",
-        # other fields like instructor_id, ta_id, etc.
-    )
-    db.session.add(team)
-    db.session.commit()
-    return team

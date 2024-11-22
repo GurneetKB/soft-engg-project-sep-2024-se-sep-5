@@ -1,9 +1,3 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_security import UserMixin, RoleMixin
-from sqlalchemy import MetaData
-from enum import Enum
-import os
-
 """
 Module: Database Models
 -------------------------
@@ -38,6 +32,13 @@ Relationships:
 - Many-to-many relationships between Users and Roles, Users and Teams.
 - One-to-many relationships between Teams and Submissions, Milestones and Tasks, etc.
 """
+
+from flask_sqlalchemy import SQLAlchemy
+from flask_security import UserMixin, RoleMixin
+from sqlalchemy import MetaData
+from enum import Enum
+import os
+
 
 # Define naming convention for constraints
 convention = {
@@ -74,13 +75,12 @@ UsersRoles = db.Table(
 )
 
 
-"""
-Represents users in the system (Instructor, TA, Student).
-Contains user info (username, email, password) and relationships with roles, teams, and notifications.
-"""
-
-
 class Users(db.Model, UserMixin):
+    """
+    Represents users in the system (Instructor, TA, Student).
+    Contains user info (username, email, password) and relationships with roles, teams, and notifications.
+    """
+
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
     email = db.Column(db.String, nullable=False, unique=True)
@@ -131,13 +131,12 @@ class Users(db.Model, UserMixin):
     )
 
 
-"""
-Represents roles (Instructor, TA, Student) assigned to users.
-Each role has a name and description.
-"""
-
-
 class Roles(db.Model, RoleMixin):
+    """
+    Represents roles (Instructor, TA, Student) assigned to users.
+    Each role has a name and description.
+    """
+
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     name = db.Column(db.String, unique=True)
     description = db.Column(db.String, nullable=False)
@@ -146,13 +145,12 @@ class Roles(db.Model, RoleMixin):
     )
 
 
-"""
-Represents teams in the system, including instructor, TA, and student members.
-Tracks the team's GitHub repo and associated submissions.
-"""
-
-
 class Teams(db.Model):
+    """
+    Represents teams in the system, including instructor, TA, and student members.
+    Tracks the team's GitHub repo and associated submissions.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False, unique=True)
     github_repo_url = db.Column(db.String)
@@ -185,12 +183,11 @@ class Teams(db.Model):
     )
 
 
-"""
-Represents milestones in the project, including title, description, deadline, and tasks.
-"""
-
-
 class Milestones(db.Model):
+    """
+    Represents milestones in the project, including title, description, deadline, and tasks.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -208,12 +205,11 @@ class Milestones(db.Model):
     )
 
 
-"""
-Represents tasks within a milestone, including descriptions and associated submissions.
-"""
-
-
 class Tasks(db.Model):
+    """
+    Represents tasks within a milestone, including descriptions and associated submissions.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     milestone_id = db.Column(
         db.Integer,
@@ -232,12 +228,11 @@ class Tasks(db.Model):
     )
 
 
-"""
-Represents student submissions for tasks, including feedback, submission time, and associated documents.
-"""
-
-
 class Submissions(db.Model):
+    """
+    Represents student submissions for tasks, including feedback, submission time, and associated documents.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     task_id = db.Column(db.Integer, db.ForeignKey("tasks.id", ondelete="CASCADE"))
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id", ondelete="CASCADE"))
@@ -258,12 +253,11 @@ class Submissions(db.Model):
     )
 
 
-"""
-Represents documents submitted for tasks, with methods to delete files from the filesystem.
-"""
-
-
 class Documents(db.Model):
+    """
+    Represents documents submitted for tasks, with methods to delete files from the filesystem.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     file_url = db.Column(db.String)
@@ -298,12 +292,11 @@ def delete_file_on_delete(mapper, connection, target):
     target.delete_file()
 
 
-"""
-Stores AI-generated progress analysis as JSON data.
-"""
-
-
 class AIProgressText(db.Model):
+    """
+    Stores AI-generated progress analysis as JSON data.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     generated_by = db.Column(
         db.Integer,
@@ -313,12 +306,11 @@ class AIProgressText(db.Model):
     text = db.Column(db.JSON, nullable=False)
 
 
-"""
-Represents notifications sent to users, including types like DEADLINE, FEEDBACK, etc.
-"""
-
-
 class Notifications(db.Model):
+    """
+    Represents notifications sent to users, including types like DEADLINE, FEEDBACK, etc.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     message = db.Column(db.Text, nullable=False)
@@ -332,12 +324,11 @@ class Notifications(db.Model):
     )
 
 
-"""
-Represents the relationship between users and notifications, tracking read statuses.
-"""
-
-
 class UserNotifications(db.Model):
+    """
+    Represents the relationship between users and notifications, tracking read statuses.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     notification_id = db.Column(
         db.Integer,
@@ -359,12 +350,11 @@ class UserNotifications(db.Model):
     )
 
 
-"""
-Stores notification preferences for users, including email and in-app notification settings.
-"""
-
-
 class NotificationPreferences(db.Model):
+    """
+    Stores notification preferences for users, including email and in-app notification settings.
+    """
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False

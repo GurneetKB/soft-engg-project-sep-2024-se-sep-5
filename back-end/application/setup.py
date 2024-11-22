@@ -1,16 +1,3 @@
-import os
-from flask import Flask, Response, json
-from flask.sessions import SecureCookieSessionInterface, SessionMixin
-from flask_migrate import Migrate
-from flask_security import Security, SQLAlchemyUserDatastore
-from werkzeug.datastructures import Headers
-from werkzeug.exceptions import HTTPException
-
-from application.models import Users, Roles, db
-from application.initial_data import seed_database
-from apis.student.setup import student
-from apis.teacher.setup import teacher
-
 """
 Module: Application Setup and Configuration
 -------------------------------------------
@@ -42,40 +29,51 @@ Classes:
 2. CustomResponse: Custom response handling with CORS headers.
 """
 
+import os
+from flask import Flask, Response, json
+from flask.sessions import SecureCookieSessionInterface, SessionMixin
+from flask_migrate import Migrate
+from flask_security import Security, SQLAlchemyUserDatastore
+from werkzeug.datastructures import Headers
+from werkzeug.exceptions import HTTPException
 
-"""
-Class: CustomSessionInterface
-------------------------------
-Custom session interface for Flask that overrides the default session behavior. This class disables
-setting the session cookie for the application.
-
-Methods:
-- should_set_cookie(app: Flask, session: SessionMixin) -> bool: Always returns False to prevent
-  the session cookie from being set.
-"""
+from application.models import Users, Roles, db
+from application.initial_data import seed_database
+from apis.student.setup import student
+from apis.teacher.setup import teacher
 
 
 class CustomSessionInterface(SecureCookieSessionInterface):
+    """
+    Class: CustomSessionInterface
+    ------------------------------
+    Custom session interface for Flask that overrides the default session behavior. This class disables
+    setting the session cookie for the application.
+
+    Methods:
+    - should_set_cookie(app: Flask, session: SessionMixin) -> bool: Always returns False to prevent
+      the session cookie from being set.
+    """
+
     def should_set_cookie(self, app: Flask, session: SessionMixin) -> bool:
         return False
 
 
-"""
-Class: CustomResponse
-----------------------
-Custom response class for Flask that sets the default response type to JSON and adds CORS headers
-to the response.
-
-Attributes:
-- default_mimetype (str): The default mimetype for the response, set to "application/json".
-
-Methods:
-- __init__(response=None, status=None, headers=None, mimetype=None, content_type=None, direct_passthrough=False):
-  Custom constructor that sets CORS headers and initializes the response with the provided parameters.
-"""
-
-
 class CustomResponse(Response):
+    """
+    Class: CustomResponse
+    ----------------------
+    Custom response class for Flask that sets the default response type to JSON and adds CORS headers
+    to the response.
+
+    Attributes:
+    - default_mimetype (str): The default mimetype for the response, set to "application/json".
+
+    Methods:
+    - __init__(response=None, status=None, headers=None, mimetype=None, content_type=None, direct_passthrough=False):
+      Custom constructor that sets CORS headers and initializes the response with the provided parameters.
+    """
+
     default_mimetype = "application/json"
 
     def __init__(
@@ -114,27 +112,33 @@ class CustomResponse(Response):
         )
 
 
-"""
-Function: Configure Application
--------------------------------
-Configures the Flask application with necessary settings such as the database URI, security settings,
-and other application-specific configurations.
-
-Parameters:
-- app (Flask): The Flask application instance.
-- database_uri (str): URI for connecting to the database.
-- testing (bool): A flag indicating whether the app is in testing mode.
-
-Configures the following settings:
-- TESTING: Set based on the `testing` argument.
-- SQLALCHEMY_DATABASE_URI: URI for the database connection.
-- SECRET_KEY: Secret key for sessions and cookies.
-- SECURITY_PASSWORD_SALT: Salt for password hashing.
-- Various other Flask-Security and app-specific configurations.
-"""
-
-
 def configure_app(app, database_uri, testing):
+    """
+    Function: Configure Application
+    -------------------------------
+    Configures the Flask application with necessary settings such as the database URI, security settings,
+    and other application-specific configurations.
+
+    Parameters:
+    - app (Flask): The Flask application instance.
+    - database_uri (str): URI for connecting to the database.
+    - testing (bool): A flag indicating whether the app is in testing mode.
+
+    Configures the following settings:
+    - TESTING: Set based on the `testing` argument.
+    - SQLALCHEMY_DATABASE_URI: URI for the database connection.
+    - SECRET_KEY: Secret key for sessions and cookies.
+    - SECURITY_PASSWORD_SALT: Salt for password hashing.
+    - Various other Flask-Security and app-specific configurations.
+    """
+    if testing:
+        # Extract the database file path from the URI
+        db_path = database_uri.replace("sqlite:///", "")
+
+        # Check if the database file exists and delete it
+        if os.path.exists("instance/" + db_path):
+            os.remove("instance/" + db_path)
+
     app.config.update(
         TESTING=testing,
         SQLALCHEMY_DATABASE_URI=database_uri,
@@ -154,24 +158,22 @@ def configure_app(app, database_uri, testing):
     )
 
 
-"""
-Function: Initialize Extensions
-------------------------------
-Initializes the necessary Flask extensions such as SQLAlchemy, Migrate, Flask-Security, and custom session
-and response classes. It also sets up the database and runs the database migrations.
-
-Parameters:
-- app (Flask): The Flask application instance.
-
-Behavior:
-- Initializes the database and sets up the migration system.
-- Creates the necessary tables in the database if they do not already exist.
-- Seeds the database with initial data if no users are present.
-- Configures the custom session interface and response class.
-"""
-
-
 def init_extensions(app):
+    """
+    Function: Initialize Extensions
+    ------------------------------
+    Initializes the necessary Flask extensions such as SQLAlchemy, Migrate, Flask-Security, and custom session
+    and response classes. It also sets up the database and runs the database migrations.
+
+    Parameters:
+    - app (Flask): The Flask application instance.
+
+    Behavior:
+    - Initializes the database and sets up the migration system.
+    - Creates the necessary tables in the database if they do not already exist.
+    - Seeds the database with initial data if no users are present.
+    - Configures the custom session interface and response class.
+    """
     db.init_app(app)
     Migrate(app, db)
 
@@ -187,39 +189,36 @@ def init_extensions(app):
     app.response_class = CustomResponse
 
 
-"""
-Function: Register Blueprints
------------------------------
-Registers the student and teacher blueprints with the Flask application.
-
-Parameters:
-- app (Flask): The Flask application instance.
-
-Behavior:
-- Registers the `student` and `teacher` blueprints, enabling the respective routes for each.
-"""
-
-
 def register_blueprints(app):
+    """
+    Function: Register Blueprints
+    -----------------------------
+    Registers the student and teacher blueprints with the Flask application.
+
+    Parameters:
+    - app (Flask): The Flask application instance.
+
+    Behavior:
+    - Registers the `student` and `teacher` blueprints, enabling the respective routes for each.
+    """
     app.register_blueprint(student)
     app.register_blueprint(teacher)
 
 
-"""
-Function: Set Up Error Handlers
--------------------------------
-Sets up error handling for HTTP exceptions and unexpected errors.
-
-Parameters:
-- app (Flask): The Flask application instance.
-
-Behavior:
-- Registers a handler for HTTP exceptions (e.g., 404 errors) that returns a custom error response.
-- Registers a handler for unexpected exceptions that logs the error and returns a 500 response.
-"""
-
-
 def setup_error_handlers(app):
+    """
+    Function: Set Up Error Handlers
+    -------------------------------
+    Sets up error handling for HTTP exceptions and unexpected errors.
+
+    Parameters:
+    - app (Flask): The Flask application instance.
+
+    Behavior:
+    - Registers a handler for HTTP exceptions (e.g., 404 errors) that returns a custom error response.
+    - Registers a handler for unexpected exceptions that logs the error and returns a 500 response.
+    """
+
     @app.errorhandler(HTTPException)
     def handle_exception(error):
         response_data = {
@@ -244,21 +243,19 @@ def setup_error_handlers(app):
         return app.response_class(response=json.dumps(response_data), status=500)
 
 
-"""
-Function: Create Flask Application
------------------------------------
-Creates and configures the Flask application, initializes necessary extensions, and registers blueprints.
-
-Parameters:
-- database_uri (str): URI for the database connection.
-- testing (bool): A flag indicating whether the app is in testing mode (default is False).
-
-Returns:
-- app (Flask): The configured Flask application instance.
-"""
-
-
 def create_app(database_uri, testing=False):
+    """
+    Function: Create Flask Application
+    -----------------------------------
+    Creates and configures the Flask application, initializes necessary extensions, and registers blueprints.
+
+    Parameters:
+    - database_uri (str): URI for the database connection.
+    - testing (bool): A flag indicating whether the app is in testing mode (default is False).
+
+    Returns:
+    - app (Flask): The configured Flask application instance.
+    """
     app = Flask("Tracky")
 
     configure_app(app, database_uri, testing)

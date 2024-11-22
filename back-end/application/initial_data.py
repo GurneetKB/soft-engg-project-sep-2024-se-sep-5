@@ -1,16 +1,3 @@
-from application.models import (
-    Roles,
-    Users,
-    NotificationPreferences,
-    Teams,
-    Milestones,
-    Tasks,
-    Notifications,
-    UserNotifications,
-)
-from flask_security import hash_password
-from datetime import datetime, timedelta, timezone
-
 """
 Module: Database Seeding for Roles, Users, Teams, Milestones, and Notifications
 ------------------------------------------------------------------------------
@@ -30,35 +17,49 @@ Function:
 1. seed_database(db)
 """
 
+from application.models import (
+    Roles,
+    Users,
+    NotificationPreferences,
+    Teams,
+    Milestones,
+    Tasks,
+    Notifications,
+    UserNotifications,
+)
+from flask_security import hash_password
+from datetime import datetime, timedelta, timezone
 
-"""
-Function: Seed Database
-------------------------
-Seeds the database with predefined roles, users, teams, milestones, tasks, and notifications. This function 
-sets up an initial dataset for the application, providing the necessary structure and relationships for roles, users, 
-teams, and milestones.
 
-Parameters:
-- db (SQLAlchemy object): The database session object used to interact with the database.
-
-Process:
-1. Creates and adds predefined roles (Instructor, TA, Student) to the database.
-2. Creates users (Instructor, TAs, and 12 students) and assigns roles to them.
-3. Sets up default notification preferences for students.
-4. Creates teams, linking them with users and assigning each team members (students), instructors, and TAs.
-5. Defines and adds milestones and tasks for the project, with specific deadlines and descriptions.
-6. Creates and associates notifications (Deadline, Feedback, Milestone Update) with students for each milestone.
-
-Behavior:
-- The function creates roles and users (instructor, TAs, and students) with the appropriate roles and notification preferences.
-- It creates four teams and assigns them to instructors and TAs, with team members being students.
-- Milestones and associated tasks are created, followed by notification creation for each student to keep track of deadlines, feedback, and updates.
-- All changes are committed to the database.
-
-Return:
-- None (Directly modifies the database).
-"""
 def seed_database(db):
+    """
+    Function: Seed Database
+    ------------------------
+    Seeds the database with predefined roles, users, teams, milestones, tasks, and notifications. This function
+    sets up an initial dataset for the application, providing the necessary structure and relationships for roles, users,
+    teams, and milestones.
+
+    Parameters:
+    - db (SQLAlchemy object): The database session object used to interact with the database.
+
+    Process:
+    1. Creates and adds predefined roles (Instructor, TA, Student) to the database.
+    2. Creates users (Instructor, TAs, and 12 students) and assigns roles to them.
+    3. Sets up default notification preferences for students.
+    4. Creates teams, linking them with users and assigning each team members (students), instructors, and TAs.
+    5. Defines and adds milestones and tasks for the project, with specific deadlines and descriptions.
+    6. Creates and associates notifications (Deadline, Feedback, Milestone Update) with students for each milestone.
+
+    Behavior:
+    - The function creates roles and users (instructor, TAs, and students) with the appropriate roles and notification preferences.
+    - It creates four teams and assigns them to instructors and TAs, with team members being students.
+    - Milestones and associated tasks are created, followed by notification creation for each student to keep track of deadlines, feedback, and updates.
+    - All changes are committed to the database.
+
+    Return:
+    - None (Directly modifies the database).
+    """
+
     # Create roles
     roles = {
         "instructor": Roles(name="Instructor", description="Course instructor role"),

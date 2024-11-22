@@ -1,27 +1,3 @@
-from apis.teacher.setup import (
-    teacher,
-    get_teams_under_user,
-    get_single_team_under_user,
-    fetch_commit_details,
-    ai_client,
-)
-from flask_security import current_user, roles_accepted
-from application.models import (
-    Tasks,
-    db,
-    Submissions,
-    Milestones,
-    AIProgressText,
-)
-from flask import abort, request, send_file
-from datetime import datetime, timezone
-import os
-from PyPDF2 import PdfReader
-from typing import List
-from pydantic import BaseModel
-import json
-from datetime import datetime
-
 """
 Module: Teacher Team Management and Analysis APIs
 --------------------------------------------------
@@ -57,6 +33,30 @@ Endpoints:
 8. GET /teacher/team_management/individual/ai_analysis/<int:team_id>/<int:task_id>
 """
 
+from apis.teacher.setup import (
+    teacher,
+    get_teams_under_user,
+    get_single_team_under_user,
+    fetch_commit_details,
+    ai_client,
+)
+from flask_security import current_user, roles_accepted
+from application.models import (
+    Tasks,
+    db,
+    Submissions,
+    Milestones,
+    AIProgressText,
+)
+from flask import abort, request, send_file
+from datetime import datetime, timezone
+import os
+from PyPDF2 import PdfReader
+from typing import List
+from pydantic import BaseModel
+import json
+from datetime import datetime
+
 
 class TeamAnalysis(BaseModel):
     team_name: str
@@ -69,33 +69,31 @@ class AIResponse(BaseModel):
     teams: List[TeamAnalysis]
 
 
-"""
-API: Get Overall Team Progress
--------------------------------
-Analyzes and retrieves the progress of all teams under the current user. Progress is calculated based on 
-milestones, tasks, and GitHub activity.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Response:
-- 200: JSON array of team progress, including:
-    - Team name
-    - Progress percentage
-    - AI-generated analysis including ranks, statuses, and reasons for progress.
-- 403: If the user does not have the required role.
-- 500: Internal server error or Invalid AI response or fetching from AI failed.
-
-Behavior:
-- Uses AI to generate a detailed ranking and analysis based on task completion, GitHub activity, and feedback.
-- Stores the AI-generated analysis in the database.
-"""
-
-
 @teacher.route("/team_management/overall", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_overall_teams_progress():
+    """
+    API: Get Overall Team Progress
+    -------------------------------
+    Analyzes and retrieves the progress of all teams under the current user. Progress is calculated based on
+    milestones, tasks, and GitHub activity.
+
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Response:
+    - 200: JSON array of team progress, including:
+        - Team name
+        - Progress percentage
+        - AI-generated analysis including ranks, statuses, and reasons for progress.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error or Invalid AI response or fetching from AI failed.
+
+    Behavior:
+    - Uses AI to generate a detailed ranking and analysis based on task completion, GitHub activity, and feedback.
+    - Stores the AI-generated analysis in the database.
+    """
     response_data = []
     milestones = db.session.query(Milestones).all()
     milestone_count = len(milestones)
@@ -249,28 +247,25 @@ def get_overall_teams_progress():
     return response_data, 200
 
 
-"""
-API: Get All Teams
--------------------
-Fetches a list of all teams managed by the current user.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Response:
-- 200: JSON array of teams, each with:
-    - ID
-    - Name
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-"""
-
-
 @teacher.route("/team_management/individual", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_teams():
+    """
+    API: Get All Teams
+    -------------------
+    Fetches a list of all teams managed by the current user.
 
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Response:
+    - 200: JSON array of teams, each with:
+        - ID
+        - Name
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+    """
     teams = get_teams_under_user(current_user)
     team_list = [
         {
@@ -282,35 +277,32 @@ def get_teams():
     return {"teams": team_list}, 200
 
 
-"""
-API: Get Team Details
-----------------------
-Retrieves detailed information about a specific team, including team members, GitHub repository, and assigned roles.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Path Parameters:
-- team_id (int): ID of the team to fetch details for.
-
-Response:
-- 200: JSON object containing:
-    - Team ID
-    - Team name
-    - Members with their details
-    - GitHub repository URL
-    - Instructor and TA details.
-- 404: If the team is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-"""
-
-
 @teacher.route("/team_management/individual/detail/<int:team_id>", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_details(team_id):
+    """
+    API: Get Team Details
+    ----------------------
+    Retrieves detailed information about a specific team, including team members, GitHub repository, and assigned roles.
 
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Path Parameters:
+    - team_id (int): ID of the team to fetch details for.
+
+    Response:
+    - 200: JSON object containing:
+        - Team ID
+        - Team name
+        - Members with their details
+        - GitHub repository URL
+        - Instructor and TA details.
+    - 404: If the team is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+    """
     team = get_single_team_under_user(current_user, team_id)
     if not team:
         return abort(404, "Team not found")
@@ -333,40 +325,37 @@ def get_team_details(team_id):
     return {"team": team}, 200
 
 
-"""
-API: Get Team Progress
------------------------
-Retrieves milestone-wise progress for a specific team, including task-level details.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Path Parameters:
-- team_id (int): ID of the team to fetch progress for.
-
-Response:
-- 200: JSON array of milestones, each with:
-    - ID
-    - Title
-    - Description
-    - Deadline
-    - List of tasks, each with:
-        - Task ID
-        - Description
-        - Completion status
-        - Submission time
-        - Feedback and feedback time.
-- 404: If the team is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-"""
-
-
 @teacher.route("/team_management/individual/progress/<int:team_id>", methods=["GET"])
 @roles_accepted("Instructor", "TA")
 def get_team_progress(team_id):
+    """
+    API: Get Team Progress
+    -----------------------
+    Retrieves milestone-wise progress for a specific team, including task-level details.
 
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Path Parameters:
+    - team_id (int): ID of the team to fetch progress for.
+
+    Response:
+    - 200: JSON array of milestones, each with:
+        - ID
+        - Title
+        - Description
+        - Deadline
+        - List of tasks, each with:
+            - Task ID
+            - Description
+            - Completion status
+            - Submission time
+            - Feedback and feedback time.
+    - 404: If the team is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+    """
     team = get_single_team_under_user(current_user, team_id)
     if not team:
         return abort(404, "Team not found")
@@ -410,33 +399,31 @@ def get_team_progress(team_id):
     return milestones_data, 200
 
 
-"""
-API: View Submission
----------------------
-Retrieves the submission file for a specific task by a specific team.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Path Parameters:
-- team_id (int): ID of the team.
-- task_id (int): ID of the task.
-
-Response:
-- 200: File download of the submission.
-- 404: If the team, submission, or document is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-"""
-
-
 @teacher.route(
     "/team_management/individual/submission/<int:team_id>/<int:task_id>",
     methods=["GET"],
 )
 @roles_accepted("Instructor", "TA")
 def view_submission(team_id, task_id):
+    """
+    API: View Submission
+    ---------------------
+    Retrieves the submission file for a specific task by a specific team.
+
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Path Parameters:
+    - team_id (int): ID of the team.
+    - task_id (int): ID of the task.
+
+    Response:
+    - 200: File download of the submission.
+    - 404: If the team, submission, or document is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+    """
 
     team = get_single_team_under_user(current_user, team_id)
     if not team:
@@ -458,39 +445,36 @@ def view_submission(team_id, task_id):
     return send_file(document.file_url), 200
 
 
-"""
-API: Provide Feedback
-----------------------
-Allows the instructor or TA to provide feedback on a specific submission.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Path Parameters:
-- team_id (int): ID of the team.
-- task_id (int): ID of the task.
-
-Request:
-- JSON object with:
-    - feedback (string): The feedback content.
-
-Response:
-- 201: Confirmation message of successful feedback submission.
-- 400: If feedback data is missing or invalid.
-- 404: If the team or submission is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-"""
-
-
 @teacher.route(
     "/team_management/individual/feedback/<int:team_id>/<int:task_id>",
     methods=["POST"],
 )
 @roles_accepted("Instructor", "TA")
 def provide_feedback(team_id, task_id):
+    """
+    API: Provide Feedback
+    ----------------------
+    Allows the instructor or TA to provide feedback on a specific submission.
 
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Path Parameters:
+    - team_id (int): ID of the team.
+    - task_id (int): ID of the task.
+
+    Request:
+    - JSON object with:
+        - feedback (string): The feedback content.
+
+    Response:
+    - 201: Confirmation message of successful feedback submission.
+    - 400: If feedback data is missing or invalid.
+    - 404: If the team or submission is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+    """
     team = get_single_team_under_user(current_user, team_id)
     if not team:
         return abort(404, "Team not found")
@@ -518,40 +502,39 @@ def provide_feedback(team_id, task_id):
     return {"message": "The feedback is successfully provided."}, 201
 
 
-"""
-API: Get GitHub Details
-------------------------
-Fetches GitHub activity details for a team's repository, including commit statistics and milestone-specific details.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Path Parameters:
-- team_id (int): ID of the team.
-
-Query Parameters:
-- user_id (int, optional): ID of a specific team member to filter GitHub activity.
-
-Response:
-- 200: JSON object containing:
-    - Repository details
-    - Total commits
-    - Lines of code added/deleted
-    - Milestone-specific GitHub stats.
-- 400: If the user id, if given, not an integer.
-- 404: If the team, GitHub repository, or team member is not found.
-- 403: If the user does not have the required role.
-- 500: Internal server error.
-- 502: If the fetching from github failed.
-"""
-
-
 @teacher.route(
     "/team_management/individual/github/<int:team_id>",
     methods=["GET"],
 )
 def get_github_details(team_id):
+    """
+    API: Get GitHub Details
+    ------------------------
+    Fetches GitHub activity details for a team's repository, including commit statistics and milestone-specific details.
+
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Path Parameters:
+    - team_id (int): ID of the team.
+
+    Query Parameters:
+    - user_id (int, optional): ID of a specific team member to filter GitHub activity.
+
+    Response:
+    - 200: JSON object containing:
+        - Repository details
+        - Total commits
+        - Lines of code added/deleted
+        - Milestone-specific GitHub stats.
+    - 400: If the user id, if given, not an integer.
+    - 404: If the team, GitHub repository, or team member is not found.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+    - 502: If the fetching from github failed.
+    """
+
     user_id = request.args.get("user_id")
 
     if user_id:
@@ -592,34 +575,33 @@ def get_github_details(team_id):
     }, 200
 
 
-"""
-API: Get AI Analysis
----------------------
-Uses AI to analyze the quality and completeness of a team's submission for a specific task.
-
-Roles Accepted:
-- Instructor
-- TA
-
-Path Parameters:
-- team_id (int): ID of the team.
-- task_id (int): ID of the task.
-
-Response:
-- 200: JSON object containing the AI-generated analysis, including:
-    - Content review
-    - Task requirement checks.
-- 404: If the team, submission, or document is not found.
-- 500: If the document cannot be read or the AI analysis fails or Internal server error.
-- 403: If the user does not have the required role.
-"""
-
-
 @teacher.route(
     "/team_management/individual/ai_analysis/<int:team_id>/<int:task_id>",
     methods=["GET"],
 )
 def get_ai_analysis(team_id, task_id):
+    """
+    API: Get AI Analysis
+    ---------------------
+    Uses AI to analyze the quality and completeness of a team's submission for a specific task.
+
+    Roles Accepted:
+    - Instructor
+    - TA
+
+    Path Parameters:
+    - team_id (int): ID of the team.
+    - task_id (int): ID of the task.
+
+    Response:
+    - 200: JSON object containing the AI-generated analysis, including:
+        - Content review
+        - Task requirement checks.
+    - 404: If the team, submission, or document is not found.
+    - 500: If the document cannot be read or the AI analysis fails or Internal server error.
+    - 403: If the user does not have the required role.
+    """
+
     team = get_single_team_under_user(current_user, team_id)
     if not team:
         return abort(404, "Team not found")

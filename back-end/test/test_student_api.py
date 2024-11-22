@@ -14,6 +14,7 @@ def valid_file():
 
 @pytest.fixture
 def client(scope="session"):
+
     app = create_app("sqlite:///testing.sqlite3", testing=True)
     with app.test_client() as client:
         yield client
