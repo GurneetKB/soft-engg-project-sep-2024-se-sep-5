@@ -84,6 +84,8 @@ Response:
     - Team name
     - Progress percentage
     - AI-generated analysis including ranks, statuses, and reasons for progress.
+- 403: If the user does not have the required role.
+- 500: Internal server error or Invalid AI response or fetching from AI failed.
 
 Behavior:
 - Uses AI to generate a detailed ranking and analysis based on task completion, GitHub activity, and feedback.
@@ -260,6 +262,8 @@ Response:
 - 200: JSON array of teams, each with:
     - ID
     - Name
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -298,6 +302,8 @@ Response:
     - GitHub repository URL
     - Instructor and TA details.
 - 404: If the team is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -352,6 +358,8 @@ Response:
         - Submission time
         - Feedback and feedback time.
 - 404: If the team is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -418,6 +426,8 @@ Path Parameters:
 Response:
 - 200: File download of the submission.
 - 404: If the team, submission, or document is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -469,6 +479,8 @@ Response:
 - 201: Confirmation message of successful feedback submission.
 - 400: If feedback data is missing or invalid.
 - 404: If the team or submission is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -527,7 +539,11 @@ Response:
     - Total commits
     - Lines of code added/deleted
     - Milestone-specific GitHub stats.
+- 400: If the user id, if given, not an integer.
 - 404: If the team, GitHub repository, or team member is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
+- 502: If the fetching from github failed.
 """
 
 
@@ -536,48 +552,44 @@ Response:
     methods=["GET"],
 )
 def get_github_details(team_id):
-    try:
-        user_id = request.args.get("user_id")
+    user_id = request.args.get("user_id")
 
-        if user_id:
-            try:
-                user_id = int(user_id)
-            except ValueError:
-                return abort(400, "User id must be integer.")
+    if user_id:
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return abort(400, "User id must be integer.")
 
-        github_username = None
-        team = get_single_team_under_user(current_user, team_id)
+    github_username = None
+    team = get_single_team_under_user(current_user, team_id)
 
-        if not team:
-            return abort(404, "Team not found")
+    if not team:
+        return abort(404, "Team not found")
 
-        if user_id:
-            for member in team.members:
-                if member.id == user_id:
-                    github_username = member.github_username
-            if not github_username:
-                return abort(404, "Team member not found.")
+    if user_id:
+        for member in team.members:
+            if member.id == user_id:
+                github_username = member.github_username
+        if not github_username:
+            return abort(404, "Team member not found.")
 
-        if not team.github_repo_url:
-            return abort(404, "No GitHub repository URL found for this team")
+    if not team.github_repo_url:
+        return abort(404, "No GitHub repository URL found for this team")
 
-        # Fetch commit details, passing in the username if provided
-        commit_details = fetch_commit_details(team.github_repo_url, github_username)
+    # Fetch commit details, passing in the username if provided
+    commit_details = fetch_commit_details(team.github_repo_url, github_username)
 
-        if "status" in commit_details:
-            return abort(502, commit_details["message"])
+    if "status" in commit_details:
+        return abort(502, commit_details["message"])
 
-        return {
-            "name": github_username or team.name,
-            "github_repo_url": team.github_repo_url,
-            "total_commits": commit_details["total_commits"],
-            "lines_of_code_added": commit_details["lines_of_code_added"],
-            "lines_of_code_deleted": commit_details["lines_of_code_deleted"],
-            "milestones": commit_details["milestones"],
-        }, 200
-
-    except ValueError as e:
-        return abort(500, str(e))
+    return {
+        "name": github_username or team.name,
+        "github_repo_url": team.github_repo_url,
+        "total_commits": commit_details["total_commits"],
+        "lines_of_code_added": commit_details["lines_of_code_added"],
+        "lines_of_code_deleted": commit_details["lines_of_code_deleted"],
+        "milestones": commit_details["milestones"],
+    }, 200
 
 
 """
@@ -598,7 +610,8 @@ Response:
     - Content review
     - Task requirement checks.
 - 404: If the team, submission, or document is not found.
-- 500: If the document cannot be read or the AI analysis fails.
+- 500: If the document cannot be read or the AI analysis fails or Internal server error.
+- 403: If the user does not have the required role.
 """
 
 

@@ -47,6 +47,8 @@ Response:
     - Type
     - Created at
     - Read at
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -91,8 +93,10 @@ Response:
     - Created at
     - Read at
 - 404: If the notification does not exist or is inaccessible by the current user.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
-Exceptions:
+Behaviour:
 - Marks the notification as read upon successful retrieval.
 """
 
@@ -136,6 +140,8 @@ Role Required:
 
 Response:
 - 200: JSON message confirming that all notifications have been marked as read.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -172,6 +178,8 @@ Response:
     - email_feedback_notifications
     - in_app_feedback_notifications
 - 404: If no notification preferences are found for the current user.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -214,6 +222,8 @@ Response:
 - 201: JSON message confirming that the preferences were updated successfully.
 - 400: If any of the provided fields are not boolean values.
 - 404: If no notification preferences are found for the current user.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
 Behavior:
 - Only updates fields that are provided and valid in the request.

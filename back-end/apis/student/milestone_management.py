@@ -47,9 +47,8 @@ Role Required:
 Response:
 - 200: JSON object with team name and milestone details (ID, title, completion percentage).
 - 400: If the student does not belong to a team.
-
-Exceptions:
-- Abort with 400 if no team is assigned to the user.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -116,6 +115,8 @@ Role Required:
 
 Response:
 - 200: JSON array of milestone objects (ID, title).
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -148,9 +149,8 @@ Path Parameters:
 Response:
 - 200: JSON object with milestone details (ID, title, description, tasks, etc.).
 - 404: If the milestone or team does not exist.
-
-Exceptions:
-- Abort with 404 if the milestone or team is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -210,10 +210,8 @@ Response:
 - 201: JSON message confirming successful submission.
 - 400: If the milestone deadline has passed, task ID is invalid, or file is not a PDF.
 - 404: If the milestone or team does not exist.
-
-Exceptions:
-- Abort with 400 for invalid data or file type.
-- Abort with 404 for missing milestone or team.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 
@@ -311,9 +309,8 @@ Path Parameters:
 Response:
 - 200: File attachment response containing the PDF document.
 - 404: If the submission or document does not exist, or the file is not found on the server.
-
-Exceptions:
-- Abort with 404 for missing submission or file.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 """
 
 

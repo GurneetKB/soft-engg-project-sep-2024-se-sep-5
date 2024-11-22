@@ -51,6 +51,8 @@ Response:
         - Description
         - Deadline
         - Completion rate (percentage of teams that have completed the milestone).
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
 Behavior:
 - Calculates completion rates by analyzing submissions against the tasks in each milestone.
@@ -131,6 +133,8 @@ Response:
 - 400: If validation errors occur, such as:
     - Missing or invalid title, description, or deadline.
     - Invalid task structure.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
 Behavior:
 - Validates input data and ensures the deadline is in the future.
@@ -225,6 +229,8 @@ Response:
     - List of tasks, each with:
         - Description.
 - 404: If the milestone is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
 Behavior:
 - Returns milestone details along with its associated tasks.
@@ -275,6 +281,8 @@ Response:
     - Invalid or missing fields.
     - Deadline not in the future.
 - 404: If the milestone is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
 Behavior:
 - Replaces existing tasks with the new task list if provided.
@@ -372,6 +380,8 @@ Path Parameters:
 Response:
 - 200: JSON message confirming the deletion of the milestone.
 - 404: If the milestone is not found.
+- 403: If the user does not have the required role.
+- 500: Internal server error.
 
 Behavior:
 - Removes the milestone and all its associated tasks from the database.
