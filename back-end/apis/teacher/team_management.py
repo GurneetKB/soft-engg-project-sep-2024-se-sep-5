@@ -41,13 +41,7 @@ from apis.teacher.setup import (
     ai_client,
 )
 from flask_security import current_user, roles_accepted
-from application.models import (
-    Tasks,
-    db,
-    Submissions,
-    Milestones,
-    AIProgressText,
-)
+from application.models import Tasks, db, Submissions, Milestones
 from flask import abort, request, send_file
 from datetime import datetime, timezone
 import os
@@ -92,7 +86,6 @@ def get_overall_teams_progress():
 
     Behavior:
     - Uses AI to generate a detailed ranking and analysis based on task completion, GitHub activity, and feedback.
-    - Stores the AI-generated analysis in the database.
     """
     response_data = []
     milestones = db.session.query(Milestones).all()
@@ -236,13 +229,6 @@ def get_overall_teams_progress():
                     }
                 )
                 break
-
-    ai_progress_entry = AIProgressText(
-        generated_by=current_user.id,
-        text=json.dumps(ai_response.dict(), indent=2),
-    )
-    db.session.add(ai_progress_entry)
-    db.session.commit()
 
     return response_data, 200
 

@@ -22,10 +22,9 @@ Classes:
 5. Tasks
 6. Submissions
 7. Documents
-8. AIProgressText
-9. Notifications
-10. UserNotifications
-11. NotificationPreferences
+8. Notifications
+9. UserNotifications
+10. NotificationPreferences
 
 Relationships:
 -------------
@@ -290,20 +289,6 @@ def delete_file_on_delete(mapper, connection, target):
     Event listener that deletes the file when the Document record is deleted
     """
     target.delete_file()
-
-
-class AIProgressText(db.Model):
-    """
-    Stores AI-generated progress analysis as JSON data.
-    """
-
-    id = db.Column(db.Integer, primary_key=True)
-    generated_by = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    text = db.Column(db.JSON, nullable=False)
 
 
 class Notifications(db.Model):

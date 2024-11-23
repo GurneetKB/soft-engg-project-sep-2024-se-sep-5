@@ -207,15 +207,16 @@ def create_milestone():
 
 
 @teacher.route("/milestone_management/<int:milestone_id>", methods=["GET"])
-@roles_required("Instructor")
+@roles_accepted("Instructor", "TA")
 def get_milestone(milestone_id):
     """
     API: Get Milestone Details
     ---------------------------
     Fetches detailed information about a specific milestone, including its tasks.
 
-    Role Required:
+    Role Accepted:
     - Instructor
+    - TA
 
     Path Parameters:
     - milestone_id (int): ID of the milestone to fetch.
@@ -234,7 +235,7 @@ def get_milestone(milestone_id):
     Behavior:
     - Returns milestone details along with its associated tasks.
     """
-    milestone_object = Milestones.query.filter_by(id=milestone_id).first()
+    milestone_object = Milestones.query.get(milestone_id)
     if not milestone_object:
         return abort(404, "Milestone not found.")
 
@@ -381,7 +382,7 @@ def delete_milestone(milestone_id):
     Behavior:
     - Removes the milestone and all its associated tasks from the database.
     """
-    delete_object = Milestones.query.filter_by(id=milestone_id).first()
+    delete_object = Milestones.query.get(milestone_id)
     if not delete_object:
         return abort(404, "Milestone not found.")
 
