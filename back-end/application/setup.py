@@ -131,13 +131,6 @@ def configure_app(app, database_uri, testing):
     - SECURITY_PASSWORD_SALT: Salt for password hashing.
     - Various other Flask-Security and app-specific configurations.
     """
-    if testing:
-        # Extract the database file path from the URI
-        db_path = database_uri.replace("sqlite:///", "")
-
-        # Check if the database file exists and delete it
-        if os.path.exists("instance/" + db_path):
-            os.remove("instance/" + db_path)
 
     app.config.update(
         TESTING=testing,
@@ -221,6 +214,7 @@ def setup_error_handlers(app):
 
     @app.errorhandler(HTTPException)
     def handle_exception(error):
+        app.logger.error(f"HTTP error: {str(error)}")
         response_data = {
             "meta": {"code": error.code},
             "response": {

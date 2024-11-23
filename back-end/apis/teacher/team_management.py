@@ -506,6 +506,7 @@ def provide_feedback(team_id, task_id):
     "/team_management/individual/github/<int:team_id>",
     methods=["GET"],
 )
+@roles_accepted("Instructor", "TA")
 def get_github_details(team_id):
     """
     API: Get GitHub Details
@@ -579,6 +580,7 @@ def get_github_details(team_id):
     "/team_management/individual/ai_analysis/<int:team_id>/<int:task_id>",
     methods=["GET"],
 )
+@roles_accepted("Instructor", "TA")
 def get_ai_analysis(team_id, task_id):
     """
     API: Get AI Analysis
