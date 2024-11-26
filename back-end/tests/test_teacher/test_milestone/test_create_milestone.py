@@ -173,7 +173,7 @@ def test_create_milestone_internal_server_error(mock_commit, client, instructor_
     milestone_data = {
         "title": "New Milestone",
         "description": "This is a new milestone for the project.",
-        "deadline": "Mon, 25 Nov 2024 10:00:00 GMT",
+        "deadline": future_deadline(),
         "tasks": [
             {"description": "Task 1 for milestone"},
             {"description": "Task 2 for milestone"},

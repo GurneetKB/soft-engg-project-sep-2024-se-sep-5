@@ -32,11 +32,7 @@ from application.models import Tasks, db, Submissions, Milestones
 from flask import abort, request
 from datetime import datetime, timezone
 
-
-@teacher.route("/milestone_management", methods=["GET"])
-@roles_accepted("Instructor", "TA")
-def get_all_milestones():
-    """
+"""
     API: Get All Milestones and Progress Overview
     ----------------------------------------------
     Retrieves a list of all milestones, including their details and completion rates for the teams under the current user.
@@ -59,7 +55,12 @@ def get_all_milestones():
 
     Behavior:
     - Calculates completion rates by analyzing submissions against the tasks in each milestone.
-    """
+"""
+
+
+@teacher.route("/milestone_management", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_all_milestones():
 
     milestone_objects = Milestones.query.all()
 
@@ -111,10 +112,7 @@ def get_all_milestones():
     return response_data, 200
 
 
-@teacher.route("/milestone_management", methods=["POST"])
-@roles_required("Instructor")
-def create_milestone():
-    """
+"""
     API: Create a New Milestone
     ---------------------------
     Allows instructors to create a new milestone with tasks and a deadline.
@@ -140,7 +138,13 @@ def create_milestone():
     Behavior:
     - Validates input data and ensures the deadline is in the future.
     - Creates tasks and associates them with the milestone.
-    """
+"""
+
+
+@teacher.route("/milestone_management", methods=["POST"])
+@roles_required("Instructor")
+def create_milestone():
+
     data = request.get_json()
 
     # Extract fields
@@ -206,10 +210,7 @@ def create_milestone():
     return {"message": "Milestone published successfully."}, 201
 
 
-@teacher.route("/milestone_management/<int:milestone_id>", methods=["GET"])
-@roles_accepted("Instructor", "TA")
-def get_milestone(milestone_id):
-    """
+"""
     API: Get Milestone Details
     ---------------------------
     Fetches detailed information about a specific milestone, including its tasks.
@@ -234,7 +235,13 @@ def get_milestone(milestone_id):
 
     Behavior:
     - Returns milestone details along with its associated tasks.
-    """
+"""
+
+
+@teacher.route("/milestone_management/<int:milestone_id>", methods=["GET"])
+@roles_accepted("Instructor", "TA")
+def get_milestone(milestone_id):
+
     milestone_object = Milestones.query.get(milestone_id)
     if not milestone_object:
         return abort(404, "Milestone not found.")
@@ -252,10 +259,7 @@ def get_milestone(milestone_id):
     return milestone_data, 200
 
 
-@teacher.route("/milestone_management/<int:milestone_id>", methods=["PUT"])
-@roles_required("Instructor")
-def update_milestone(milestone_id):
-    """
+"""
     API: Update an Existing Milestone
     ----------------------------------
     Allows instructors to update the title, description, deadline, and tasks of a milestone.
@@ -285,7 +289,13 @@ def update_milestone(milestone_id):
     Behavior:
     - Replaces existing tasks with the new task list if provided.
     - Validates all updated fields before committing changes.
-    """
+"""
+
+
+@teacher.route("/milestone_management/<int:milestone_id>", methods=["PUT"])
+@roles_required("Instructor")
+def update_milestone(milestone_id):
+
     # Fetch milestone
     milestone_object = Milestones.query.filter_by(id=milestone_id).first()
     if not milestone_object:
@@ -359,10 +369,7 @@ def update_milestone(milestone_id):
     return {"message": "Milestone updated successfully."}, 201
 
 
-@teacher.route("/milestone_management/<int:milestone_id>", methods=["DELETE"])
-@roles_required("Instructor")
-def delete_milestone(milestone_id):
-    """
+"""
     API: Delete a Milestone
     ------------------------
     Deletes a milestone along with its associated tasks.
@@ -381,7 +388,13 @@ def delete_milestone(milestone_id):
 
     Behavior:
     - Removes the milestone and all its associated tasks from the database.
-    """
+"""
+
+
+@teacher.route("/milestone_management/<int:milestone_id>", methods=["DELETE"])
+@roles_required("Instructor")
+def delete_milestone(milestone_id):
+
     delete_object = Milestones.query.get(milestone_id)
     if not delete_object:
         return abort(404, "Milestone not found.")

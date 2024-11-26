@@ -31,10 +31,7 @@ from flask_security import (
     logout_user,
 )
 
-
-@app.route("/user/role")
-def userroleassign():
-    """
+"""
     API: Get User Roles
     -------------------
     Fetches the list of roles assigned to the currently authenticated user.
@@ -48,16 +45,19 @@ def userroleassign():
 
     Behavior:
     - Checks if the current user is authenticated and returns their roles.
-    """
+"""
+
+
+@app.route("/user/role")
+def userroleassign():
+
     if current_user.is_authenticated:
         return [r.name for r in current_user.roles], 200
     else:
         abort(401)
 
 
-@app.route("/logout")
-def logout():
-    """
+"""
     API: Log Out User
     -------------------
     Logs out the currently authenticated user and invalidates all their authentication tokens by changing the
@@ -73,7 +73,12 @@ def logout():
     Behavior:
     - Changes the `fs_uniquifier` to a random string to invalidate authentication tokens.
     - Logs out the user by calling `logout_user()`.
-    """
+"""
+
+
+@app.route("/logout")
+def logout():
+
     if current_user.is_authenticated:
         # changing the fs_uniquifier so that all the authentication tokens of the current user gets invalidated
         current_user.fs_uniquifier = "".join(

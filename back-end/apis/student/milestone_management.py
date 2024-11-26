@@ -35,11 +35,7 @@ from flask import abort, make_response, request, send_file, current_app
 from datetime import datetime, timezone
 import os
 
-
-@student.route("/milestone_management/overall", methods=["GET"])
-@roles_required("Student")
-def get_team_milestones():
-    """
+"""
     API: Get Team Milestones Overview
     ----------------------------------
     Retrieves an overview of milestones for the current student's team, including task completion percentages.
@@ -52,7 +48,13 @@ def get_team_milestones():
     - 400: If the student does not belong to a team.
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/milestone_management/overall", methods=["GET"])
+@roles_required("Student")
+def get_team_milestones():
+
     # Get the team ID associated with the current student
     team_id = get_team_id(current_user)
 
@@ -103,10 +105,7 @@ def get_team_milestones():
     return response_data, 200
 
 
-@student.route("/milestone_management/individual", methods=["GET"])
-@roles_required("Student")
-def get_milestones():
-    """
+"""
     API: Get All Milestones
     ------------------------
     Fetches a list of all available milestones with their IDs and titles.
@@ -118,7 +117,13 @@ def get_milestones():
     - 200: JSON array of milestone objects (ID, title).
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/milestone_management/individual", methods=["GET"])
+@roles_required("Student")
+def get_milestones():
+
     # Fetch all milestones for the student
     milestones = Milestones.query.all()
     milestone_list = [
@@ -131,10 +136,7 @@ def get_milestones():
     return {"milestones": milestone_list}, 200
 
 
-@student.route("/milestone_management/individual/<int:milestone_id>", methods=["GET"])
-@roles_required("Student")
-def get_milestone_details(milestone_id):
-    """
+"""
     API: Get Milestone Details
     ---------------------------
     Retrieves detailed information about a specific milestone for the student's team, including tasks and submission status.
@@ -150,7 +152,13 @@ def get_milestone_details(milestone_id):
     - 404: If the milestone or team does not exist.
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/milestone_management/individual/<int:milestone_id>", methods=["GET"])
+@roles_required("Student")
+def get_milestone_details(milestone_id):
+
     team_id = get_team_id(current_user)
     milestone = Milestones.query.get(milestone_id)
     team_submissions = db.session.query(Submissions).filter(
@@ -186,10 +194,7 @@ def get_milestone_details(milestone_id):
         return abort(404, "Milestone or team not found.")
 
 
-@student.route("/milestone_management/individual/<int:milestone_id>", methods=["POST"])
-@roles_required("Student")
-def submit_milestone(milestone_id):
-    """
+"""
     API: Submit Milestone Documents
     --------------------------------
     Allows students to submit task documents for a specific milestone, validating the deadline and task association.
@@ -209,7 +214,13 @@ def submit_milestone(milestone_id):
     - 404: If the milestone or team does not exist.
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/milestone_management/individual/<int:milestone_id>", methods=["POST"])
+@roles_required("Student")
+def submit_milestone(milestone_id):
+
     team_id = get_team_id(current_user)
     saved_files = []
     tasks = []
@@ -287,10 +298,7 @@ def submit_milestone(milestone_id):
     return {"message": "Milestone documents submitted successfully"}, 201
 
 
-@student.route("/download_submission/<int:task_id>", methods=["GET"])
-@roles_required("Student")
-def download_submission(task_id):
-    """
+"""
     API: Download Submission File
     ------------------------------
     Allows students to download the submitted document for a specific task under their team.
@@ -306,7 +314,13 @@ def download_submission(task_id):
     - 404: If the submission or document does not exist, or the file is not found on the server.
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/download_submission/<int:task_id>", methods=["GET"])
+@roles_required("Student")
+def download_submission(task_id):
+
     team_id = get_team_id(current_user)
     submission = Submissions.query.filter(
         Submissions.task_id == task_id, Submissions.team_id == team_id

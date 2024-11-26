@@ -31,11 +31,7 @@ from application.models import (
 from flask import abort, request
 from datetime import datetime, timezone
 
-
-@student.route("/notifications", methods=["GET"])
-@roles_required("Student")
-def get_notifications():
-    """
+"""
     API: Get Notifications
     -----------------------
     Retrieves a list of all notifications for the current user, including their title, type, creation time, and read status.
@@ -52,7 +48,12 @@ def get_notifications():
         - Read at
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/notifications", methods=["GET"])
+@roles_required("Student")
+def get_notifications():
 
     # Query the UserNotifications for the current user's notifications
     notifications = UserNotifications.query.filter_by(user_id=current_user.id).all()
@@ -71,10 +72,7 @@ def get_notifications():
     return {"notifications": notification_list}, 200
 
 
-@student.route("/notifications/<int:notification_id>", methods=["GET"])
-@roles_required("Student")
-def get_notification_detail(notification_id):
-    """
+"""
     API: Get Notification Details
     ------------------------------
     Fetches detailed information about a specific notification and marks it as read.
@@ -99,7 +97,13 @@ def get_notification_detail(notification_id):
 
     Behaviour:
     - Marks the notification as read upon successful retrieval.
-    """
+"""
+
+
+@student.route("/notifications/<int:notification_id>", methods=["GET"])
+@roles_required("Student")
+def get_notification_detail(notification_id):
+
     # Fetch the UserNotification by ID and ensure it belongs to the current user
     user_notification = UserNotifications.query.filter_by(
         notification_id=notification_id, user_id=current_user.id
@@ -125,10 +129,7 @@ def get_notification_detail(notification_id):
     return data, 200
 
 
-@student.route("/notifications/mark_all_as_read", methods=["GET"])
-@roles_required("Student")
-def mark_all_notifications_as_read():
-    """
+"""
     API: Mark All Notifications as Read
     ------------------------------------
     Marks all unread notifications for the current user as read.
@@ -140,7 +141,13 @@ def mark_all_notifications_as_read():
     - 200: JSON message confirming that all notifications have been marked as read.
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/notifications/mark_all_as_read", methods=["GET"])
+@roles_required("Student")
+def mark_all_notifications_as_read():
+
     # Query all unread notifications for the current user
     unread_notifications = UserNotifications.query.filter_by(
         user_id=current_user.id, read_at=None
@@ -155,10 +162,7 @@ def mark_all_notifications_as_read():
     return {"message": "All notifications marked as read."}, 200
 
 
-@student.route("/notifications/preferences", methods=["GET"])
-@roles_required("Student")
-def get_notification_preferences():
-    """
+"""
     API: Get Notification Preferences
     ----------------------------------
     Fetches the current user's notification preferences, such as whether email or in-app notifications are enabled.
@@ -175,7 +179,13 @@ def get_notification_preferences():
     - 404: If no notification preferences are found for the current user.
     - 403: If the user does not have the required role.
     - 500: Internal server error.
-    """
+"""
+
+
+@student.route("/notifications/preferences", methods=["GET"])
+@roles_required("Student")
+def get_notification_preferences():
+
     # Get the current user's notification preferences
     preferences = NotificationPreferences.query.filter_by(
         user_id=current_user.id
@@ -192,10 +202,7 @@ def get_notification_preferences():
     }, 200
 
 
-@student.route("/notifications/preferences", methods=["PUT"])
-@roles_required("Student")
-def set_notification_preferences():
-    """
+"""
     API: Set Notification Preferences
     ----------------------------------
     Updates the current user's notification preferences based on the provided input.
@@ -219,7 +226,13 @@ def set_notification_preferences():
 
     Behavior:
     - Only updates fields that are provided and valid in the request.
-    """
+"""
+
+
+@student.route("/notifications/preferences", methods=["PUT"])
+@roles_required("Student")
+def set_notification_preferences():
+
     data = request.get_json()
     email_deadline_pref = data.get("email_deadline_notifications")
     in_app_deadline_pref = data.get("in_app_deadline_notifications")
