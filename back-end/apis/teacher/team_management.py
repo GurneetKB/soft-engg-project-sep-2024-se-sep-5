@@ -660,12 +660,14 @@ def get_ai_analysis(team_id, task_id):
                     "role": "user",
                     "content": f"""
         ### Inputs:  
-        1. **Submission Details**:   
-        - Content: {text}  
-        2. **Milestone Description**:  
-           {submission.task.description} 
-        3. **Task Description**:  
+        1. **Milestone Description**:  
            {submission.task.milestone.description} 
+
+        2. **Task Description**:  
+           {submission.task.description} 
+
+        3. **Submission Content**:  
+           {text}
         """,
                 },
             ],

@@ -7,7 +7,7 @@
     import router from '../router/index.js'
     import { ref, watch } from 'vue'
 
-    const props = defineProps( [ 'access' ] )
+    const props = defineProps( { access: { type: String, default: "Login" } } )
     const currentAccess = ref( props.access ) // Local variable to track access state
 
     // Watch for changes in the prop and update the local variable
