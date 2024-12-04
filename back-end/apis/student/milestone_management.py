@@ -18,8 +18,9 @@ Endpoints:
 2. GET /student/milestone_management/individual
 3. GET /student/milestone_management/individual/<int:milestone_id>
 4. POST /student/milestone_management/individual/<int:milestone_id>
-5. GET /student/download_submission/<int:task_id>
-6. POST /student/chat
+5. GET /student/milestone_management/individual/ai_analysis/<int:task_id>
+6. GET /student/download_submission/<int:task_id>
+7. POST /student/chat
 """
 
 from apis.student.setup import student, get_team_id, ai_client
@@ -303,6 +304,114 @@ def submit_milestone(milestone_id):
 
 
 """
+    API: Get AI Analysis
+    ---------------------
+    Uses AI to provide high-level recommendations or indicates alignment with the milestone and task requirements.
+
+    Roles Accepted:
+    - Student
+
+    Path Parameters:
+    - task_id (int): ID of the task.
+
+    Response:
+    - 200: JSON object containing the AI-generated analysis, including:
+        - Content review
+        - Task requirement checks.
+    - 404: If the team, submission, or document is not found.
+    - 500: If the document cannot be read or the AI analysis fails or Internal server error.
+    - 403: If the user does not have the required role.
+    - 400: If the milestone deadline has passed.
+"""
+
+
+@student.route(
+    "/milestone_management/individual/ai_analysis/<int:task_id>",
+    methods=["GET"],
+)
+@roles_required("Student")
+def get_ai_analysis(task_id):
+
+    team_id = get_team_id(current_user)
+    submission = Submissions.query.filter_by(team_id=team_id, task_id=task_id).first()
+
+    if not submission or not submission.documents:
+        return abort(404, "Submission or document not found")
+
+    if submission.task.milestone.deadline.replace(tzinfo=timezone.utc) < datetime.now(
+        timezone.utc
+    ):
+        return abort(400, "Milestone Deadline Passed")
+
+    document = submission.documents
+
+    # Check file existence
+    if not os.path.exists(document.file_url):
+        return abort(404, "File not found")
+
+    try:
+        with open(document.file_url, "rb") as pdf_file:
+            pdf_reader = PdfReader(pdf_file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + " "
+            text = text.replace("\n", " ")
+    except Exception as e:
+        return abort(500, f"Error reading document: {str(e)}")
+
+    try:
+        chat_completion = ai_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
+                    You are an AI expert specializing in analyzing the submitted documents and recommending the changes based on milestone and task description.
+
+                    ### Instructions:
+                    - Review the document and compare it against the provided milestone and task descriptions.
+                    - Provide a response with a consistent header structure, regardless of the document's alignment.
+                    - The response must always include two sections:
+                    1. **Alignment Assessment**
+                    2. **Recommendations**
+
+                    ### Response Format:
+                    #### Alignment Assessment
+                    - State whether the document fully aligns with the milestone and task descriptions in short and concise way.
+
+                    #### Recommendations
+                    - If fully aligned: "No changes required."
+                    - If discrepancies exist: Provide exactly three high-level recommendations.
+
+                    ### Tasks:
+                    1. Analyze the document thoroughly
+                    2. Maintain the specified response structure
+                    3. Provide clear, concise insights
+                    """,
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+                    ### Inputs:  
+                    1. **Submission Details**:   
+                    - Content: {text}  
+                    2. **Milestone Description**:  
+                    {submission.task.milestone.description} 
+                    3. **Task Description**:  
+                    {submission.task.description} 
+                    """,
+                },
+            ],
+            model="llama-3.1-8b-instant",
+        )
+
+        response = chat_completion.choices[0].message.content
+        return {"analysis": response}, 200
+
+    except Exception as e:
+        return abort(500, f"AI analysis error: {str(e)}")
+
+
+"""
     API: Download Submission File
     ------------------------------
     Allows students to download the submitted document for a specific task under their team.
@@ -422,82 +531,3 @@ def chat():
 
     except Exception as e:
         return abort(500, str(e))
-
-
-
-@student.route(
-    "/milestone_management/individual/ai_analysis/<int:task_id>",
-    methods=["GET"],
-)
-@roles_required("Student")
-def get_ai_analysis(task_id):
-
-    team_id = get_team_id(current_user)    
-    submission = Submissions.query.filter_by(team_id=team_id, task_id=task_id).first()
-
-    
-    if not submission or not submission.documents:        
-        return abort(404, "Submission or document not found")
-
-    if submission.task.milestone.deadline.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-        return abort(400, " Milestone Deadline Passed")
-
-
-    document = submission.documents
-
-    # Check file existence
-    if not os.path.exists(document.file_url):
-        return abort(404, "File not found")
-
-    try:
-        with open(document.file_url, "rb") as pdf_file:
-            pdf_reader = PdfReader(pdf_file)
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text() + " "
-            text = text.replace("\n", " ")
-    except Exception as e:
-        return abort(500, f"Error reading document: {str(e)}")
-
-    try:
-        chat_completion = ai_client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": """
-        You are an AI expert specializing in analyzing the submitted documents and recommending the changes based on milestone description.
-         
-        ### Instructions:
-        - Review the document and compare it against the provided milestone and task descriptions.
-- If the document fully aligns with the milestone and task descriptions, respond with:  
-  **"No recommendations. The document aligns with the milestone and task descriptions."**  
-- If there are discrepancies, respond with **exactly three high-level recommendation headings** that address the issues. Do not provide additional explanation.
-
-        ### Tasks:
-        1. **Recommendations**:  
-         - Suggest exactly three high-level recommendations to improve alignment.  
-        - Use concise, professional headings for the recommendations.
-        
-        """,
-                },
-                {
-                    "role": "user",
-                    "content": f"""
-        ### Inputs:  
-        1. **Submission Details**:   
-        - Content: {text}  
-        2. **Milestone Description**:  
-           {submission.task.milestone.description} 
-        3. **Task Description**:  
-           {submission.task.description} 
-        """,
-                },
-            ],
-            model="llama-3.1-8b-instant",
-        )
-
-        response = chat_completion.choices[0].message.content
-        return {"analysis": response}, 200
-
-    except Exception as e:
-        return abort(500, f"AI analysis error: {str(e)}")

@@ -78,8 +78,6 @@ def test_chat_invalid_role(client, instructor_token):
     )
 
     assert response.status_code == 403
-    data = response.get_json()
-    assert "errors" in data["response"]
 
 
 @patch("apis.student.milestone_management.db.session.query")

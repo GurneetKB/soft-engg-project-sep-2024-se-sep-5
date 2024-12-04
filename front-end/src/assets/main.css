@@ -83,7 +83,7 @@ select:focus {
 .nav-color-btn-outline {
   background-color: transparent !important;
   color: var(--navbar-bg) !important;
-  border: 2px solid var(--navbar-bg) !important;
+  border: 1px solid var(--navbar-bg) !important;
   transition: all 0.3s ease;
 }
 

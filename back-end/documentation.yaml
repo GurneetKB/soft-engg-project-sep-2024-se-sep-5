@@ -1738,6 +1738,76 @@ paths:
                     - Milestone or team not found
         '500':
           $ref: '#/components/responses/InternalServerError'
+
+  /student/milestone_management/individual/ai_analysis/{task_id}:
+    get:
+      summary: Perform AI analysis on a submission document for a task
+      description: |
+        Allows a student to request AI-generated recommendations for their team's submitted document based on the milestone and task descriptions. 
+        The AI analysis provides high-level recommendations or indicates alignment with the milestone and task requirements.
+      security:
+        - authToken: []
+      tags:
+        - Student_Milestone_Info
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          description: The ID of the task for which AI analysis is requested.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: AI analysis was successfully performed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis:
+                    type: string
+                    description: The AI-generated recommendations or alignment confirmation.
+                example:
+                  analysis: "**No recommendations. The document aligns with the milestone and task descriptions.**"
+        '400':
+          description: Request failed due to invalid inputs or milestone deadline.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                milestone_deadline_passed:
+                  value:
+                    meta:
+                      code: 400
+                    response:
+                      errors:
+                        - "Milestone Deadline Passed"
+        '404':
+          description: Submission or file not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                submission_or_doc_not_found:
+                  value:
+                    meta:
+                      code: 404
+                    response:
+                      errors:
+                        - "Submission or document not found"
+                file_not_found:
+                  value:
+                    meta:
+                      code: 404
+                    response:
+                      errors:
+                        - "File not found"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   
   /student/download_submission/{task_id}:
     get:

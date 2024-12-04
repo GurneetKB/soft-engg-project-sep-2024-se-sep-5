@@ -154,7 +154,7 @@
           <i class="bi bi-search search-icon"></i>
         </div>
         <div class="sort-container d-flex align-items-center">
-          <button class="btn nav-color-btn me-2" :disabled="loading||error" @click="openModal">
+          <button class="btn nav-color-btn-outline me-2" :disabled="loading||error" @click="openModal">
             Ranking Reason
           </button>
           <button title="sort by rank" class="btn btn-outline-primary me-2" @click="toggleSort('rank')">

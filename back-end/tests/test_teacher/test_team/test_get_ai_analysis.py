@@ -1,25 +1,4 @@
-import pytest
 from unittest.mock import patch, MagicMock, mock_open
-
-
-@pytest.fixture
-def mock_team():
-    return {
-        "id": 1,
-        "name": "Team Alpha",
-        "github_repo_url": "https://github.com/example/repo",
-        "members": [],
-    }
-
-
-@pytest.fixture
-def mock_commit_details():
-    return {
-        "total_commits": 42,
-        "lines_of_code_added": 1500,
-        "lines_of_code_deleted": 500,
-        "milestones": [{"id": 1, "title": "Milestone 1", "commits": 20}],
-    }
 
 
 @patch("apis.teacher.team_management.get_single_team_under_user")

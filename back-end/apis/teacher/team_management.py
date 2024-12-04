@@ -174,7 +174,7 @@ def get_overall_teams_progress():
             messages=[
                 {
                     "role": "system",
-                    "content": f"""Analyze the progress of each team and provide a JSON response using the following schema:
+                    "content": f"""Analyze the progress of each team and provide a JSON response   using the following schema:
                             {json.dumps(AIResponse.model_json_schema(), indent=2)}
                             
                             Ranking Rules:
@@ -641,33 +641,53 @@ def get_ai_analysis(team_id, task_id):
                 {
                     "role": "system",
                     "content": """
-        You are an AI expert specializing in analyzing document submissions for quality and clarity.  
+                    You are an AI expert specializing in analyzing document submissions for quality and clarity.   
 
-        ### Tasks:  
+                    ## AI Document Analysis Report
 
-        1. **Content Review**:  
-        - Analyze the grammar, structure, and clarity of the submission.  
-        - Identify areas where the submission does not meet professional or academic standards.  
-        - Suggest specific improvements for each issue.  
+                    ### 1. Overview
+                    - **Overall Quality Score**: [To be determined by AI]
 
-        2. **Task Requirements Check**:  
-        - Cross-verify the content against the listed task which is the part of the milestone.  
-        - Indicate which requirements are met and which are missing or incomplete.   
-        """,
+                    ### 2. Content Review
+                    - **Grammar Assessment**: 
+                    - **Structural Analysis**: 
+                    - **Clarity Evaluation**: 
+                    - **Professional Standards Compliance**: 
+
+                    ### 3. Task Requirements Check
+                    - **Requirements Met**: 
+                    - **Requirements Partially Met**: 
+                    - **Requirements Not Met**: 
+
+                    ### 4. Detailed Findings
+
+                    #### 4.1 Strengths
+                    [Highlight positive aspects of the submission]
+
+                    #### 4.2 Areas for Improvement
+                    [Specific, actionable suggestions]
+
+                    ### 5. Recommendations
+                    [Concise, targeted recommendations for improvement]
+
+                    ### Final Assessment
+                    [Summarize key insights and overall evaluation]
+                    """,
                 },
                 {
                     "role": "user",
                     "content": f"""
-        ### Inputs:  
-        1. **Milestone Description**:  
-           {submission.task.milestone.description} 
+                    ## Submission Analysis Inputs
 
-        2. **Task Description**:  
-           {submission.task.description} 
+                    ### 1. Milestone Details
+                    **Milestone Description**: {submission.task.milestone.description}
 
-        3. **Submission Content**:  
-           {text}
-        """,
+                    ### 2. Task Specifications
+                    **Task Description**: {submission.task.description}
+
+                    ### 3. Submission Content
+                    {text}
+                    """,
                 },
             ],
             model="llama-3.1-8b-instant",
