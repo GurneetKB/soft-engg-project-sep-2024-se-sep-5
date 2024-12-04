@@ -36,6 +36,7 @@
         {
             loading.value = true
             error.value = null
+            submissionMode.value = false
             const response = await fetchfunct( `student/milestone_management/individual/${ selectedMilestoneId.value }` )
             if ( response.ok )
             {
@@ -186,7 +187,7 @@
                                 disabled />
                             {{ task.description }}
                             <div v-if="task.is_completed" class="mt-4 mb-4">
-                                <button @click="download(task.task_id)" class="btn btn-outline-primary btn-sm">
+                                <button @click="download(task.task_id)" class="btn  btn-sm nav-color-btn-outline">
                                     <i class="bi bi-download"></i> Download Submission
                                 </button>
                             </div>
@@ -294,5 +295,10 @@
 
     .task-feedback p:last-child {
         margin-bottom: 0;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--navbar-bg);
+        border-color: var(--navbar-bg);
     }
 </style>

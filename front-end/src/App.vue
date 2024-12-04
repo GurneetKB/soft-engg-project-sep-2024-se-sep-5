@@ -1,5 +1,51 @@
+<script setup>
+  import { onMounted, watch, ref, computed } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import { useIdentityStore } from './stores/identity.js'
+  import { useAlertStore } from './stores/alert.js'
+  import Access from '@/components/Access.vue'
+  import Alert from '@/components/Alert.vue'
+  import Chatbot from '@/components/Chatbot.vue'
+
+  const { identity } = storeToRefs( useIdentityStore() )
+  const access_type = ref()
+  const route = useRoute()
+
+  // Computed property to check if the current route is home
+  const isHomePage = computed( () => route.name === 'home' )
+
+  onMounted( () =>
+  {
+    if ( localStorage.getItem( 'Authentication-Token' ) )
+    {
+      identity.value = JSON.parse( localStorage.getItem( 'Identity' ) ) || [
+        'Unauthenticated',
+      ]
+    }
+  } )
+
+  watch( identity, () =>
+  {
+    const root = document.documentElement
+    if ( identity.value.includes( 'Student' ) )
+      root.style.setProperty( '--navbar-bg', '#2c3e50' )
+    else if ( identity.value.includes( 'Instructor' ) )
+      root.style.setProperty( '--navbar-bg', '#34495e' )
+    else if ( identity.value.includes( 'TA' ) )
+      root.style.setProperty( '--navbar-bg', '#1a2e5b' )
+    else root.style.setProperty( '--navbar-bg', '#232952' )
+  } )
+
+  function access_type_change ( value )
+  {
+    access_type.value = value
+    new bootstrap.Modal( '#accessModal' ).show()
+  }
+</script>
+
 <template>
-  <nav class="navbar sticky-top navbar-expand-lg" data-bs-theme="dark">
+  <nav class="navbar sticky-top navbar-expand-lg border-0 border-dark" data-bs-theme="dark">
     <div class="container-fluid">
       <RouterLink class="navbar-brand" to="/">
         <i class="bi bi-file-earmark-bar-graph"></i> Tracky
@@ -63,52 +109,8 @@
     <Alert :alert="value" :id="key"></Alert>
   </div>
   <RouterView />
+  <Chatbot v-if="identity.includes('Student')" />
 </template>
-
-<script setup>
-  import { onMounted, watch, ref, computed } from 'vue'
-  import { useRoute } from 'vue-router'
-  import { storeToRefs } from 'pinia'
-  import { useIdentityStore } from './stores/identity.js'
-  import { useAlertStore } from './stores/alert.js'
-  import Access from '@/components/Access.vue'
-  import Alert from '@/components/Alert.vue'
-
-  const { identity } = storeToRefs( useIdentityStore() )
-  const access_type = ref()
-  const route = useRoute()
-
-  // Computed property to check if the current route is home
-  const isHomePage = computed( () => route.name === 'home' )
-
-  onMounted( () =>
-  {
-    if ( localStorage.getItem( 'Authentication-Token' ) )
-    {
-      identity.value = JSON.parse( localStorage.getItem( 'Identity' ) ) || [
-        'Unauthenticated',
-      ]
-    }
-  } )
-
-  watch( identity, () =>
-  {
-    const root = document.documentElement
-    if ( identity.value.includes( 'Student' ) )
-      root.style.setProperty( '--navbar-bg', '#2c3e50' )
-    else if ( identity.value.includes( 'Instructor' ) )
-      root.style.setProperty( '--navbar-bg', '#34495e' )
-    else if ( identity.value.includes( 'TA' ) )
-      root.style.setProperty( '--navbar-bg', '#1a2e5b' )
-    else root.style.setProperty( '--navbar-bg', '#1e2a78' )
-  } )
-
-  function access_type_change ( value )
-  {
-    access_type.value = value
-    new bootstrap.Modal( '#accessModal' ).show()
-  }
-</script>
 
 <style scoped>
 

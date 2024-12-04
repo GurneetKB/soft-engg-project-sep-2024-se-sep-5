@@ -21,7 +21,7 @@ Endpoints:
 5. GET /student/download_submission/<int:task_id>
 """
 
-from apis.student.setup import student, get_team_id
+from apis.student.setup import student, get_team_id, ai_client
 from flask_security import current_user, roles_required
 from application.models import (
     Documents,
@@ -340,3 +340,58 @@ def download_submission(task_id):
         f'attachment; filename="{document.title}.pdf"'
     )
     return file_response, 200
+
+
+@student.route("/chat", methods=["POST"])
+@roles_required("Student")
+def chat():
+    data = request.json
+    user_message = data.get("message")
+    if not user_message:
+        return abort(400, "User message can not be empty")
+    milestones = db.session.query(Milestones).all()
+    ai_prompt = []
+
+    for milestone in milestones:
+        milestone_ai_prompt = ""
+        milestone_ai_prompt += f"\nMilestone: {milestone.title}\n"
+        milestone_ai_prompt += f"\nMilestone Description: {milestone.description}\n"
+        milestone_ai_prompt += (
+            f"Deadline: {milestone.deadline.strftime('%Y-%m-%d %H:%M:%S')} GMT\n"
+        )
+        for task in milestone.task_milestones:
+            milestone_ai_prompt += f"Task: {task.description}\n"
+
+        ai_prompt.append(milestone_ai_prompt)
+
+    try:
+        chat_completion = ai_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""
+                    You are an AI assistant focused solely on helping students with operational aspects of their project milestones. Your knowledge is limited to the following milestone information: 
+                    {ai_prompt}
+
+                    Strictly adhere to these guidelines:
+                    1. Only answer questions directly related to the milestones, their tasks, deadlines, or general project management.
+                    2. If asked about anything outside the provided milestone details, state that you don't have that information.
+                    3. Do not provide any information or assistance on technical implementation, coding, or subject matter expertise.
+                    4. Be concise and direct in your responses, focusing on operational aspects only.
+
+                    Remember, your purpose is to help students understand and manage their project milestones, not to assist with the actual project work or any other topics.
+                    """,
+                },
+                {
+                    "role": "user",
+                    "content": str(user_message),
+                },
+            ],
+            model="llama-3.1-8b-instant",
+        )
+
+        response = chat_completion.choices[0].message.content
+        return {"analysis": response}, 200
+
+    except Exception as e:
+        return abort(500, str(e))

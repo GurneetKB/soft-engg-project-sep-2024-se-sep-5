@@ -1,3 +1,23 @@
+<script setup>
+  import { ref } from 'vue'
+
+  const teamRoles = ref( [
+    { title: 'Scrum Master', description: 'Facilitates team operations and ensures smooth progress.' },
+    { title: 'Project Manager', description: 'Manages tasks, deadlines, and resource allocation.' },
+    { title: 'Backend Developer', description: 'Builds and manages server-side functionality.' },
+    { title: 'Frontend Developer', description: 'Creates the user interface and experience.' },
+    { title: 'Tester', description: 'Ensures quality and reliability through rigorous testing.' }
+  ] )
+
+  const technologyGroups = ref( [
+    { title: 'Design & UI', technologies: [ 'Figma', 'Canva', 'Mermaid (draw.io)' ] },
+    { title: 'Frontend Development', technologies: [ 'Vue 3', 'Vite', 'Pinia', 'vue-router', 'Bootstrap' ] },
+    { title: 'Backend Development', technologies: [ 'Flask', 'SQLAlchemy', 'SQLite', 'open API' ] },
+    { title: 'Testing & Validation', technologies: [ 'Pytest', 'vee-validate' ] },
+    { title: 'Other Tools', technologies: [ 'Groq', 'Llama', 'GitHub API', 'jspdf', 'marked', 'sanitize-html', 'yup' ] }
+  ] )
+</script>
+
 <template>
   <div class="about-page container py-5">
     <section class="mb-5 text-center">
@@ -42,35 +62,14 @@
   </div>
 </template>
 
-<script setup>
-  import { ref } from 'vue'
-
-  const teamRoles = ref( [
-    { title: 'Scrum Master', description: 'Facilitates team operations and ensures smooth progress.' },
-    { title: 'Project Manager', description: 'Manages tasks, deadlines, and resource allocation.' },
-    { title: 'Backend Developer', description: 'Builds and manages server-side functionality.' },
-    { title: 'Frontend Developer', description: 'Creates the user interface and experience.' },
-    { title: 'Tester', description: 'Ensures quality and reliability through rigorous testing.' }
-  ] )
-
-  const technologyGroups = ref( [
-    { title: 'Design & UI', technologies: [ 'Figma', 'Canva', 'Mermaid (draw.io)' ] },
-    { title: 'Frontend Development', technologies: [ 'Vue 3', 'Vite', 'Pinia', 'vue-router', 'Bootstrap' ] },
-    { title: 'Backend Development', technologies: [ 'Flask', 'SQLAlchemy', 'SQLite', 'open API' ] },
-    { title: 'Testing & Validation', technologies: [ 'Pytest', 'vee-validate' ] },
-    { title: 'Other Tools', technologies: [ 'Groq', 'Llama', 'GitHub API', 'jspdf', 'marked', 'sanitize-html', 'yup' ] }
-  ] )
-</script>
-
 <style scoped>
   .about-page {
-    color: #2c3e50;
-    font-family: 'Arial', sans-serif;
+    color: rgb(from var(--navbar-bg) r g b/0.8);
   }
 
   h1,
   h2 {
-    color: #34495e;
+    color: rgb(from var(--navbar-bg) r g b/0.8);
     font-weight: bold;
   }
 
@@ -102,7 +101,7 @@
   .card-title {
     font-size: 1.3rem;
     font-weight: bold;
-    color: #34495e;
+    color: rgb(from var(--navbar-bg) r g b/0.8);
   }
 
   ul {

@@ -105,10 +105,7 @@ def get_overall_teams_progress():
         team_ai_prompt = f"Team: {team.name}\n"
 
         for milestone in milestones:
-            tasks = (
-                db.session.query(Tasks).filter(Tasks.milestone_id == milestone.id).all()
-            )
-            task_count = len(tasks)
+            task_count = len(milestone.task_milestones)
             submissions = (
                 db.session.query(Submissions)
                 .join(Tasks, Submissions.task_id == Tasks.id)
@@ -124,10 +121,12 @@ def get_overall_teams_progress():
             completion_rate += milestone_completion / milestone_count
 
             team_ai_prompt += f"\nMilestone: {milestone.title}\n"
-            team_ai_prompt += f"Deadline: {milestone.deadline.strftime('%Y-%m-%d')}\n"
+            team_ai_prompt += (
+                f"Deadline: {milestone.deadline.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
             team_ai_prompt += f"Tasks completed: {submission_count}/{task_count}\n"
 
-            for task in tasks:
+            for task in milestone.task_milestones:
                 submission = next(
                     (s for s in submissions if s.task_id == task.id), None
                 )

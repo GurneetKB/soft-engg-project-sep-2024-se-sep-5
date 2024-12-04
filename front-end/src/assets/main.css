@@ -1,15 +1,21 @@
 :root {
-  --navbar-bg: #1e2a78;
+  --navbar-bg: #232952;
   --transition-speed: 0.3s;
   --navbar-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   --accent-color: #42b983;
-  --gradient-end: rgba(52, 73, 94, 0.95);
+  --gradient-end: #3c316c;
 }
 
 input:not([type='submit']),
 textarea,
 select {
   border-color: var(--navbar-bg) !important;
+}
+
+input:not([type='submit']):focus,
+textarea:focus,
+select:focus {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgb(from var(--navbar-bg) r g b/ 0.6) !important
 }
 
 .form-element:has(.form-text) input,
@@ -41,15 +47,75 @@ select {
   cursor: pointer;
 }
 
+.nav-color {
+  color: var(--navbar-bg)
+}
+
 .nav-color-btn {
+  background-color: var(--navbar-bg) !important;
+  color: #fff !important;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease-in-out;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.nav-color-btn:hover {
+  opacity: 0.85;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.nav-color-btn:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
+.nav-color-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.nav-color-btn-outline {
+  background-color: transparent !important;
+  color: var(--navbar-bg) !important;
+  border: 2px solid var(--navbar-bg) !important;
+  transition: all 0.3s ease;
+}
+
+.nav-color-btn-outline:hover {
   background-color: var(--navbar-bg) !important;
   color: #fff !important;
 }
 
-.nav-color-btn:hover {
-  background: rgb(from var(--navbar-bg) r g b / 0.8) !important;
+.nav-color-btn-outline:focus {
+  box-shadow: 0 0 0 0.2rem rgb(from var(--navbar-bg) r g b/ 0.5);
+  outline: none;
 }
 
-.nav-color {
-  color: var(--navbar-bg)
+.nav-color-btn-outline:active {
+  background-color: var(--navbar-bg) !important;
+  color: #fff !important;
+  border-color: var(--navbar-bg) !important;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
 }

@@ -14,6 +14,10 @@ Blueprint:
 - Name: student
 - URL Prefix: /student
 
+Global Variables:
+-----------------
+1. `ai_client`: Configured AI client using an API key.
+
 Submodules:
 -----------
 1. milestone_management: Handles milestone-related functionalities.
@@ -30,9 +34,14 @@ from application.models import (
 )
 from flask import Blueprint
 from application.models import db
+from groq import Groq
+import os
 
 
 student = Blueprint("student", __name__, url_prefix="/student")
+
+# AI configuration
+ai_client = Groq(api_key=os.environ.get("AI_ACCESS_TOKEN"))
 
 
 def get_team_id(user):
