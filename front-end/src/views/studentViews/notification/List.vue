@@ -94,7 +94,7 @@
                     <span class="text-muted small">
                         {{ unreadCount }} unread
                     </span>
-                    <button v-if="unreadCount > 0" @click="markAllAsRead" class="btn btn-sm btn-outline-primary">
+                    <button v-if="unreadCount > 0" @click="markAllAsRead" class="btn btn-sm nav-color-btn-outline">
                         Mark all as read
                     </button>
                 </div>
@@ -147,14 +147,14 @@
     }
 
     .notification-item.unread {
-        background-color: rgba(var(--bs-primary-rgb), 0.05);
+        background-color: rgb(from var(--navbar-bg) r g b/0.05);
     }
 
     .notification-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background-color: var(--bs-primary);
+        background-color: rgb(from var(--navbar-bg) r g b/0.8);
         margin-top: 8px;
     }
 

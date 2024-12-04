@@ -2,15 +2,18 @@ openapi: 3.0.0
 info:
   title: Tracky | The Project Tracking System
   description: |
-    These API are designed to facilitate the management, monitoring, and feedback collection for student projects. Instructors, teaching assistants (TAs), and students can interact with the system to manage milestones, tasks, submissions, and receive feedback on their work. The system also includes integration with GitHub to track commits and uses Generative AI for document and teams' progress analysis.
+    These APIs are designed to streamline the management, tracking, and feedback processes for student projects in an educational setting. The system provides distinct functionalities for instructors, teaching assistants, and students, focusing on milestones, task submissions and progress tracking. Advanced integrations with GitHub and Generative AI enhance the application's capabilities by automating analysis and offering actionable insights.
 
-    **Key Features**:
-    - Milestone and task management with deadlines.
-    - Submission tracking and feedback system.
-    - GitHub integration for tracking commit histories and Git-related data.
-    - AI-driven analysis for teams' progress and document review.
-    - Role-based access control for instructors, TAs, and students.
-    - Real-time feedback delivery for students based on task submissions.
+    ### **Key Features**:
+    - **Milestone and Task Management**: Create, update, track, and delete milestones and associated tasks, ensuring timely delivery and progress tracking.
+    - **Submission Tracking and Feedback**: Allow students to submit work, with instructors and TAs providing detailed feedback on specific tasks.
+    - **GitHub Integration**: Monitor team and individual commit histories to evaluate contributions and development progress.
+    - **AI-Driven Insights**: Leverage AI for analyzing document submissions and team progress.
+    - **Role-Based Access Control**: Tailored access for instructors, TAs, and students to ensure security and relevant functionalities for each role.
+    - **Student AI Chat Assistant**: Assist students with milestone-related queries, focusing on operational and project management aspects.
+    - **Dashboard Analytics**: Provide instructors with comprehensive statistics on team progress, milestone completion, and individual performance.
+
+    These APIs serve as a comprehensive toolkit for managing student projects, fostering collaboration, and enhancing learning outcomes through efficient workflows and modern technology integrations.
   version: 1.0.0
 servers:
   - url: 'http://localhost:5000'
@@ -1783,5 +1786,55 @@ paths:
                     response:
                       errors:
                         - File not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /student/chat:
+    post:
+      summary: Chat with AI assistant for milestone-related queries
+      description: Allows a student to interact with an AI assistant focused on helping with operational aspects of project milestones, such as understanding tasks, deadlines, and management details.
+      security:
+        - authToken: []
+      tags:
+        - Student_Milestone_Info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: The student's message or question for the AI assistant.
+              required:
+                - message
+      responses:
+        '200':
+          description: AI assistant's response to the student's query.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis:
+                    type: string
+                    description: The AI assistant's response to the student's question.
+        '400':
+          description: Bad request due to missing or invalid user input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/GenericError/content/application~1json/schema'
+              examples:
+                missing_message:
+                  value:
+                    meta:
+                      code: 400
+                    response:
+                      errors:
+                        - User message cannot be empty
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
