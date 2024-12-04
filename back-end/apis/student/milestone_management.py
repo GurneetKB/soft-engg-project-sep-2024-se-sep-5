@@ -31,9 +31,12 @@ from application.models import (
     Teams,
     db,
 )
+from apis.teacher.setup import ai_client
 from flask import abort, make_response, request, send_file, current_app
 from datetime import datetime, timezone
 import os
+from PyPDF2 import PdfReader
+
 
 """
     API: Get Team Milestones Overview
@@ -340,3 +343,82 @@ def download_submission(task_id):
         f'attachment; filename="{document.title}.pdf"'
     )
     return file_response, 200
+
+
+@student.route(
+    "/milestone_management/individual/ai_analysis/<int:task_id>",
+    methods=["GET"],
+)
+@roles_required("Student")
+def get_ai_analysis(task_id):
+
+    team_id = get_team_id(current_user)    
+    submission = Submissions.query.filter_by(team_id=team_id, task_id=task_id).first()
+
+    
+    if not submission or not submission.documents:        
+        return abort(404, "Submission or document not found")
+
+    if submission.task.milestone.deadline.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        return abort(400, " Milestone Deadline Passed")
+
+
+    document = submission.documents
+
+    # Check file existence
+    if not os.path.exists(document.file_url):
+        return abort(404, "File not found")
+
+    try:
+        with open(document.file_url, "rb") as pdf_file:
+            pdf_reader = PdfReader(pdf_file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + " "
+            text = text.replace("\n", " ")
+    except Exception as e:
+        return abort(500, f"Error reading document: {str(e)}")
+
+    try:
+        chat_completion = ai_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
+        You are an AI expert specializing in analyzing the submitted documents and recommending the changes based on milestone description.
+         
+        ### Instructions:
+        - Review the document and compare it against the provided milestone and task descriptions.
+- If the document fully aligns with the milestone and task descriptions, respond with:  
+  **"No recommendations. The document aligns with the milestone and task descriptions."**  
+- If there are discrepancies, respond with **exactly three high-level recommendation headings** that address the issues. Do not provide additional explanation.
+
+        ### Tasks:
+        1. **Recommendations**:  
+         - Suggest exactly three high-level recommendations to improve alignment.  
+        - Use concise, professional headings for the recommendations.
+        
+        """,
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+        ### Inputs:  
+        1. **Submission Details**:   
+        - Content: {text}  
+        2. **Milestone Description**:  
+           {submission.task.milestone.description} 
+        3. **Task Description**:  
+           {submission.task.description} 
+        """,
+                },
+            ],
+            model="llama-3.1-8b-instant",
+        )
+
+        response = chat_completion.choices[0].message.content
+        return {"analysis": response}, 200
+
+    except Exception as e:
+        return abort(500, f"AI analysis error: {str(e)}")
+

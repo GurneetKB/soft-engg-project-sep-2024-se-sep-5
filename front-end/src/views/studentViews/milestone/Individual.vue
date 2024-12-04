@@ -1,10 +1,15 @@
 <script setup>
     import { ref, onMounted, computed } from 'vue'
-    import { checksuccess, fetchfunct } from '@/components/fetch.js'
+    import { checksuccess, fetchfunct, checkerror } from '@/components/fetch.js'
     import LoadingPlaceholder from '@/components/LoadingPlaceholder.vue'
+    import sanitizeHtml from 'sanitize-html'
+    import { marked } from 'marked'
+
+
     import { formatDate } from '@/components/date';
     import { downloadFile } from '@/components/download';
     import { useAlertStore } from '@/stores/alert';
+
 
     const milestones = ref( [] )
     const selectedMilestoneId = ref( null )
@@ -118,6 +123,26 @@
 
     };
 
+    
+  const generateAiRecommendation = async task =>
+  {
+    task.aiAnalysisLoading = true
+    const response = await fetchfunct(
+      `student/milestone_management/individual/ai_analysis/${ task.task_id }`,
+    )
+    if ( response.ok )
+    {
+      const data = await response.json()
+      task.aiAnalysis = sanitizeHtml( marked( data.analysis || '' ) )
+      task.aiAnalysisLoading = false
+    }
+    else
+    {
+      checkerror( response )
+    }
+    task.aiAnalysisLoading = false
+  };
+
     // Computed property to check if the deadline has passed
     const isPastDeadline = computed( () =>
     {
@@ -127,6 +152,8 @@
         }
         return false;
     } );
+
+    
 
 </script>
 
@@ -178,6 +205,8 @@
                     </div>
                 </div>
 
+
+
                 <div>
                     <h5 class="mb-3">Tasks</h5>
                     <ul class="list-group">
@@ -189,16 +218,47 @@
                                 <button @click="download(task.task_id)" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-download"></i> Download Submission
                                 </button>
+                                  <button v-if="!isPastDeadline"  class="btn nav-color-btn btn-sm ms-4"
+                                 
+                            @click="generateAiRecommendation(task)">
+                            <i class="bi bi-robot"></i>
+                            AI Recommendation
+                            </button>
+                           
                             </div>
+                           
                             <div class="task-feedback mt-3" v-if="task.feedback">
                                 <p class="mb-2"><strong>Feedback:</strong> {{ task.feedback }}</p>
                                 <p class="mb-0"><strong>Feedback Time:</strong> {{ formatDate(task.feedback_time) }}</p>
                             </div>
+                 
+
+                   
                             <input v-if="submissionMode" type="file" class="form-control mt-2" accept=".pdf"
                                 @change="selectFile(task.task_id, $event)" />
+
+
+                <!-- Separate AI Analysis Section -->
+                <div v-if="task.aiAnalysis || task.aiAnalysisLoading"
+                    class="ai-analysis-container mt-3 p-3 border rounded">
+                    <div v-if="task.aiAnalysisLoading" class="d-flex align-items-center gap-2">
+                      <div class="spinner-border spinner-border-sm" role="status"></div>
+                      <span>Analyzing submission...</span>
+                    </div>
+                    <div v-else class="analysis-content">
+                      <h6 class="mb-3">AI Analysis Recommendation</h6>
+                      <div v-html="task.aiAnalysis"></div>
+                    </div>
+                  </div>
                         </li>
+
                     </ul>
+    
+         
                 </div>
+
+         
+
 
                 <div class="mt-4 d-flex gap-3">
                     <button class="btn nav-color-btn" @click="handleSubmitButtonClick"
@@ -210,6 +270,7 @@
                     Submission no longer allowed as due date has passed.
                 </p>
 
+           
                 <div class="modal" tabindex="-1" role="dialog" id="submitConfirmation">
                     <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content">
