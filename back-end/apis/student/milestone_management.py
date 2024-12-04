@@ -19,6 +19,7 @@ Endpoints:
 3. GET /student/milestone_management/individual/<int:milestone_id>
 4. POST /student/milestone_management/individual/<int:milestone_id>
 5. GET /student/download_submission/<int:task_id>
+6. POST /student/chat
 """
 
 from apis.student.setup import student, get_team_id, ai_client
@@ -340,6 +341,29 @@ def download_submission(task_id):
         f'attachment; filename="{document.title}.pdf"'
     )
     return file_response, 200
+
+
+"""
+    API: AI Chat Assistant for Milestones
+    -------------------------------------
+    Allows students to interact with an AI assistant to ask questions about their project milestones, tasks, and deadlines.
+
+    Role Required:
+    - Student
+
+    Request Body:
+    - message (string): The query or message from the student to the AI assistant.
+
+    Functionality:
+    - Retrieves milestone data, including tasks and deadlines, to provide operational guidance.
+    - Generates responses based on predefined milestones using an AI chat model.
+
+    Response:
+    - 200: JSON response containing the AI assistant's analysis or answer.
+    - 400: If the `message` field is missing or empty.
+    - 403: If the user does not have the required role.
+    - 500: Internal server error.
+"""
 
 
 @student.route("/chat", methods=["POST"])
