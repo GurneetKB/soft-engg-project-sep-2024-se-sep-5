@@ -96,7 +96,10 @@ def test_chat_internal_server_error(mock_db_query, client, student_token):
     assert response.status_code == 500
     data = response.get_json()
     assert "errors" in data["response"]
-    assert "Database error" in data["response"]["errors"][0]
+    assert (
+        "An unexpected error occurred. Try again later."
+        in data["response"]["errors"][0]
+    )
 
 
 @patch("apis.student.milestone_management.db.session.query")

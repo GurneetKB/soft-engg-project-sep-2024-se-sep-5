@@ -30,6 +30,8 @@ Classes:
 """
 
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, Response, json
 from flask.sessions import SecureCookieSessionInterface, SessionMixin
 from flask_migrate import Migrate
@@ -214,7 +216,9 @@ def setup_error_handlers(app):
 
     @app.errorhandler(HTTPException)
     def handle_exception(error):
-        app.logger.error(f"HTTP error: {str(error)}")
+
+        app.logger.error(f"An HTTP exception occurred:\n{error}")
+
         response_data = {
             "meta": {"code": error.code},
             "response": {
@@ -229,12 +233,43 @@ def setup_error_handlers(app):
 
     @app.errorhandler(Exception)
     def handle_unexpected_error(error):
-        app.logger.error(f"Unexpected error: {str(error)}")
+
+        app.logger.error(f"An unexpected error occurred:\n{error}")
+
         response_data = {
             "meta": {"code": 500},
-            "response": {"errors": [str(error)]},
+            "response": {"errors": ["An unexpected error occurred. Try again later."]},
         }
         return app.response_class(response=json.dumps(response_data), status=500)
+
+
+def configure_logging(app):
+    """
+    Configure logging for the Flask application.
+
+    :param app: Flask application instance
+    """
+
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+
+    # Create file handler
+    file_handler = RotatingFileHandler(
+        os.path.join(log_dir, "Tracky.log"),
+        maxBytes=10240,
+        backupCount=10,
+    )
+
+    # Create formatter
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    file_handler.setFormatter(formatter)
+
+    # Set log levels
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
 
 
 def create_app(database_uri, testing=False):
@@ -243,12 +278,10 @@ def create_app(database_uri, testing=False):
     -----------------------------------
     Creates and configures the Flask application, initializes necessary extensions, and registers blueprints.
 
-    Parameters:
-    - database_uri (str): URI for the database connection.
-    - testing (bool): A flag indicating whether the app is in testing mode (default is False).
+    :param database_uri (str): URI for the database connection.
+    :param testing (bool): A flag indicating whether the app is in testing mode (default is False).
 
-    Returns:
-    - app (Flask): The configured Flask application instance.
+    :returns app (Flask): The configured Flask application instance.
     """
     app = Flask("Tracky")
 
@@ -256,6 +289,8 @@ def create_app(database_uri, testing=False):
     init_extensions(app)
     register_blueprints(app)
     setup_error_handlers(app)
+    if not testing:
+        configure_logging(app)
 
     return app
 

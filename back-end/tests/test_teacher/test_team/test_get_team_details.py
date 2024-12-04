@@ -127,4 +127,7 @@ def test_get_team_details_internal_server_error(
     assert response.status_code == 500
     data = response.get_json()
     assert "errors" in data["response"]
-    assert "Unexpected error" in data["response"]["errors"][0]
+    assert (
+        "An unexpected error occurred. Try again later."
+        in data["response"]["errors"][0]
+    )
