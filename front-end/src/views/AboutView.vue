@@ -10,11 +10,34 @@
   ] )
 
   const technologyGroups = ref( [
-    { title: 'Design & UI', technologies: [ 'Figma', 'Canva', 'Mermaid (draw.io)' ] },
-    { title: 'Frontend Development', technologies: [ 'Vue 3', 'Vite', 'Pinia', 'vue-router', 'Bootstrap' ] },
-    { title: 'Backend Development', technologies: [ 'Flask', 'SQLAlchemy', 'SQLite', 'open API' ] },
-    { title: 'Testing & Validation', technologies: [ 'Pytest', 'vee-validate' ] },
-    { title: 'Other Tools', technologies: [ 'Groq', 'Llama', 'GitHub API', 'jspdf', 'marked', 'sanitize-html', 'yup' ] }
+    {
+      title: 'Version Control & Project Management',
+      technologies: [ 'GitHub', 'Jira' ]
+    },
+    {
+      title: 'Design & UI',
+      technologies: [ 'Figma', 'Canva', 'Mermaid (draw.io)' ]
+    },
+    {
+      title: 'Frontend Development',
+      technologies: [ 'Vue 3', 'Vite', 'Pinia', 'vue-router', 'Bootstrap' ]
+    },
+    {
+      title: 'Backend Development',
+      technologies: [ 'Flask', 'Flask-Security-Too', 'SQLAlchemy', 'SQLite', 'OpenAPI' ]
+    },
+    {
+      title: 'Testing & Validation',
+      technologies: [ 'Pytest', 'vee-validate', 'Yup', 'sanitize-html' ]
+    },
+    {
+      title: 'AI & Data Processing',
+      technologies: [ 'Groq', 'Llama', 'Pydantic' ]
+    },
+    {
+      title: 'Integration & Utilities',
+      technologies: [ 'PyGitHub', 'jsPDF', 'Marked', 'PyPDF2' ]
+    }
   ] )
 </script>
 
