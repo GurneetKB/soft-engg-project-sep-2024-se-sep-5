@@ -21,6 +21,7 @@ Functions:
 2. init_extensions(app)
 3. register_blueprints(app)
 4. setup_error_handlers(app)
+5. configure_logging(app)
 5. create_app(database_uri, testing=False)
 
 Classes:
