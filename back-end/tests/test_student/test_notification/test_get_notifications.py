@@ -98,7 +98,10 @@ def test_get_notifications_internal_server_error(mock_query, client, student_tok
     assert response.status_code == 500
     data = response.get_json()
     assert "errors" in data["response"]
-    assert "Unexpected error" in data["response"]["errors"][0]
+    assert (
+        "An unexpected error occurred. Try again later."
+        in data["response"]["errors"][0]
+    )
 
 
 def test_get_notifications_invalid_role(client, ta_token):

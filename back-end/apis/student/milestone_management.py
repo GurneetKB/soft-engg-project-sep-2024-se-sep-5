@@ -300,6 +300,10 @@ def submit_milestone(milestone_id):
 
     db.session.commit()
 
+    current_app.logger.info(
+        f"Documents for Milestone {milestone_id} added by user {current_user.id} for team {team_id}"
+    )
+
     return {"message": "Milestone documents submitted successfully"}, 201
 
 

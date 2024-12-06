@@ -54,7 +54,6 @@ from datetime import datetime, timezone
 @student.route("/notifications", methods=["GET"])
 @roles_required("Student")
 def get_notifications():
-
     # Query the UserNotifications for the current user's notifications
     notifications = UserNotifications.query.filter_by(user_id=current_user.id).all()
 

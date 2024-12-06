@@ -95,4 +95,6 @@ def test_get_overall_teams_progress_internal_error(
         headers={"Authentication-Token": instructor_token},
     )
     assert response.status_code == 500
-    assert "Database error" in response.get_data(as_text=True)
+    assert "An unexpected error occurred. Try again later." in response.get_data(
+        as_text=True
+    )

@@ -42,7 +42,7 @@ from apis.teacher.setup import (
 )
 from flask_security import current_user, roles_accepted
 from application.models import Tasks, db, Submissions, Milestones
-from flask import abort, request, send_file
+from flask import abort, current_app, request, send_file
 from datetime import datetime, timezone
 import os
 from PyPDF2 import PdfReader
@@ -501,6 +501,9 @@ def provide_feedback(team_id, task_id):
     submission.feedback = feedback_content.strip()  # sanitize whitespace
     submission.feedback_time = datetime.now(timezone.utc)
     db.session.commit()
+    current_app.logger.info(
+        f"Feedback given for team {team_id} and task {task_id} by user {current_user.id}"
+    )
     return {"message": "The feedback is successfully provided."}, 201
 
 

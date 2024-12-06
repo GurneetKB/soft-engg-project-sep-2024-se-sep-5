@@ -29,7 +29,7 @@ from apis.teacher.setup import (
 )
 from flask_security import current_user, roles_accepted, roles_required
 from application.models import Tasks, db, Submissions, Milestones
-from flask import abort, request
+from flask import abort, current_app, request
 from datetime import datetime, timezone
 
 """
@@ -206,7 +206,9 @@ def create_milestone():
 
     # Commit all changes
     db.session.commit()
-
+    current_app.logger.info(
+        f"New milestone with Id {milestone_object.id} is created by user {current_user.id}"
+    )
     return {"message": "Milestone published successfully."}, 201
 
 
@@ -366,6 +368,8 @@ def update_milestone(milestone_id):
 
     # Commit changes
     db.session.commit()
+
+    current_app.logger.info(f"Milestone {milestone_id} by user {current_user.id}")
     return {"message": "Milestone updated successfully."}, 201
 
 
@@ -401,4 +405,7 @@ def delete_milestone(milestone_id):
 
     db.session.delete(delete_object)
     db.session.commit()
+    current_app.logger.info(
+        f"Milestone {milestone_id} is deleted by user {current_user.id}"
+    )
     return {"message": "Milestone is deleted"}, 200

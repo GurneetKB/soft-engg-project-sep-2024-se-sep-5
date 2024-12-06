@@ -189,4 +189,6 @@ def test_create_milestone_internal_server_error(mock_commit, client, instructor_
     assert response.status_code == 500
     data = response.get_json()
     assert "errors" in data["response"]
-    assert "Database error" in data["response"]["errors"]
+    assert (
+        "An unexpected error occurred. Try again later." in data["response"]["errors"]
+    )
