@@ -66,7 +66,7 @@ Follow these steps to get the application up and running on your operating syste
 
 ### Step 1: Clone the Repository
 
-For both macOS/Linux and Windows:
+For both macOS/Linux and Windows(using Command Prompt):
 
 ```bash
 git clone https://github.com/GurneetKB/soft-engg-project-sep-2024-se-sep-5.git
@@ -114,7 +114,7 @@ Replace the values with your actual tokens. After creating the file, run:
 source secret.sh
 ```
 
-##### For Windows:
+##### For Windows(using Command Prompt):
 
 Create a `secret.bat` file in the root of the project and add the following environment variables:
 
@@ -167,7 +167,7 @@ pip3 install -r requirements.txt
 python3 main.py
 ```
 
-##### For Windows:
+##### For Windows(using Command Prompt):
 
 ```plaintext
 cd back-end
@@ -179,7 +179,7 @@ python main.py
 
 Open a new terminal window and navigate to the project root directory.
 
-##### For both macOS/Linux and Windows:
+##### For both macOS/Linux and Windows(using Command Prompt):
 
 ```shellscript
 cd front-end
