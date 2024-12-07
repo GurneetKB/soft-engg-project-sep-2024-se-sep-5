@@ -313,7 +313,7 @@
                         </button>
                         <button class="btn btn-sm nav-color-btn d-flex align-items-center gap-1"
                           @click="generateAiAnalysis(task)">
-                          <i class="bi bi-robot"></i>
+                          <i class="bi bi-stars"></i>
                           AI analysis
                         </button>
                       </div>

@@ -225,7 +225,6 @@ def get_milestone_details(milestone_id):
 @student.route("/milestone_management/individual/<int:milestone_id>", methods=["POST"])
 @roles_required("Student")
 def submit_milestone(milestone_id):
-
     team_id = get_team_id(current_user)
     saved_files = []
     tasks = []
@@ -252,59 +251,100 @@ def submit_milestone(milestone_id):
     )
     os.makedirs(file_dir, exist_ok=True)
 
-    # Check and process each file in the form data
-    for key in request.files:
-        task_id = key
-        file = request.files.get(key)
-        # Ensure task exists under the current milestone and the file is a PDF
-        if task_id in milestone_tasks and file.filename.lower().endswith(".pdf"):
+    try:
+        # Check and process each file in the form data
+        for key in request.files:
+            task_id = key
+            file = request.files.get(key)
+            # Ensure task exists under the current milestone and the file is a PDF
+            if task_id in milestone_tasks and file.filename.lower().endswith(".pdf"):
+                # Generate document title
+                document_title = (
+                    f"Milestone{milestone_id}_Task{task_id}_Team{team.name}"
+                )
+                file_url = os.path.join(file_dir, document_title + ".pdf")
 
-            # Generate document title and save file
-            document_title = f"Milestone{milestone_id}_Task{task_id}_Team{team.name}"
-            file_url = os.path.join(file_dir, document_title + ".pdf")
-            file.save(file_url)
-            saved_files.append(file_url)
+                # Check if a previous submission exists for this team and task
+                existing_submission = Submissions.query.filter_by(
+                    team_id=team_id, task_id=task_id
+                ).first()
 
-            # Check if a previous submission exists for this team and task and delete it
-            existing_submission = Submissions.query.filter_by(
-                team_id=team_id, task_id=task_id
-            ).first()
-            if existing_submission:
-                db.session.delete(existing_submission)
+                if existing_submission:
 
-            # Create a new submission
-            new_submission = Submissions(
-                task_id=task_id,
-                team_id=team_id,
-                submission_time=datetime.now(timezone.utc),
-            )
-            db.session.add(new_submission)
+                    # Update the existing submission
+                    existing_submission.submission_time = datetime.now(timezone.utc)
+                    existing_submission.feedback = None
+                    existing_submission.feedback_by = None
+                    existing_submission.feedback_time = None
 
-            # Associate document with specific task
-            document = Documents(
-                title=document_title,
-                file_url=file_url,
-                submission=new_submission,
-            )
-            db.session.add(document)
-            tasks.append(task_id)
+                    # If there's an existing submission, delete the old file
+                    old_document = Documents.query.filter_by(
+                        submission_id=existing_submission.id
+                    ).first()
+                    if old_document and os.path.exists(old_document.file_url):
+                        os.remove(old_document.file_url)
 
-        else:
-            # remove the files that were saved till now
-            for saved_file in saved_files:
+                    # Update the document
+                    if old_document:
+                        old_document.file_url = file_url
+                    else:
+                        # Create a new document if it doesn't exist
+                        new_document = Documents(
+                            title=document_title,
+                            file_url=file_url,
+                            submission=existing_submission,
+                        )
+                        db.session.add(new_document)
+
+                else:
+                    # Create a new submission
+                    new_submission = Submissions(
+                        task_id=task_id,
+                        team_id=team_id,
+                        submission_time=datetime.now(timezone.utc),
+                    )
+                    db.session.add(new_submission)
+
+                    # Create a new document
+                    new_document = Documents(
+                        title=document_title,
+                        file_url=file_url,
+                        submission=new_submission,
+                    )
+                    db.session.add(new_document)
+
+                # Save the new file
+                file.save(file_url)
+                saved_files.append(file_url)
+                tasks.append(task_id)
+
+            else:
+                # Invalid task or file type, abort with 400
+                for saved_file in saved_files:
+                    if os.path.exists(saved_file):
+                        os.remove(saved_file)
+                return abort(
+                    400,
+                    f"Task {task_id} is not valid for this milestone or the file is not a PDF",
+                )
+
+        db.session.commit()
+
+        current_app.logger.info(
+            f"Documents for Milestone {milestone_id} added/updated by user {current_user.id} for team {team_id}"
+        )
+
+        return {"message": "Milestone documents submitted successfully"}, 201
+
+    except Exception as e:
+        # If any exception occurs during file saving or database operations
+        # Delete all saved files
+        for saved_file in saved_files:
+            if os.path.exists(saved_file):
                 os.remove(saved_file)
-            abort(
-                400,
-                f"Task {task_id} is not valid for this milestone or the file is not a PDF",
-            )
 
-    db.session.commit()
-
-    current_app.logger.info(
-        f"Documents for Milestone {milestone_id} added by user {current_user.id} for team {team_id}"
-    )
-
-    return {"message": "Milestone documents submitted successfully"}, 201
+        current_app.logger.error(f"Error in submit_milestone: {str(e)}")
+        return abort(500, "An unexpected error occurred. Try again later.")
 
 
 """

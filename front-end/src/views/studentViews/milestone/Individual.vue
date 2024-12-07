@@ -221,7 +221,7 @@
                                 </button>
                                 <button v-if="!isPastDeadline" class="btn nav-color-btn-outline btn-sm ms-4"
                                     @click="generateAiRecommendation(task)">
-                                    <i class="bi bi-robot"></i>
+                                    <i class="bi bi-stars"></i>
                                     AI Recommendation
                                 </button>
                             </div>
