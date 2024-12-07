@@ -8,9 +8,6 @@ Dependencies:
 - SQLAlchemy ORM: For database operations.
 - Flask-Security: For user authentication and role management.
 - datetime: For handling time-related operations.
-- random: For generating random strings.
-- string: For character sets.
-- SystemRandom: For secure random number generation.
 
 Function:
 ---------

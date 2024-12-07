@@ -8,6 +8,8 @@ like milestone management and notifications.
 Dependencies:
 - Flask: For creating a Blueprint.
 - SQLAlchemy ORM: For database operations.
+- os: For getting environment variables.
+- Groq: For AI tool integration.
 
 Blueprint:
 ----------
@@ -33,7 +35,6 @@ from application.models import (
     db,
 )
 from flask import Blueprint
-from application.models import db
 from groq import Groq
 import os
 

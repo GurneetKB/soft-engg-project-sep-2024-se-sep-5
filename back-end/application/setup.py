@@ -14,6 +14,7 @@ Dependencies:
 - application.models: For interacting with the database models (Users, Roles, etc.).
 - application.initial_data: For seeding the database with initial data.
 - apis.student.setup and apis.teacher.setup: For registering student and teacher APIs.
+- logging: For handling the logging.
 
 Functions:
 ----------
@@ -22,7 +23,7 @@ Functions:
 3. register_blueprints(app)
 4. setup_error_handlers(app)
 5. configure_logging(app)
-5. create_app(database_uri, testing=False)
+6. create_app(database_uri, testing=False)
 
 Classes:
 --------

@@ -5,9 +5,12 @@ This module provides APIs for managing milestones and tasks for students in a te
 It supports functionalities like retrieving milestone data, submitting milestone documents, and downloading submissions.
 
 Dependencies:
-- Flask, Flask-Security: For routing and authentication.
+- Flask, Flask-Security: For routing, HTTP request handling, and user authentication/authorization.
 - SQLAlchemy ORM: For database operations.
-- os, datetime: For file handling and date-time processing.
+- os: For file and directory management, including path checks and file operations.
+- datetime: For handling and converting date-time data, particularly with time zones.
+- Werkzeug: For managing HTTP exceptions
+- PyPDF2: For reading and extracting text from PDF files using the PdfReader.
 
 Roles Required:
 - Student: All endpoints require the current user to have the "Student" role.
@@ -35,6 +38,7 @@ from application.models import (
 )
 from apis.teacher.setup import ai_client
 from flask import abort, make_response, request, send_file, current_app
+from werkzeug.exceptions import HTTPException
 from datetime import datetime, timezone
 import os
 from PyPDF2 import PdfReader
@@ -335,6 +339,10 @@ def submit_milestone(milestone_id):
         )
 
         return {"message": "Milestone documents submitted successfully"}, 201
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (like abort()) to be handled by Flask
+        raise
 
     except Exception as e:
         # If any exception occurs during file saving or database operations

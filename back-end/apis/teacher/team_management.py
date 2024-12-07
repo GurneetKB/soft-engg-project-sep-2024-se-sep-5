@@ -13,8 +13,7 @@ Dependencies:
 - PyPDF2: For extracting text from PDF submissions.
 - Pydantic: For defining and validating data models.
 - PyGithub: For interacting with the GitHub API.
-- Groq: For AI tool integration.
-- os, datetime, typing: For general utilities.
+- os, datetime, typing, json: For general utilities.
 
 Roles Accepted:
 ---------------
