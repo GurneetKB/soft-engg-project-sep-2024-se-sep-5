@@ -196,6 +196,7 @@ coverage
 
 *.tsbuildinfo
 
-
+# application-specific 
 student_submissions/
 secret.sh
+secret.bat
