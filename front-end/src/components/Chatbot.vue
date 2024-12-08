@@ -189,6 +189,7 @@
         min-height: 300px;
         max-width: 500px;
         max-height: calc(100vh - 100px);
+        border: 1px solid var(--navbar-bg);
     }
 
     .resize-handle {
